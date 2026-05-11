@@ -1,10 +1,11 @@
+import React, { useMemo } from 'react';
 import { View, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import AppText from '../components/AppText';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useMemo } from 'react';
 import { useTheme } from '../theme/ThemeContext';
 import { MODULES } from '../theme/colors';
 import { useGame } from '../context/GameContext';
+import { STORY_MISSIONS } from '../data/storyMissions';
 import ScreenBackground from '../components/ScreenBackground';
 
 const MODULE_DATA = {
@@ -30,67 +31,85 @@ export default function LevelScreen({ route, navigation }) {
 
   const getStars = (levelId) => progress.stars[levelId] || 0;
 
-  if (!data) {
+  if (!data || !mod) {
     return (
       <View style={styles.wrapper}>
-      <ScreenBackground moduleId={moduleId} />
-      <View style={styles.container}>
-        <AppText style={styles.errorText}>Module data not found</AppText>
-      </View>
+        <ScreenBackground moduleId={moduleId} />
+        <View style={styles.container}>
+          <AppText style={styles.errorText}>Module data not found</AppText>
+        </View>
       </View>
     );
   }
 
   const completedCount = progress.levelsCompleted.length;
 
+  const getMissionIdForLevel = (lid) => {
+    // Find first uncompleted mission matching this moduleId and levelId
+    const diffProgress = state.missionProgressByDifficulty?.[state.difficulty];
+    const uncompleted = STORY_MISSIONS.filter(m =>
+      m.moduleId === moduleId && m.levelId === lid &&
+      !diffProgress?.completed?.includes(m.id)
+    );
+    if (uncompleted.length > 0) return uncompleted[0].id;
+    // Fallback: first mission matching this moduleId and levelId
+    const first = STORY_MISSIONS.find(m => m.moduleId === moduleId && m.levelId === lid);
+    return first ? first.id : null;
+  };
+
   return (
     <View style={styles.wrapper}>
       <ScreenBackground moduleId={moduleId} levelId={1} />
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={[styles.header, { borderBottomColor: mod.color }]}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} color={C.text} />
-        </TouchableOpacity>
-        <View style={styles.headerInfo}>
-          <AppText style={styles.moduleLabel}>Module {mod.id}</AppText>
-          <AppText style={styles.headerTitle} decorative>{mod.title}</AppText>
-          <AppText style={styles.headerSubtitle}>{mod.subtitle}</AppText>
+        <View style={[styles.header, { borderBottomColor: mod.color }]}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back" size={22} color={C.text} />
+          </TouchableOpacity>
+          <View style={styles.headerInfo}>
+            <AppText style={styles.moduleLabel}>Module {mod.id}</AppText>
+            <AppText style={styles.headerTitle} decorative>{mod.title}</AppText>
+            <AppText style={styles.headerSubtitle}>{mod.subtitle}</AppText>
+          </View>
+          <View style={[styles.progressCircle, { borderColor: mod.color }]}>
+            <AppText style={[styles.progressNum, { color: mod.color }]}>{completedCount}</AppText>
+            <AppText style={styles.progressDen}>/4</AppText>
+          </View>
         </View>
-        <View style={[styles.progressCircle, { borderColor: mod.color }]}>
-          <AppText style={[styles.progressNum, { color: mod.color }]}>{completedCount}</AppText>
-          <AppText style={styles.progressDen}>/4</AppText>
-        </View>
-      </View>
 
-      <View style={styles.bossInfo}>
-        <View style={styles.bossIconWrap}>
-          <Ionicons name="skull-outline" size={18} color={C.textMuted} />
+        <View style={styles.bossInfo}>
+          <View style={styles.bossIconWrap}>
+            <Ionicons name="skull-outline" size={18} color={C.textMuted} />
+          </View>
+          <View>
+            <AppText style={styles.bossLabel}>Realm Boss</AppText>
+            <AppText style={styles.bossName} decorative>{mod.boss}</AppText>
+          </View>
         </View>
-        <View>
-          <AppText style={styles.bossLabel}>Realm Boss</AppText>
-          <AppText style={styles.bossName} decorative>{mod.boss}</AppText>
-        </View>
-      </View>
 
-      <View style={styles.levelsList}>
-        {data.levels.map((level, idx) => {
-          const unlocked = isLevelUnlocked(level.id);
-          const completed = progress.levelsCompleted.includes(level.id);
-          const stars = getStars(level.id);
-          const icons = ['school', 'book', 'bulb', 'trophy'];
+        <View style={styles.levelsList}>
+          {data.levels.map((level, idx) => {
+            const unlocked = isLevelUnlocked(level.id);
+            const completed = progress.levelsCompleted.includes(level.id);
+            const stars = getStars(level.id);
+            const icons = ['school', 'book', 'bulb', 'trophy'];
 
-          return (
-            <TouchableOpacity
-              key={level.id}
-              style={[
-                styles.levelCard,
-                { backgroundColor: C.card, borderColor: completed ? mod.color : C.cardBorder },
-                !unlocked && { opacity: 0.5 },
-              ]}
-              onPress={() => unlocked && navigation.navigate('Quiz', { moduleId, levelId: level.id })}
-              disabled={!unlocked}
-              activeOpacity={0.7}
-            >
+            return (
+              <TouchableOpacity
+                key={level.id}
+                style={[
+                  styles.levelCard,
+                  { backgroundColor: C.card, borderColor: completed ? mod.color : C.cardBorder },
+                  !unlocked && { opacity: 0.5 },
+                ]}
+                onPress={() => {
+                  const mid = getMissionIdForLevel(level.id);
+                  const params = { moduleId, levelId: level.id };
+                  if (mid) params.missionId = mid;
+                  navigation.navigate('Quiz', params);
+                }}
+                disabled={!unlocked}
+                activeOpacity={0.7}
+              >
               <View style={[styles.levelIcon, { backgroundColor: unlocked ? `${mod.color}20` : C.backgroundLight }]}>
                 <Ionicons name={level.isBoss ? 'trophy' : icons[idx]} size={22} color={unlocked ? mod.color : C.textMuted} />
               </View>

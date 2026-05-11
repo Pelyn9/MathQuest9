@@ -4,8 +4,9 @@ import {
   Dimensions,
   StyleSheet,
   View,
-  Platform,
   StatusBar,
+  Text,
+  Platform,
 } from 'react-native';
 
 const heroImage = require('../image/hero.png');
@@ -13,15 +14,32 @@ const heroImage = require('../image/hero.png');
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
 export default function SplashScreen() {
-  const fadeAnim = useRef(new Animated.Value(1)).current;
   const barAnim = useRef(new Animated.Value(0)).current;
+  const loadingTextAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    // Loading bar animation
     Animated.timing(barAnim, {
       toValue: 1,
       duration: 3000,
       useNativeDriver: false,
     }).start();
+
+    // Loading text pulse animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(loadingTextAnim, {
+          toValue: 1,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(loadingTextAnim, {
+          toValue: 0.3,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
   }, []);
 
   const loadPct = barAnim.interpolate({
@@ -37,29 +55,29 @@ export default function SplashScreen() {
       <Animated.Image
         source={heroImage}
         resizeMode="cover"
-        style={[
-          styles.hero,
-          {
-            opacity: fadeAnim,
-          },
-        ]}
+        style={styles.hero}
       />
 
-      {/* Dark overlay */}
+      {/* Light overlay */}
       <View style={styles.scrim} />
 
-      {/* Bottom fade */}
-      <View style={styles.bottomFade} />
+      {/* Loading Text */}
+      <Animated.Text
+        style={[
+          styles.loadingText,
+          { opacity: loadingTextAnim },
+        ]}
+      >
+        Loading Game...
+      </Animated.Text>
 
-      {/* Loading bar */}
+      {/* Loading Bar */}
       <View style={styles.loadingLineWrap}>
         <View style={styles.loadingLineTrack}>
           <Animated.View
             style={[
               styles.loadingLineFill,
-              {
-                width: loadPct,
-              },
+              { width: loadPct },
             ]}
           />
         </View>
@@ -71,13 +89,11 @@ export default function SplashScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#050814',
+    backgroundColor: '#000',
     justifyContent: 'flex-end',
     alignItems: 'center',
-    overflow: 'hidden',
   },
 
-  // ✅ FIXED IMAGE SIZE (no overflow, no zoom issue)
   hero: {
     position: 'absolute',
     width: SCREEN_W,
@@ -86,23 +102,24 @@ const styles = StyleSheet.create({
 
   scrim: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(4, 8, 20, 0.15)',
+    backgroundColor: 'rgba(0,0,0,0.05)', // very light overlay
   },
 
-  bottomFade: {
+  // 🎮 Loading text (fixed position + Times New Roman)
+  loadingText: {
     position: 'absolute',
-    bottom: 0,
-    width: '100%',
-    height: SCREEN_H * 0.25,
-    backgroundColor: 'rgba(5, 8, 20, 0.45)',
+    bottom: 60,
+    fontSize: 14,
+    letterSpacing: 1,
+    color: '#ffffff',
+    fontWeight: '400',
+    fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
   },
 
   loadingLineWrap: {
     width: '78%',
     maxWidth: 420,
-    marginBottom: Platform.OS === 'ios'
-      ? SCREEN_H * 0.07
-      : SCREEN_H * 0.05,
+    marginBottom: 40,
   },
 
   loadingLineTrack: {
@@ -111,8 +128,6 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     overflow: 'hidden',
     backgroundColor: 'rgba(255,255,255,0.28)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.38)',
   },
 
   loadingLineFill: {
