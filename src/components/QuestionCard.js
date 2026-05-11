@@ -14,17 +14,17 @@ export default function QuestionCard({ question, selected, onSelect, showCorrect
 
   useEffect(() => {
     cardFade.setValue(0);
-    cardSlide.setValue(12);
+    cardSlide.setValue(8);
     Animated.parallel([
       Animated.timing(cardFade, {
         toValue: 1,
-        duration: 260,
+        duration: 180,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
       Animated.timing(cardSlide, {
         toValue: 0,
-        duration: 260,
+        duration: 180,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),

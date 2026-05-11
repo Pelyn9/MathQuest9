@@ -67,7 +67,7 @@ export default function RoyalGuideModal({
                 <Ionicons name="book-outline" size={15} color={accent} />
                 <AppText style={[styles.sectionLabel, { color: accent }]}>Story</AppText>
               </View>
-              <AppText style={[styles.bodyText, { color: C.textLight }]}>{storyText}</AppText>
+              <AppText style={[styles.bodyText, styles.justifyText, { color: C.textLight }]}>{storyText}</AppText>
             </View>
 
             <View style={[styles.sectionCard, { backgroundColor: `${C.backgroundLight}D4`, borderColor: `${accent}30` }]}>
@@ -220,6 +220,9 @@ const styles = StyleSheet.create({
   bodyText: {
     fontSize: 12,
     lineHeight: 18,
+  },
+  justifyText: {
+    textAlign: 'justify',
   },
   questionText: {
     fontSize: 14,

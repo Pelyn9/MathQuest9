@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import { Animated, Easing, Pressable, View, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { Animated, Easing, Image, Pressable, View, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import AppText from '../components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { useGame } from '../context/GameContext';
@@ -24,6 +24,7 @@ import Timer from '../components/Timer';
 import RewardModal from '../components/RewardModal';
 import StoryIntroModal from '../components/StoryIntroModal';
 import RoyalGuideModal from '../components/RoyalGuideModal';
+import BossLoadingScreen from '../components/BossLoadingScreen';
 import ScreenBackground from '../components/ScreenBackground';
 import useScreenMusic from '../hooks/useScreenMusic';
 
@@ -34,6 +35,8 @@ const MODULES = {
   4: require('../data/module4').default,
 };
 
+const bossBackground = require('../image/boss.png');
+
 export default function QuizScreen({ route, navigation }) {
   const { moduleId, levelId, missionId, mode } = route.params;
   const modData = MODULES[moduleId];
@@ -43,6 +46,9 @@ export default function QuizScreen({ route, navigation }) {
   const { showToast } = useToast();
   const { colors: C } = useTheme();
   const styles = useMemo(() => createStyles(C), [C]);
+  const initialMission = missionId ? getMissionById(missionId) : null;
+  const initialActiveModeKey = mode || state.activeMode || 'story';
+  const startsAsBossEncounter = initialActiveModeKey === 'survival' || Boolean(initialMission ? initialMission.isBoss : level?.isBoss);
 
   const [qIndex, setQIndex] = useState(0);
   const [selected, setSelected] = useState(null);
@@ -67,6 +73,8 @@ export default function QuizScreen({ route, navigation }) {
   const [timerKey, setTimerKey] = useState(0);
   const [battleStatus, setBattleStatus] = useState('playing');
   const [onboardingStep, setOnboardingStep] = useState('story'); // story -> gameplay
+  const [showBossLoading, setShowBossLoading] = useState(startsAsBossEncounter);
+  const bossLoadingKeyRef = useRef(null);
   const gameOverTriggeredRef = useRef(false);
   const answerLockedRef = useRef(false);
   const mountedRef = useRef(true);
@@ -78,11 +86,16 @@ export default function QuizScreen({ route, navigation }) {
   const gameOverGlowAnim = useRef(new Animated.Value(0)).current;
 
   const diffConfig = DIFFICULTY[state.difficulty] || DIFFICULTY.normal;
-  const activeModeKey = mode || state.activeMode || 'story';
+  const activeModeKey = initialActiveModeKey;
   const activeMode = PLAY_MODES[activeModeKey] || PLAY_MODES.story;
-  const mission = missionId ? getMissionById(missionId) : null;
+  const mission = initialMission;
   const storyPath = getStoryDifficultyPath(state.difficulty);
   const isStoryMission = activeModeKey === 'story' && !!mission;
+  const isSurvivalMode = activeModeKey === 'survival';
+  const isBossEncounter = isSurvivalMode || Boolean(mission ? mission.isBoss : level?.isBoss);
+  const bossEncounterKey = isBossEncounter
+    ? `${activeModeKey}-${mission?.id || `${moduleId}-${levelId}`}`
+    : null;
   const missionProgress = isStoryMission ? getDifficultyMissionProgress(state, state.difficulty) : null;
   const missionStats = isStoryMission ? getMissionStats(missionProgress) : null;
   const storyLesson = isStoryMission
@@ -93,14 +106,26 @@ export default function QuizScreen({ route, navigation }) {
   const timePerQ = activeModeKey === 'timer' ? Math.max(15, Math.round(baseTimePerQ * 0.65)) : baseTimePerQ;
   const musicTrack = useMemo(() => {
     if (!level) return 'menu';
-    if (level.isBoss || mission?.isBoss) return 'boss';
+    if (isBossEncounter) return 'boss';
     if (activeModeKey === 'survival') return 'survival';
     if (activeModeKey === 'timer') return 'timer';
     return onboardingStep === 'gameplay' ? 'answer' : 'menu';
-  }, [activeModeKey, level, mission, onboardingStep]);
+  }, [activeModeKey, isBossEncounter, level, onboardingStep]);
 
   const isBattleLocked = battleStatus === 'gameOver' || finished || gameOverTriggeredRef.current;
   useScreenMusic(musicTrack);
+
+  useEffect(() => {
+    if (bossEncounterKey && bossLoadingKeyRef.current !== bossEncounterKey) {
+      bossLoadingKeyRef.current = bossEncounterKey;
+      setShowBossLoading(true);
+      return;
+    }
+
+    if (!bossEncounterKey) {
+      setShowBossLoading(false);
+    }
+  }, [bossEncounterKey]);
 
   useEffect(() => {
     if (isStoryMission && mission && level) {
@@ -116,6 +141,27 @@ export default function QuizScreen({ route, navigation }) {
 
   const buildQuestionSet = useCallback(() => {
     if (!level) return [];
+
+    if (activeModeKey === 'survival') {
+      const hardPool = [];
+      Object.values(MODULES).forEach(module => {
+        module.levels.forEach(moduleLevel => {
+          moduleLevel.questions.forEach(question => {
+            const questionDifficulty = question.difficulty || moduleLevel.difficulty;
+            if (questionDifficulty === 'hard' || questionDifficulty === 'extreme') {
+              hardPool.push({
+                ...question,
+                difficulty: questionDifficulty,
+                sourceModuleId: module.id,
+                sourceLevelId: moduleLevel.id,
+              });
+            }
+          });
+        });
+      });
+      return hardPool.sort(() => Math.random() - 0.5);
+    }
+
     const diffMap = { easy: 'easy', normal: 'medium', hard: 'hard', extreme: 'hard' };
     const targetDifficulty = diffMap[state.difficulty] || 'medium';
     const activeDiffConfig = DIFFICULTY[state.difficulty] || DIFFICULTY.normal;
@@ -269,11 +315,12 @@ export default function QuizScreen({ route, navigation }) {
     answerLockedRef.current = true;
     stopTimer();
     const correct = selected === currentQ.correct;
+    const scoringDifficulty = currentQ.difficulty || level.difficulty;
     const timeBonus = Math.floor(timePerQ * 10 * (1 - (0.5)));
     const pts = calculateScore({
-      correct, difficulty: level.difficulty, streak: correct ? streak : 0, timeBonus: correct ? timeBonus : 0,
+      correct, difficulty: scoringDifficulty, streak: correct ? streak : 0, timeBonus: correct ? timeBonus : 0,
     });
-    const xp = calculateXP({ correct, difficulty: level.difficulty, streak: correct ? streak : 0 });
+    const xp = calculateXP({ correct, difficulty: scoringDifficulty, streak: correct ? streak : 0 });
 
     if (correct) {
       soundManager.play('correct');
@@ -472,6 +519,10 @@ export default function QuizScreen({ route, navigation }) {
     setShowRoyalGuide(false);
   };
 
+  const handleBossLoadingFinish = useCallback(() => {
+    setShowBossLoading(false);
+  }, []);
+
   if (!level) {
     return (
       <View style={styles.wrapper}>
@@ -494,10 +545,27 @@ export default function QuizScreen({ route, navigation }) {
     outputRange: [0.4, 1],
   });
 
+  if (showBossLoading && isBossEncounter) {
+    return (
+      <BossLoadingScreen
+        title={isSurvivalMode ? 'Survival Boss Battle' : mission?.shortTitle || level?.title || 'Boss Battle'}
+        finalBoss={!!mission?.isUltimateBoss}
+        onFinish={handleBossLoadingFinish}
+      />
+    );
+  }
+
   return (
     <View style={styles.wrapper}>
       <ScreenBackground moduleId={moduleId} levelId={levelId} />
-      <View style={[styles.container, isStoryMission && { backgroundColor: 'transparent' }]}>
+      {isSurvivalMode && (
+        <>
+          <Image pointerEvents="none" source={bossBackground} resizeMode="cover" style={styles.survivalBossImage} />
+          <View pointerEvents="none" style={styles.survivalBossRedWash} />
+          <View pointerEvents="none" style={styles.survivalBossShade} />
+        </>
+      )}
+      <View style={[styles.container, (isStoryMission || isSurvivalMode) && { backgroundColor: 'transparent' }]}>
       {isStoryMission && (
         <View style={[styles.rpgBackdrop, { pointerEvents: 'none' }]}>
           <View style={[styles.rpgSky, { backgroundColor: storyPath.sky }]} />
@@ -538,7 +606,7 @@ export default function QuizScreen({ route, navigation }) {
       {/* Gameplay */}
       {onboardingStep === 'gameplay' && !finished && (
         <>
-          <View style={[styles.topBar, isStoryMission && { borderBottomColor: `${storyPath.color}45` }]}>
+          <View style={[styles.topBar, isStoryMission && { borderBottomColor: `${storyPath.color}45` }, isSurvivalMode && styles.survivalTopBar]}>
             <TouchableOpacity onPress={() => {
               if (onboardingStep === 'gameplay') {
                 navigation.navigate('Main', { screen: 'Home' });
@@ -566,10 +634,10 @@ export default function QuizScreen({ route, navigation }) {
                 <Ionicons name={activeMode.icon} size={12} color={activeMode.color} />
                 <AppText style={[styles.modeTagText, { color: activeMode.color }]}>{activeMode.title}</AppText>
               </View>
-              {level.isBoss && (
+              {isBossEncounter && (
                 <View style={styles.bossTag}>
                   <Ionicons name="trophy" size={12} color={C.warning} />
-                  <AppText style={styles.bossTagText}>BOSS</AppText>
+                  <AppText style={styles.bossTagText}>{isSurvivalMode ? 'SURVIVAL BOSS' : 'BOSS'}</AppText>
                 </View>
               )}
             </View>
@@ -584,8 +652,8 @@ export default function QuizScreen({ route, navigation }) {
           </View>
 
           <ScrollView
-            style={styles.body}
-            contentContainerStyle={styles.bodyContent}
+            style={[styles.body, isSurvivalMode && styles.survivalBody]}
+            contentContainerStyle={[styles.bodyContent, isSurvivalMode && styles.survivalBodyContent]}
             showsVerticalScrollIndicator={false}
             bounces={false}
             alwaysBounceVertical={false}
@@ -746,6 +814,20 @@ export default function QuizScreen({ route, navigation }) {
 const createStyles = (C) => StyleSheet.create({
   wrapper: { flex: 1, backgroundColor: C.background },
   container: { flex: 1, backgroundColor: 'transparent' },
+  survivalBossImage: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
+    opacity: 0.42,
+  },
+  survivalBossRedWash: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(120, 0, 18, 0.46)',
+  },
+  survivalBossShade: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(8, 2, 8, 0.42)',
+  },
   rpgBackdrop: {
     ...StyleSheet.absoluteFillObject,
     overflow: 'hidden',
@@ -842,6 +924,10 @@ const createStyles = (C) => StyleSheet.create({
     paddingHorizontal: 16, paddingTop: 50, paddingBottom: 12,
     backgroundColor: `${C.card}E6`, borderBottomWidth: 1, borderBottomColor: `${C.gold}30`,
   },
+  survivalTopBar: {
+    backgroundColor: 'rgba(45, 5, 12, 0.9)',
+    borderBottomColor: 'rgba(255, 93, 99, 0.55)',
+  },
   closeBtn: {
     width: 36, height: 36, borderRadius: 12,
     backgroundColor: `${C.backgroundLight}D0`, justifyContent: 'center', alignItems: 'center',
@@ -868,6 +954,8 @@ const createStyles = (C) => StyleSheet.create({
   coinText: { fontSize: 12, color: C.gold, fontWeight: 'bold' },
   body: { flex: 1, backgroundColor: C.background, overscrollBehavior: 'none' },
   bodyContent: { paddingBottom: 28, backgroundColor: C.background },
+  survivalBody: { backgroundColor: 'transparent' },
+  survivalBodyContent: { backgroundColor: 'transparent' },
   statsBar: {
     flexDirection: 'row', justifyContent: 'center', gap: 12,
     paddingVertical: 10, paddingHorizontal: 16,

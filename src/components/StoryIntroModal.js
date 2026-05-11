@@ -172,6 +172,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
     flexShrink: 1,
     fontSize: 12, lineHeight: 19, color: '#D0C8B0',
+    textAlign: 'justify',
   },
   continueBtn: {
     marginHorizontal: 14, minHeight: 48, borderRadius: 10,

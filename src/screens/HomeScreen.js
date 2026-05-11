@@ -424,7 +424,7 @@ const createStyles = (C, titleSize) => StyleSheet.create({
   missionInfo: { flex: 1 },
   missionKicker: { fontSize: 10, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', color: C.textMuted },
   missionTitle: { fontSize: 16, fontWeight: '900', marginTop: 2, color: C.text },
-  missionStory: { fontSize: 12, lineHeight: 17, marginTop: 3, color: C.textMuted },
+  missionStory: { fontSize: 12, lineHeight: 17, marginTop: 3, color: C.textMuted, textAlign: 'justify' },
   missionActions: { flexDirection: 'row', gap: 10, marginTop: 14 },
   primaryMissionBtn: { flex: 1, minHeight: 44, borderRadius: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, borderWidth: 1, borderColor: `${C.gold}55` },
   primaryMissionText: { fontSize: 14, fontWeight: '900', color: C.white },

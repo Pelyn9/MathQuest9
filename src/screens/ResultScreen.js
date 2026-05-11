@@ -300,6 +300,7 @@ const createStyles = (C) => StyleSheet.create({
     lineHeight: 17,
     color: C.textMuted,
     marginTop: 2,
+    textAlign: 'justify',
   },
   statsCard: {
     backgroundColor: `${C.card}E4`,
