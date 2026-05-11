@@ -61,7 +61,7 @@ export default function Timer({ seconds, onExpire, running, resetKey }) {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.track, { backgroundColor: C.backgroundLight }]}>
+      <View style={[styles.track, { backgroundColor: `${C.black}55`, borderColor: `${color}35` }]}>
         <View style={[styles.fill, { width: `${pct * 100}%`, backgroundColor: color }]} />
       </View>
       <Ionicons name="time-outline" size={14} color={color} />
@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1, marginRight: 8,
   },
-  track: { flex: 1, height: 6, borderRadius: 3, overflow: 'hidden' },
+  track: { flex: 1, height: 6, borderRadius: 3, overflow: 'hidden', borderWidth: 1 },
   fill: { height: '100%', borderRadius: 3 },
   text: { fontSize: 12, fontWeight: 'bold', minWidth: 26 },
 });

@@ -556,7 +556,14 @@ export default function QuizScreen({ route, navigation }) {
             </View>
           </View>
 
-          <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            style={styles.body}
+            contentContainerStyle={styles.bodyContent}
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+            alwaysBounceVertical={false}
+            overScrollMode="never"
+          >
             <View style={styles.statsBar}>
               <View style={styles.statChip}>
                 <Ionicons name="flash" size={14} color={C.xp} />
@@ -709,7 +716,7 @@ export default function QuizScreen({ route, navigation }) {
 }
 
 const createStyles = (C) => StyleSheet.create({
-  wrapper: { flex: 1 },
+  wrapper: { flex: 1, backgroundColor: C.background },
   container: { flex: 1, backgroundColor: 'transparent' },
   rpgBackdrop: {
     ...StyleSheet.absoluteFillObject,
@@ -805,11 +812,12 @@ const createStyles = (C) => StyleSheet.create({
   topBar: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 16, paddingTop: 50, paddingBottom: 12,
-    backgroundColor: C.card, borderBottomWidth: 1, borderBottomColor: C.backgroundLight,
+    backgroundColor: `${C.card}E6`, borderBottomWidth: 1, borderBottomColor: `${C.gold}30`,
   },
   closeBtn: {
-    width: 36, height: 36, borderRadius: 18,
-    backgroundColor: C.backgroundLight, justifyContent: 'center', alignItems: 'center',
+    width: 36, height: 36, borderRadius: 12,
+    backgroundColor: `${C.backgroundLight}D0`, justifyContent: 'center', alignItems: 'center',
+    borderWidth: 1, borderColor: `${C.gold}30`,
   },
   topCenter: { flex: 1, marginHorizontal: 10, alignItems: 'center', gap: 4 },
   progressRow: { flexDirection: 'row', alignItems: 'center', gap: 8, width: '100%' },
@@ -825,45 +833,52 @@ const createStyles = (C) => StyleSheet.create({
   modeTimerText: { fontSize: 11, fontWeight: '900', textTransform: 'uppercase' },
   topRight: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 0 },
   coinBadge: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: C.backgroundLight,
-    paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, gap: 4, marginRight: 8,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: `${C.gold}14`,
+    paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10, gap: 4, marginRight: 8,
+    borderWidth: 1, borderColor: `${C.gold}35`,
   },
   coinText: { fontSize: 12, color: C.gold, fontWeight: 'bold' },
-  body: { flex: 1 },
+  body: { flex: 1, backgroundColor: C.background, overscrollBehavior: 'none' },
+  bodyContent: { paddingBottom: 28, backgroundColor: C.background },
   statsBar: {
     flexDirection: 'row', justifyContent: 'center', gap: 12,
     paddingVertical: 10, paddingHorizontal: 16,
   },
   statChip: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: C.card, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10,
+    backgroundColor: `${C.card}D8`, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10,
+    borderWidth: 1, borderColor: `${C.rune || C.primary}25`,
   },
   statChipText: { fontSize: 11, color: C.textLight, fontWeight: '600' },
   hintBanner: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: `${C.warning}20`,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: `${C.warning}18`,
     marginHorizontal: 16, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 10, gap: 8, marginBottom: 8,
+    borderWidth: 1, borderColor: `${C.warning}35`,
   },
   hintText: { fontSize: 13, color: C.textLight, flex: 1, lineHeight: 18 },
   callBanner: {
-    flexDirection: 'row', alignItems: 'flex-start', backgroundColor: `${C.secondary}20`,
+    flexDirection: 'row', alignItems: 'flex-start', backgroundColor: `${C.secondary}18`,
     marginHorizontal: 16, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 10, gap: 8, marginBottom: 8,
+    borderWidth: 1, borderColor: `${C.secondary}35`,
   },
-  explanationBox: { marginHorizontal: 16, marginTop: 12, padding: 14, borderRadius: 12 },
-  correctBox: { backgroundColor: `${C.success}20`, borderLeftWidth: 3, borderLeftColor: C.success },
-  wrongBox: { backgroundColor: `${C.danger}20`, borderLeftWidth: 3, borderLeftColor: C.danger },
+  explanationBox: { marginHorizontal: 16, marginTop: 12, padding: 14, borderRadius: 12, borderWidth: 1 },
+  correctBox: { backgroundColor: `${C.success}20`, borderColor: `${C.success}45`, borderLeftWidth: 3, borderLeftColor: C.success },
+  wrongBox: { backgroundColor: `${C.danger}20`, borderColor: `${C.danger}45`, borderLeftWidth: 3, borderLeftColor: C.danger },
   explanationHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
   explanationTitle: { fontSize: 15, fontWeight: 'bold' },
   explanationText: { fontSize: 13, color: C.textLight, lineHeight: 19 },
   bottomSection: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 20 },
   submitBtn: {
-    backgroundColor: C.primary, paddingVertical: 14, borderRadius: 14,
+    backgroundColor: C.primary, paddingVertical: 14, borderRadius: 10,
     flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, marginTop: 4,
+    borderWidth: 1, borderColor: `${C.gold}55`,
   },
   btnDisabled: { opacity: 0.4 },
   submitBtnText: { color: C.white, fontSize: 15, fontWeight: 'bold' },
   nextBtn: {
-    backgroundColor: C.success, paddingVertical: 14, borderRadius: 14,
+    backgroundColor: C.success, paddingVertical: 14, borderRadius: 10,
     flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8,
+    borderWidth: 1, borderColor: `${C.gold}45`,
   },
   nextBtnText: { color: C.white, fontSize: 15, fontWeight: 'bold' },
   damageFlash: {

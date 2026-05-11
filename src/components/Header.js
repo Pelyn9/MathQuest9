@@ -7,7 +7,7 @@ export default function Header({ title, subtitle, color }) {
   const accent = color || C.primary;
 
   return (
-    <View style={[styles.container, { borderBottomColor: accent, backgroundColor: C.card }]}>
+    <View style={[styles.container, { borderBottomColor: accent, backgroundColor: `${C.card}E6` }]}>
       <AppText style={[styles.title, { color: accent }]}>{title}</AppText>
       {subtitle && <AppText style={[styles.subtitle, { color: C.textMuted }]}>{subtitle}</AppText>}
     </View>

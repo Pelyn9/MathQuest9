@@ -33,8 +33,8 @@ export default function QuestionCard({ question, selected, onSelect, showCorrect
 
   return (
     <View style={styles.container}>
-      <View style={[styles.questionBox, { backgroundColor: C.card, borderColor: C.cardBorder }]}>
-        <View style={[styles.questionIcon, { backgroundColor: C.primary }]}>
+      <View style={[styles.questionBox, { backgroundColor: `${C.card}E8`, borderColor: `${C.gold}45`, shadowColor: C.primary }]}>
+        <View style={[styles.questionIcon, { backgroundColor: `${C.primary}22`, borderColor: `${C.gold}45` }]}>
           <AppText style={[styles.questionIconText, { color: C.white }]}>?</AppText>
         </View>
         <AppText style={[styles.questionText, { color: C.text }]}>{question.question}</AppText>
@@ -82,12 +82,16 @@ const styles = StyleSheet.create({
   },
   questionBox: {
     flexDirection: 'row',
-    borderRadius: 14,
+    borderRadius: 12,
     padding: 18,
     marginBottom: 16,
     borderWidth: 1,
     gap: 12,
     alignItems: 'flex-start',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.16,
+    shadowRadius: 12,
+    elevation: 3,
   },
   questionIcon: {
     width: 32,
@@ -95,6 +99,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
   },
   questionIconText: {
     fontSize: 16,
@@ -110,7 +115,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   option: {
-    borderRadius: 12,
+    borderRadius: 10,
     padding: 14,
     borderWidth: 1,
   },
@@ -134,6 +139,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(244,197,106,0.2)',
   },
   optionText: {
     fontSize: 15,

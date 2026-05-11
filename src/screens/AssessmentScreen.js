@@ -167,7 +167,7 @@ export default function AssessmentScreen({ route, navigation }) {
                 key={i}
                 style={[
                   styles.option,
-                  { backgroundColor: isCorrect ? `${C.success}25` : isWrong ? `${C.danger}25` : isSelected ? `${C.info}20` : C.card, borderColor: isCorrect ? C.success : isWrong ? C.danger : isSelected ? C.info : C.cardBorder },
+                  { backgroundColor: isCorrect ? `${C.success}25` : isWrong ? `${C.danger}25` : isSelected ? `${C.info}20` : `${C.card}E6`, borderColor: isCorrect ? C.success : isWrong ? C.danger : isSelected ? C.info : `${C.cardBorder}90` },
                 ]}
                 onPress={() => handleSelect(i)}
                 disabled={showCorrect}
@@ -218,22 +218,24 @@ const createStyles = (C) => StyleSheet.create({
   topBar: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     paddingHorizontal: 16, paddingTop: 50, paddingBottom: 12,
-    backgroundColor: C.card, borderBottomWidth: 1, borderBottomColor: C.backgroundLight,
+    backgroundColor: `${C.card}E6`, borderBottomWidth: 1, borderBottomColor: `${C.gold}30`,
   },
   closeBtn: {
-    width: 36, height: 36, borderRadius: 18,
-    backgroundColor: C.backgroundLight, justifyContent: 'center', alignItems: 'center',
+    width: 36, height: 36, borderRadius: 12,
+    backgroundColor: `${C.backgroundLight}D0`, justifyContent: 'center', alignItems: 'center',
+    borderWidth: 1, borderColor: `${C.gold}30`,
   },
   topCenter: { flex: 1 },
   questionNum: { fontSize: 13, color: C.textMuted, fontWeight: '600' },
   body: { flex: 1 },
   header: { padding: 20, paddingBottom: 12 },
-  headerLabel: { fontSize: 11, fontWeight: '700', color: C.primary, letterSpacing: 2, textTransform: 'uppercase' },
+  headerLabel: { fontSize: 11, fontWeight: '800', color: C.gold, letterSpacing: 2, textTransform: 'uppercase' },
   headerTitle: { fontSize: 18, fontWeight: 'bold', color: C.text, marginTop: 8, lineHeight: 26 },
   options: { paddingHorizontal: 20, gap: 10 },
   option: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    padding: 14, borderRadius: 12, borderWidth: 1,
+    padding: 14, borderRadius: 10, borderWidth: 1,
+    shadowColor: C.primary, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.12, shadowRadius: 8, elevation: 2,
   },
   letter: {
     width: 28, height: 28, borderRadius: 8,
@@ -242,34 +244,36 @@ const createStyles = (C) => StyleSheet.create({
   optionText: { fontSize: 15, flex: 1, lineHeight: 20 },
   explanationBox: {
     marginHorizontal: 20, marginTop: 16, padding: 14,
-    borderRadius: 12, borderLeftWidth: 3,
+    borderRadius: 12, borderLeftWidth: 3, borderWidth: 1, borderColor: `${C.info}35`,
   },
   explanationTitle: { fontSize: 13, fontWeight: 'bold', marginBottom: 4 },
   explanationText: { fontSize: 13, lineHeight: 19 },
   bottomSection: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 30 },
   submitBtn: {
-    backgroundColor: C.primary, paddingVertical: 14, borderRadius: 14,
+    backgroundColor: C.primary, paddingVertical: 14, borderRadius: 10,
     flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8,
+    borderWidth: 1, borderColor: `${C.gold}55`,
   },
   btnDisabled: { opacity: 0.4 },
   submitBtnText: { color: C.white, fontSize: 15, fontWeight: 'bold' },
   nextBtn: {
-    backgroundColor: C.success, paddingVertical: 14, borderRadius: 14,
+    backgroundColor: C.success, paddingVertical: 14, borderRadius: 10,
     flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8,
+    borderWidth: 1, borderColor: `${C.gold}45`,
   },
   nextBtnText: { color: C.white, fontSize: 15, fontWeight: 'bold' },
   resultCard: {
     flex: 1, justifyContent: 'center', alignItems: 'center',
     paddingHorizontal: 30,
   },
-  resultTitle: { fontSize: 22, fontWeight: 'bold', color: C.text, marginTop: 16 },
+  resultTitle: { fontSize: 22, fontWeight: '900', color: C.gold, marginTop: 16, letterSpacing: 1, textTransform: 'uppercase' },
   resultScore: { fontSize: 48, fontWeight: 'bold', color: C.text, marginTop: 12 },
   resultPct: { fontSize: 20, color: C.textMuted, marginTop: 4 },
   resultBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12 },
   resultBadgeText: { fontSize: 16, fontWeight: '600' },
   doneBtn: {
     marginTop: 30, backgroundColor: C.primary, paddingVertical: 14,
-    paddingHorizontal: 40, borderRadius: 25,
+    paddingHorizontal: 40, borderRadius: 10, borderWidth: 1, borderColor: `${C.gold}55`,
   },
   doneBtnText: { color: C.white, fontSize: 16, fontWeight: 'bold' },
 });

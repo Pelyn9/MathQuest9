@@ -32,7 +32,7 @@ export default function DailyRewardModal({ visible, streak, onClaim, onClose }) 
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.overlay}>
-        <Animated.View style={[styles.modal, { backgroundColor: C.card, borderColor: C.gold, transform: [{ scale: scaleAnim }] }]}>
+        <Animated.View style={[styles.modal, { backgroundColor: `${C.card}F2`, borderColor: C.gold, transform: [{ scale: scaleAnim }] }]}>
           <View style={styles.starsRow}>
             <Ionicons name="star" size={24} color={C.gold} />
             <Ionicons name="gift" size={40} color={C.gold} />
@@ -55,7 +55,7 @@ export default function DailyRewardModal({ visible, streak, onClaim, onClose }) 
             </View>
           </View>
 
-          <View style={[styles.streakBar, { backgroundColor: C.backgroundLight }]}>
+          <View style={[styles.streakBar, { backgroundColor: `${C.backgroundLight}D0`, borderColor: `${C.gold}25` }]}>
             {STREAK_REWARDS.map((r, i) => (
               <View key={i} style={[styles.streakDot, {
                 backgroundColor: i <= streak ? C.gold : C.textMuted,
@@ -89,9 +89,13 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1, backgroundColor: 'rgba(0,0,0,0.8)',
     justifyContent: 'center', alignItems: 'center',
+    width: '100%',
+    maxWidth: 430,
+    alignSelf: 'center',
+    overflow: 'hidden',
   },
   modal: {
-    borderRadius: 24, padding: 28, marginHorizontal: 30,
+    borderRadius: 16, padding: 28, marginHorizontal: 30,
     alignItems: 'center', width: '85%', borderWidth: 2,
   },
   starsRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -104,6 +108,7 @@ const styles = StyleSheet.create({
   streakBar: {
     flexDirection: 'row', gap: 8, marginTop: 20,
     padding: 12, borderRadius: 14,
+    borderWidth: 1,
   },
   streakDot: {
     width: 30, height: 30, borderRadius: 15,
@@ -112,7 +117,7 @@ const styles = StyleSheet.create({
   streakDotText: { fontSize: 11, fontWeight: 'bold' },
   claimBtn: {
     paddingVertical: 14, paddingHorizontal: 50,
-    borderRadius: 25, marginTop: 20,
+    borderRadius: 10, marginTop: 20,
   },
   claimBtnText: { fontSize: 16, fontWeight: 'bold' },
   skipBtn: { marginTop: 12, paddingVertical: 6 },

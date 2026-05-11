@@ -10,6 +10,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Times New Roman',
   },
   decorativeFont: {
-    fontFamily: 'Times New Roman',
+    fontFamily: 'AncientModernTales',
   },
 });

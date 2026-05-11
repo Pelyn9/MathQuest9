@@ -48,9 +48,9 @@ export default function DifficultySelectScreen({ navigation }) {
             </View>
           </Animated.View>
         </View>
-        <AppText style={styles.title} decorative>Choose Your Difficulty</AppText>
+        <AppText style={styles.title} decorative>Derivative Chronicles</AppText>
         <AppText style={styles.subtitle}>
-          The harder the path, the greater the rewards.
+          Choose your path through the Lost Kingdom of Numeria.
         </AppText>
         <AppText style={styles.subtitle2}>
           Each path has its own story, allies, and challenges.
@@ -82,7 +82,7 @@ export default function DifficultySelectScreen({ navigation }) {
                 </View>
                 <AppText style={[styles.cardDesc, { color: C.textMuted }]}>{d.desc}</AppText>
                 <View style={styles.pathRow}>
-                  <Ionicons name={path.icon} size={12} color={path.color} />
+                  <Ionicons name={path.sceneIcon || path.characterIcon} size={12} color={path.color} />
                   <AppText style={[styles.pathDesc, { color: path.color }]}>
                     {path.label}
                   </AppText>
@@ -150,7 +150,7 @@ const createStyles = (C) => StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: `${C.primary}40`,
+    borderColor: `${C.gold}55`,
     shadowColor: C.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -158,12 +158,16 @@ const createStyles = (C) => StyleSheet.create({
     elevation: 6,
   },
   title: {
-    fontSize: 26,
-    fontWeight: 'bold',
+    fontSize: 28,
+    fontWeight: '900',
     textAlign: 'center',
-    color: C.text,
+    color: C.gold,
     marginBottom: 4,
-    letterSpacing: -0.5,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    textShadowColor: 'rgba(244,197,106,0.34)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 12,
   },
   subtitle: {
     fontSize: 13,
@@ -186,15 +190,15 @@ const createStyles = (C) => StyleSheet.create({
     alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 16,
+    borderRadius: 12,
     borderWidth: 1.5,
     padding: 14,
     marginBottom: 12,
     shadowColor: C.black,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOpacity: 0.18,
+    shadowRadius: 10,
+    elevation: 3,
   },
   iconCircle: {
     width: 46,

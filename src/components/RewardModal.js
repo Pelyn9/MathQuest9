@@ -9,7 +9,7 @@ export default function RewardModal({ visible, coins, badge, onClose }) {
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View style={[styles.overlay]}>
-        <View style={[styles.modal, { backgroundColor: C.card, borderColor: C.gold }]}>
+        <View style={[styles.modal, { backgroundColor: `${C.card}F2`, borderColor: C.gold }]}>
           <View style={styles.starsRow}>
             <Ionicons name="star" size={28} color={C.gold} />
             <Ionicons name="star" size={36} color={C.gold} />
@@ -19,14 +19,14 @@ export default function RewardModal({ visible, coins, badge, onClose }) {
           <AppText style={[styles.title, { color: C.gold }]}>Rewards Earned!</AppText>
 
           {coins > 0 && (
-            <View style={[styles.rewardRow, { backgroundColor: C.backgroundLight, borderColor: C.cardBorder }]}>
+            <View style={[styles.rewardRow, { backgroundColor: `${C.backgroundLight}D0`, borderColor: `${C.gold}25` }]}>
               <Ionicons name="cash-outline" size={22} color={C.gold} />
               <AppText style={[styles.rewardText, { color: C.text }]}>+{coins} Coins</AppText>
             </View>
           )}
 
           {badge && (
-            <View style={[styles.rewardRow, { backgroundColor: C.backgroundLight, borderColor: C.cardBorder }]}>
+            <View style={[styles.rewardRow, { backgroundColor: `${C.backgroundLight}D0`, borderColor: `${C.gold}25` }]}>
               <Ionicons name={badge.icon} size={24} color={C.gold} />
               <View style={styles.badgeInfo}>
                 <AppText style={[styles.badgeName, { color: C.text }]}>{badge.name}</AppText>
@@ -50,9 +50,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.8)',
     justifyContent: 'center',
     alignItems: 'center',
+    width: '100%',
+    maxWidth: 430,
+    alignSelf: 'center',
+    overflow: 'hidden',
   },
   modal: {
-    borderRadius: 20,
+    borderRadius: 16,
     padding: 28,
     marginHorizontal: 30,
     alignItems: 'center',
@@ -77,7 +81,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 12,
+    borderRadius: 10,
     width: '100%',
     borderWidth: 1,
   },
@@ -99,7 +103,7 @@ const styles = StyleSheet.create({
   button: {
     paddingVertical: 14,
     paddingHorizontal: 40,
-    borderRadius: 25,
+    borderRadius: 10,
     marginTop: 10,
   },
   buttonText: {

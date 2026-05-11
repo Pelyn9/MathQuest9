@@ -41,7 +41,7 @@ const BADGE_LABELS = {
 };
 
 const THEME_PREVIEW = {
-  light: ['#6C5CE7', '#F0F2F5', '#FFFFFF', '#FFD700', '#2ED573', '#FF6B8A'],
+  light: ['#42D9FF', '#051126', '#102846', '#F4C56A', '#38D996', '#FF7A5C'],
   dark: ['#6C5CE7', '#1A0F0A', '#3D2415', '#FFD700', '#66BB6A', '#FF6584'],
   forest: ['#4CAF50', '#F0F5E8', '#FFFFFF', '#D4A017', '#2ED573', '#8BC34A'],
   ocean: ['#00BCD4', '#0A0E1A', '#141C2E', '#FFD740', '#00BFA5', '#26C6DA'],
@@ -53,7 +53,7 @@ const THEME_PREVIEW = {
 };
 
 const THEMES = [
-  { id: 'light', name: 'Royal Dawn', icon: 'sunny', price: 0, desc: 'Bright castle colors for daily quests.' },
+  { id: 'light', name: 'Derivative Chronicles', icon: 'sparkles', price: 0, desc: 'Royal blue, gold, and arcane glow.' },
   { id: 'dark', name: 'Shadow Keep', icon: 'moon', price: 250, desc: 'A darker RPG theme for night battles.' },
   { id: 'forest', name: 'Feral Woods', icon: 'leaf', price: 250, desc: 'Deep forest greens for nature lovers.' },
   { id: 'ocean', name: 'Abyssal Depths', icon: 'water', price: 250, desc: 'Dark ocean blues for deep focus.' },
@@ -434,15 +434,16 @@ const createStyles = (C) => StyleSheet.create({
   header: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
     paddingHorizontal: 20, paddingTop: 55, paddingBottom: 18,
-    backgroundColor: C.card,
-    borderBottomWidth: 1, borderBottomColor: C.backgroundLight,
+    backgroundColor: `${C.card}E0`,
+    borderBottomWidth: 1, borderBottomColor: `${C.gold}30`,
     ...SHADOWS.small,
   },
   backBtn: {
-    width: 38, height: 38, borderRadius: 19,
-    backgroundColor: C.backgroundLight, justifyContent: 'center', alignItems: 'center',
+    width: 38, height: 38, borderRadius: 12,
+    backgroundColor: `${C.backgroundLight}D0`, justifyContent: 'center', alignItems: 'center',
+    borderWidth: 1, borderColor: `${C.gold}30`,
   },
-  headerTitle: { fontSize: 22, fontWeight: 'bold', color: C.text },
+  headerTitle: { fontSize: 22, fontWeight: '900', color: C.gold, letterSpacing: 1, textTransform: 'uppercase' },
   headerSubtitle: { fontSize: 12, color: C.textMuted, marginTop: 2 },
   coinDisplay: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
@@ -452,11 +453,12 @@ const createStyles = (C) => StyleSheet.create({
   coinText: { fontSize: 15, fontWeight: 'bold', color: C.gold },
   tabBar: {
     flexDirection: 'row', marginHorizontal: 20, marginTop: 16, marginBottom: 4,
-    backgroundColor: C.backgroundLight, borderRadius: 14, padding: 4, gap: 4,
+    backgroundColor: `${C.backgroundLight}CC`, borderRadius: 12, padding: 4, gap: 4,
+    borderWidth: 1, borderColor: `${C.rune || C.primary}25`,
   },
   tab: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: 'transparent',
+    paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderColor: 'transparent',
   },
   tabLabel: { fontSize: 14, fontWeight: '900' },
   tabCount: {
@@ -489,7 +491,8 @@ const createStyles = (C) => StyleSheet.create({
   card: {
     flexDirection: 'row', alignItems: 'center',
     marginHorizontal: 20, marginTop: 12, padding: 16,
-    backgroundColor: C.card, borderRadius: 16, borderWidth: 1, borderColor: C.cardBorder,
+    backgroundColor: `${C.card}E6`, borderRadius: 12, borderWidth: 1, borderColor: `${C.cardBorder}90`,
+    shadowColor: C.primary, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.12, shadowRadius: 9, elevation: 2,
   },
   iconWrap: {
     width: 56, height: 56, borderRadius: 28,

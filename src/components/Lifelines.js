@@ -17,7 +17,7 @@ export default function Lifelines({
   return (
     <View style={styles.container}>
       <TouchableOpacity
-        style={[styles.lifeline, { backgroundColor: C.card, borderColor: C.cardBorder }, hintLevel >= 2 && styles.used]}
+        style={[styles.lifeline, { backgroundColor: `${C.card}E0`, borderColor: `${C.warning}35` }, hintLevel >= 2 && styles.used]}
         onPress={onHint}
         disabled={hintLevel >= 2}
       >
@@ -31,7 +31,7 @@ export default function Lifelines({
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={[styles.lifeline, { backgroundColor: C.card, borderColor: C.cardBorder }, usedFifty && styles.used]}
+        style={[styles.lifeline, { backgroundColor: `${C.card}E0`, borderColor: `${C.mana}35` }, usedFifty && styles.used]}
         onPress={onFiftyFifty}
         disabled={usedFifty}
       >
@@ -45,7 +45,7 @@ export default function Lifelines({
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={[styles.lifeline, { backgroundColor: C.card, borderColor: C.cardBorder }, usedCall && styles.used]}
+        style={[styles.lifeline, { backgroundColor: `${C.card}E0`, borderColor: `${C.secondary}35` }, usedCall && styles.used]}
         onPress={onCallFriend}
         disabled={usedCall}
       >

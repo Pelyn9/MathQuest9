@@ -1,19 +1,17 @@
 import React, { useEffect, useRef } from 'react';
 import {
   Animated,
-  Dimensions,
   StyleSheet,
   View,
   StatusBar,
-  Text,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 
 const heroImage = require('../image/hero.png');
 
-const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
-
 export default function SplashScreen() {
+  const { width, height } = useWindowDimensions();
   const barAnim = useRef(new Animated.Value(0)).current;
   const loadingTextAnim = useRef(new Animated.Value(0)).current;
 
@@ -46,6 +44,11 @@ export default function SplashScreen() {
     inputRange: [0, 1],
     outputRange: ['0%', '100%'],
   });
+  const posterRatio = 942 / 1536;
+  const frameRatio = width / height;
+  const posterStyle = frameRatio > posterRatio
+    ? { height: '100%', width: height * posterRatio }
+    : { width: '100%', height: width / posterRatio };
 
   return (
     <View style={styles.container}>
@@ -54,8 +57,8 @@ export default function SplashScreen() {
       {/* Background Image */}
       <Animated.Image
         source={heroImage}
-        resizeMode="cover"
-        style={styles.hero}
+        resizeMode="contain"
+        style={[styles.hero, posterStyle]}
       />
 
       {/* Light overlay */}
@@ -89,20 +92,21 @@ export default function SplashScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#020817',
     justifyContent: 'flex-end',
     alignItems: 'center',
+    overflow: 'hidden',
   },
 
   hero: {
     position: 'absolute',
-    width: SCREEN_W,
-    height: SCREEN_H,
+    top: 0,
+    alignSelf: 'center',
   },
 
   scrim: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.05)', // very light overlay
+    backgroundColor: 'rgba(2,8,23,0.08)',
   },
 
   // 🎮 Loading text (fixed position + Times New Roman)

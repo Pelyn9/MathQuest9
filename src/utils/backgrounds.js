@@ -48,6 +48,16 @@ const EMBER_SCREEN = {
   result: { colors: ['#281005', '#361808', '#44200C'], start: { x: 0, y: 0 }, end: { x: 0, y: 1 } },
 };
 
+const CHRONICLE_SCREEN = {
+  home: { colors: ['#020817', '#062A57', '#0B54A6', '#07101E'], start: { x: 0, y: 0 }, end: { x: 1, y: 1 } },
+  map: { colors: ['#020716', '#071D3B', '#0A3B78', '#050A15'], start: { x: 0, y: 0 }, end: { x: 1, y: 1 } },
+  profile: { colors: ['#040918', '#0A223F', '#102D4D', '#050B16'], start: { x: 0, y: 0 }, end: { x: 1, y: 1 } },
+  shop: { colors: ['#050B18', '#102A43', '#173A5C', '#070D18'], start: { x: 0, y: 0 }, end: { x: 1, y: 1 } },
+  difficulty: { colors: ['#020716', '#092650', '#0B4D92', '#06101E'], start: { x: 0, y: 0 }, end: { x: 0, y: 1 } },
+  assessment: { colors: ['#020918', '#08213F', '#11365C', '#050B16'], start: { x: 0, y: 0 }, end: { x: 1, y: 0 } },
+  result: { colors: ['#031126', '#112B45', '#3C2A17', '#080D16'], start: { x: 0, y: 0 }, end: { x: 0, y: 1 } },
+};
+
 const LIGHT_MODULE = {
   1: [
     { colors: ['#E0F0D8', '#D0E8C8', '#C0E0B8'], start: { x: 0, y: 0 }, end: { x: 1, y: 1 } },
@@ -183,8 +193,36 @@ const EMBER_MODULE = {
   ],
 };
 
+const CHRONICLE_MODULE = {
+  1: [
+    { colors: ['#031525', '#0D3041', '#123D34'], start: { x: 0, y: 0 }, end: { x: 1, y: 1 } },
+    { colors: ['#04111F', '#102E3E', '#164832'], start: { x: 0, y: 0 }, end: { x: 0, y: 1 } },
+    { colors: ['#06182A', '#133A45', '#0F342F'], start: { x: 1, y: 0 }, end: { x: 0, y: 1 } },
+    { colors: ['#031525', '#0D3041', '#123D34'], start: { x: 0, y: 0 }, end: { x: 1, y: 0 } },
+  ],
+  2: [
+    { colors: ['#020817', '#082A58', '#123855'], start: { x: 0, y: 0 }, end: { x: 1, y: 1 } },
+    { colors: ['#030D1C', '#0A244A', '#143B5E'], start: { x: 0, y: 0 }, end: { x: 0, y: 1 } },
+    { colors: ['#041020', '#0E335F', '#123855'], start: { x: 1, y: 0 }, end: { x: 0, y: 1 } },
+    { colors: ['#020817', '#082A58', '#123855'], start: { x: 0, y: 0 }, end: { x: 1, y: 0 } },
+  ],
+  3: [
+    { colors: ['#050819', '#14204B', '#252252'], start: { x: 0, y: 0 }, end: { x: 1, y: 1 } },
+    { colors: ['#050716', '#171D44', '#2A245A'], start: { x: 0, y: 0 }, end: { x: 0, y: 1 } },
+    { colors: ['#080B1E', '#1A2554', '#252252'], start: { x: 1, y: 0 }, end: { x: 0, y: 1 } },
+    { colors: ['#050819', '#14204B', '#252252'], start: { x: 0, y: 0 }, end: { x: 1, y: 0 } },
+  ],
+  4: [
+    { colors: ['#080A16', '#27233A', '#4A251D'], start: { x: 0, y: 0 }, end: { x: 1, y: 1 } },
+    { colors: ['#070813', '#2B2032', '#4A251D'], start: { x: 0, y: 0 }, end: { x: 0, y: 1 } },
+    { colors: ['#0B0D18', '#33253A', '#4A251D'], start: { x: 1, y: 0 }, end: { x: 0, y: 1 } },
+    { colors: ['#080A16', '#27233A', '#4A251D'], start: { x: 0, y: 0 }, end: { x: 1, y: 0 } },
+  ],
+};
+
 const SCREEN_BG = {
-  light: LIGHT_SCREEN,
+  chronicles: CHRONICLE_SCREEN,
+  light: CHRONICLE_SCREEN,
   dark: DARK_SCREEN,
   forest: FOREST_SCREEN,
   ocean: OCEAN_SCREEN,
@@ -192,7 +230,8 @@ const SCREEN_BG = {
 };
 
 const MODULE_BG = {
-  light: LIGHT_MODULE,
+  chronicles: CHRONICLE_MODULE,
+  light: CHRONICLE_MODULE,
   dark: DARK_MODULE,
   forest: FOREST_MODULE,
   ocean: OCEAN_MODULE,

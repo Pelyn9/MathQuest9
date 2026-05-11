@@ -40,7 +40,7 @@ export default function Toast({ visible, message, type = 'success', icon, onHide
   if (!visible) return null;
 
   return (
-    <Animated.View style={[styles.container, { backgroundColor: C.card, borderColor: getColor(), transform: [{ translateY: slideAnim }] }]}>
+    <Animated.View style={[styles.container, { backgroundColor: `${C.card}F2`, borderColor: getColor(), shadowColor: getColor(), transform: [{ translateY: slideAnim }] }]}>
       <Ionicons name={icon || ICONS[type] || 'checkmark-circle'} size={22} color={getColor()} />
       <AppText style={[styles.message, { color: C.text }]}>{message}</AppText>
     </Animated.View>
@@ -53,6 +53,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 10,
     padding: 14, borderRadius: 14, borderWidth: 1,
     zIndex: 9999, elevation: 10,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.24,
+    shadowRadius: 10,
   },
   message: { fontSize: 14, fontWeight: '600', flex: 1 },
 });

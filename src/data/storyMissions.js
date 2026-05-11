@@ -9,11 +9,11 @@ export const STORY_DIFFICULTY_PATHS = {
     characterRole: 'Royal Guide',
     characterIcon: 'sparkles',
     sceneIcon: 'leaf',
-    color: '#4CAF50',
-    sky: '#DDF7F0',
-    hill: '#82C772',
-    ridge: '#3E8F58',
-    road: '#C8914C',
+    color: '#38D996',
+    sky: '#061B28',
+    hill: '#123D34',
+    ridge: '#0D3041',
+    road: '#3C2A17',
     clearBonusXP: 8,
     storyPrefix: 'On the Apprentice Trail, the kingdom keeps the danger low while Lira teaches the first method.',
     storyTwist: 'Your goal is to learn the pattern, protect the people nearby, and earn steady XP.',
@@ -27,11 +27,11 @@ export const STORY_DIFFICULTY_PATHS = {
     characterRole: 'Battle Tutor',
     characterIcon: 'shield-checkmark',
     sceneIcon: 'shield',
-    color: '#2196F3',
-    sky: '#DCEEFF',
-    hill: '#6AA7D9',
-    ridge: '#2C6BA2',
-    road: '#9A7751',
+    color: '#42D9FF',
+    sky: '#061B35',
+    hill: '#123855',
+    ridge: '#0A2B58',
+    road: '#3C2A17',
     clearBonusXP: 14,
     storyPrefix: 'On the Knight Route, Numeria sends you into the main campaign where lessons and battles stay balanced.',
     storyTwist: 'Clear the mission to advance your knight progress and gain stronger XP rewards.',
@@ -45,11 +45,11 @@ export const STORY_DIFFICULTY_PATHS = {
     characterRole: 'Tactical Mage',
     characterIcon: 'flame',
     sceneIcon: 'flame',
-    color: '#FF9800',
-    sky: '#FFEBD1',
-    hill: '#C87936',
-    ridge: '#884E24',
-    road: '#6F4A2E',
+    color: '#F4C56A',
+    sky: '#1A1522',
+    hill: '#463119',
+    ridge: '#2A2032',
+    road: '#4A2E19',
     clearBonusXP: 24,
     storyPrefix: 'On the Warden March, enemies change the rules faster and every lesson must be used with precision.',
     storyTwist: 'Survive the tougher route to push a separate hard-mode progress path and earn higher XP.',
@@ -63,11 +63,11 @@ export const STORY_DIFFICULTY_PATHS = {
     characterRole: 'Crown Oracle',
     characterIcon: 'skull',
     sceneIcon: 'skull',
-    color: '#F44336',
-    sky: '#F8D8D1',
-    hill: '#A6473E',
-    ridge: '#5C1F22',
-    road: '#3D2415',
+    color: '#FF5D63',
+    sky: '#140914',
+    hill: '#431C24',
+    ridge: '#2A1018',
+    road: '#2B1720',
     clearBonusXP: 40,
     storyPrefix: 'On the Crown Trial, the corrupted relic tests your mastery with the most dangerous version of the story.',
     storyTwist: 'Only this difficulty records Crown progress, and victory grants the largest XP reward.',
@@ -81,7 +81,7 @@ export const PLAY_MODES = {
     label: 'Story',
     title: 'Story Mode',
     icon: 'book',
-    color: '#7C3AED',
+    color: '#9B8CFF',
     description: 'Follow the kingdom quest and unlock missions one by one.',
   },
   survival: {
@@ -89,7 +89,7 @@ export const PLAY_MODES = {
     label: 'Survival',
     title: 'Survival Mode',
     icon: 'heart',
-    color: '#EF4444',
+    color: '#FF5D63',
     description: 'Hold your ground through longer battles with no countdown.',
   },
   timer: {
@@ -97,7 +97,7 @@ export const PLAY_MODES = {
     label: 'Timer',
     title: 'Timer Mode',
     icon: 'timer',
-    color: '#0EA5E9',
+    color: '#42D9FF',
     description: 'Race the clock with faster questions and bonus pressure.',
   },
 };
@@ -108,7 +108,7 @@ export const MISSION_REGIONS = [
     moduleId: 1,
     name: 'Village of Traders',
     title: 'The Broken Ledger',
-    color: '#4CAF50',
+    color: '#38D996',
     icon: 'storefront',
     boss: 'The Debt Warden',
     topic: 'arithmetic and math literacy',
@@ -120,13 +120,15 @@ export const MISSION_REGIONS = [
       'Expose the false taxes hidden inside the royal caravan records.',
       'Break the Debt Warden\'s seal and restore honest trade to Numeria.',
     ],
+    // Story bridges — each land connects to the next in the saga
+    bridgeOut: 'With the markets restored, the villagers whisper of a deeper curse spreading toward the capital. Sir Caldus arrives with a warning: the royal compass has been stolen.',
   },
   {
     id: 2,
     moduleId: 2,
     name: 'City of Architects',
     title: 'The Shattered Blueprint',
-    color: '#2196F3',
+    color: '#42D9FF',
     icon: 'shapes',
     boss: 'The Angle Wraith',
     topic: 'geometry',
@@ -138,13 +140,14 @@ export const MISSION_REGIONS = [
       'Use hidden measurements to seal cracks in the crystal dome.',
       'Defeat the Angle Wraith and return order to the city plans.',
     ],
+    bridgeOut: 'The city stands again, but the Queen\'s messengers bring troubling news — maps across the Data Kingdom have begun erasing themselves, patterns vanishing one by one.',
   },
   {
     id: 3,
     moduleId: 3,
     name: 'Data Kingdom',
     title: 'The Vanishing Pattern',
-    color: '#9C27B0',
+    color: '#9B8CFF',
     icon: 'git-branch',
     boss: 'The Function Phantom',
     topic: 'relations and functions',
@@ -156,13 +159,14 @@ export const MISSION_REGIONS = [
       'Separate true functions from illusions in the Phantom\'s hall.',
       'Trap the Function Phantom inside its own perfect mapping.',
     ],
+    bridgeOut: 'With the patterns restored, the tragic truth emerges — the corrupted relic at the heart of Numeria is freezing every road in the City of Motion. The final land must be saved.',
   },
   {
     id: 4,
     moduleId: 4,
     name: 'City of Motion',
     title: 'The Frozen Road',
-    color: '#F44336',
+    color: '#FF7A5C',
     icon: 'trending-up',
     boss: 'The Slope Shadow',
     topic: 'linear functions',
@@ -174,6 +178,7 @@ export const MISSION_REGIONS = [
       'Use slope spells to reopen the royal highway.',
       'Face the Slope Shadow and set Numeria in motion again.',
     ],
+    bridgeOut: null, // Final land — no bridge out
   },
 ];
 
@@ -248,6 +253,27 @@ const getChapter = (localId) => Math.ceil(localId / 5);
 
 const getLevelId = (localId) => ((localId - 1) % 4) + 1;
 
+// Connected saga narrative for each mission — ties all 100 missions into one story
+const SAGA_OVERVIEW = {
+  1: 'A dark curse has fallen upon the kingdom of Numeria. The legendary Crown of Numeria — Source of all wisdom and order — has been shattered into four fragments. Each fragment was entrusted to a guardian of a different land. But the fragments have awakened twisted versions of the guardians. You must journey across all four lands, defeat each corrupted guardian, recover the fragments, and face the final boss — the Corrupted Crown itself — to restore peace to Numeria.',
+};
+
+const SAGA_LAND_INTRODUCTION = {
+  1: 'Your journey begins in the Village of Traders, where the coin ledgers have turned blank and merchants cannot do business. The first Crown fragment lies with the Debt Warden.',
+  2: 'With the first fragment recovered, you travel to the City of Architects. The city walls twist in impossible angles — the second guardian, the Angle Wraith, holds the next fragment.',
+  3: 'Two fragments in hand, you enter the Data Kingdom. Maps erase themselves, messages lose meaning, and patterns dissolve into chaos. The Function Phantom guards the third fragment.',
+  4: 'Three fragments restored, the Crown begins to glow — but the final land, the City of Motion, is frozen solid. Roads stand still, carts hang in midair. The Slope Shadow holds the last fragment.',
+};
+
+const REGION_BOSS_STORY = {
+  1: 'You face the Debt Warden in his treasury fortress. He demands the coins of every villager as tribute. Defeat him to reclaim the first Crown fragment and restore honest trade to Numeria.',
+  2: 'The Angle Wraith guards the second fragment within the Spire of Shifting Walls. She twists every corner into a maze. Defeat her to restore the city plans and claim the next piece of the Crown.',
+  3: 'The Function Phantom lurks in the Archive of Lost Data. It feeds on confusion and broken patterns. Trap it in its own logic and free the third Crown fragment.',
+  4: 'The Slope Shadow rules the frozen highways of the City of Motion. It drains all change and direction from the world. Defeat it to claim the final Crown fragment.',
+};
+
+const FINAL_BOSS_STORY = 'All four fragments are yours. But as they merge, the Crown awakens — not as a savior, but as the Corrupted Crown, the true source of Numeria\'s curse. It speaks in a voice of shattered numbers: "You have gathered the pieces, child. Now face the sum of your fears." The final battle begins. Every lesson you learned across the 100 missions — arithmetic, geometry, patterns, and motion — will be tested in one ultimate trial. Defeat the Corrupted Crown and restore Numeria forever!';
+
 const buildMission = (_, index) => {
   const id = index + 1;
   const region = MISSION_REGIONS[Math.floor(index / 25)];
@@ -255,9 +281,47 @@ const buildMission = (_, index) => {
   const chapter = getChapter(localId);
   const isBoss = localId === 25;
   const isGate = localId % 5 === 0;
-  const title = isBoss
-    ? `Mission ${id}: ${region.boss}'s Keep`
-    : `Mission ${id}: ${missionActions[localId - 1]} ${missionObjects[localId - 1]}`;
+  const isUltimateBoss = id === MISSION_TOTAL; // Mission 100 — final ultimate boss
+  const title = isUltimateBoss
+    ? `Mission 100: The Corrupted Crown`
+    : isBoss
+      ? `Mission ${id}: ${region.boss}'s Keep`
+      : `Mission ${id}: ${missionActions[localId - 1]} ${missionObjects[localId - 1]}`;
+
+  // Build a connected story for this mission
+  let story = '';
+
+  if (isUltimateBoss) {
+    // Mission 100 — the final ultimate boss
+    story = FINAL_BOSS_STORY;
+  } else if (localId === 1) {
+    // First mission of a region — introduce the land
+    story = `${SAGA_LAND_INTRODUCTION[region.id]}`;
+    if (region.id > 1) {
+      // Reference previous region's bridge
+      const prevRegion = MISSION_REGIONS.find(r => r.id === region.id - 1);
+      if (prevRegion?.bridgeOut) {
+        story = `${prevRegion.bridgeOut} ${story}`;
+      }
+    }
+    story += ` ${region.arc[chapter - 1]}`;
+  } else if (isBoss) {
+    // Boss mission of a region
+    story = `${REGION_BOSS_STORY[region.id]}`;
+    if (region.bridgeOut) {
+      story += ` ${region.bridgeOut}`;
+    }
+  } else {
+    // Regular mission
+    const intro = localId === 1 ? SAGA_LAND_INTRODUCTION[region.id] : '';
+    const arcText = region.arc[chapter - 1];
+    story = `${intro ? intro + ' ' : ''}${region.opening} ${arcText}`;
+  }
+
+  // For regular missions, add the saga overview reference for the very first mission
+  if (id === 1) {
+    story = `${SAGA_OVERVIEW[1]} ${story}`;
+  }
 
   return {
     id,
@@ -269,13 +333,14 @@ const buildMission = (_, index) => {
     moduleId: region.moduleId,
     levelId: getLevelId(localId),
     color: region.color,
-    icon: isBoss ? 'skull' : isGate ? 'flag' : region.icon,
+    icon: isUltimateBoss ? 'skull' : isBoss ? 'skull' : isGate ? 'flag' : region.icon,
     title,
-    shortTitle: isBoss ? `${region.boss}'s Keep` : missionObjects[localId - 1],
-    objective: `Win a ${region.topic} battle to recover a Numerian relic.`,
-    story: `${region.opening} ${region.arc[chapter - 1]}`,
-    isBoss,
+    shortTitle: isUltimateBoss ? 'The Corrupted Crown' : isBoss ? `${region.boss}'s Keep` : missionObjects[localId - 1],
+    objective: isUltimateBoss ? 'Face the Corrupted Crown in the ultimate battle for Numeria!' : `Win a ${region.topic} battle to recover a Numerian relic.`,
+    story,
+    isBoss: isBoss || isUltimateBoss,
     isGate,
+    isUltimateBoss,
   };
 };
 

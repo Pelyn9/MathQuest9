@@ -1,7 +1,7 @@
 export const DIFFICULTY = {
   easy: {
     label: 'Easy',
-    color: '#4CAF50',
+    color: '#38D996',
     icon: 'leaf',
     lives: 5,
     xpMult: 1.0,
@@ -12,7 +12,7 @@ export const DIFFICULTY = {
   },
   normal: {
     label: 'Normal',
-    color: '#2196F3',
+    color: '#42D9FF',
     icon: 'shield',
     lives: 3,
     xpMult: 1.5,
@@ -23,7 +23,7 @@ export const DIFFICULTY = {
   },
   hard: {
     label: 'Hard',
-    color: '#FF9800',
+    color: '#F4C56A',
     icon: 'flame',
     lives: 3,
     xpMult: 2.0,
@@ -34,7 +34,7 @@ export const DIFFICULTY = {
   },
   extreme: {
     label: 'Extreme',
-    color: '#F44336',
+    color: '#FF5D63',
     icon: 'skull',
     lives: 1,
     xpMult: 3.0,

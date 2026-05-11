@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
-import { Animated, StyleSheet } from 'react-native';
+import { Animated, Platform, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
 import { ThemeProvider } from './src/theme/ThemeContext';
@@ -82,7 +82,11 @@ export default function App() {
       <ThemeProvider>
         <GameProvider>
           <ToastProvider>
-            <AppContent />
+            <View style={styles.appOuter}>
+              <View style={styles.appFrame}>
+                <AppContent />
+              </View>
+            </View>
           </ToastProvider>
         </GameProvider>
       </ThemeProvider>
@@ -91,7 +95,28 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
+  appOuter: {
+    flex: 1,
+    backgroundColor: '#101217',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  appFrame: {
+    flex: 1,
+    width: '100%',
+    backgroundColor: '#051126',
+    overflow: 'hidden',
+    ...(Platform.OS === 'web' ? {
+      maxWidth: 430,
+      minHeight: '100%',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.28,
+      shadowRadius: 30,
+    } : null),
+  },
   splashContainer: {
     flex: 1,
+    backgroundColor: '#000',
   },
 });

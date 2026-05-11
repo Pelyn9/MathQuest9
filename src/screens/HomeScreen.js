@@ -95,14 +95,19 @@ export default function HomeScreen({ navigation }) {
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <View style={styles.headerLeft}>
+            <View style={styles.titleOrnament}>
+              <View style={styles.ornamentLine} />
+              <Ionicons name="compass" size={18} color={C.gold} />
+              <View style={styles.ornamentLine} />
+            </View>
             <View style={styles.titleRow}>
-              <AppText style={styles.greeting} decorative>MathQuest 9</AppText>
+              <AppText style={styles.greeting} decorative>Derivative Chronicles</AppText>
               <View style={[styles.diffBadge, { backgroundColor: `${diffConfig.color}20` }]}>
                 <Ionicons name={diffConfig.icon} size={12} color={diffConfig.color} />
                 <AppText style={[styles.diffText, { color: diffConfig.color }]}>{diffConfig.label}</AppText>
               </View>
             </View>
-            <AppText style={styles.subtitle}>The Lost Kingdom of Numeria</AppText>
+            <AppText style={styles.subtitle}>MathQuest 9 - The Lost Kingdom of Numeria</AppText>
           </View>
           <View style={styles.headerRight}>
             <LivesDisplay lives={state.lives} maxLives={state.maxLives} />
@@ -325,20 +330,22 @@ export default function HomeScreen({ navigation }) {
 const createStyles = (C, titleSize) => StyleSheet.create({
   wrapper: { flex: 1 },
   container: { flex: 1, backgroundColor: 'transparent' },
-  header: { paddingHorizontal: 20, paddingTop: 48, paddingBottom: 16, backgroundColor: C.card },
-  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  header: { paddingHorizontal: 20, paddingTop: 48, paddingBottom: 16, backgroundColor: 'transparent' },
+  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 },
   headerLeft: { flexShrink: 1, minWidth: 0 },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 4, flexWrap: 'nowrap' },
-  greeting: { fontSize: titleSize, fontWeight: 'bold', color: C.text, textAlign: 'left', includeFontPadding: false, flexShrink: 1 },
-  diffBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 6, paddingVertical: 3, borderRadius: 8, flexShrink: 0 },
+  titleOrnament: { flexDirection: 'row', alignItems: 'center', gap: 8, width: 210, maxWidth: '100%', marginBottom: 6 },
+  ornamentLine: { flex: 1, height: 1, backgroundColor: `${C.gold}70` },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+  greeting: { fontSize: titleSize, fontWeight: '900', color: C.gold, textAlign: 'left', includeFontPadding: false, flexShrink: 1, letterSpacing: 2, textTransform: 'uppercase', textShadowColor: 'rgba(244,197,106,0.35)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 10 },
+  diffBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: `${C.primary}55`, flexShrink: 0 },
   diffText: { fontSize: 9, fontWeight: 'bold', textTransform: 'uppercase' },
-  subtitle: { fontSize: 13, marginTop: 2, color: C.textMuted },
+  subtitle: { fontSize: 14, marginTop: 4, color: C.textLight, fontStyle: 'italic' },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 10, flexShrink: 0 },
-  coinBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 14, gap: 4, marginRight: 8, backgroundColor: `${C.gold}20` },
+  coinBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, gap: 4, marginRight: 8, backgroundColor: `${C.gold}18`, borderWidth: 1, borderColor: `${C.gold}45` },
   coinText: { fontWeight: 'bold', fontSize: 13, color: C.gold },
-  playerCard: { flexDirection: 'row', alignItems: 'center', marginTop: 16, borderRadius: 16, padding: 14, borderWidth: 1, backgroundColor: C.card, borderColor: C.cardBorder },
+  playerCard: { flexDirection: 'row', alignItems: 'center', marginTop: 18, borderRadius: 14, padding: 14, borderWidth: 1, backgroundColor: `${C.card}E8`, borderColor: `${C.gold}45`, shadowColor: C.gold, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 12, elevation: 4 },
   playerInfo: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
-  avatarSmall: { width: 42, height: 42, borderRadius: 21, justifyContent: 'center', alignItems: 'center', backgroundColor: `${C.primary}20` },
+  avatarSmall: { width: 42, height: 42, borderRadius: 21, justifyContent: 'center', alignItems: 'center', backgroundColor: `${C.primary}20`, borderWidth: 1, borderColor: `${C.gold}50` },
   playerText: { flex: 1 },
   playerName: { fontSize: 14, fontWeight: 'bold', color: C.text },
   playerSub: { fontSize: 11, color: C.textMuted },
@@ -346,10 +353,10 @@ const createStyles = (C, titleSize) => StyleSheet.create({
   xpHeader: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   xpLabel: { fontSize: 11, fontWeight: '600', flex: 1, color: C.textMuted },
   xpValue: { fontSize: 12, fontWeight: 'bold', color: C.xp },
-  xpTrack: { height: 6, borderRadius: 3, overflow: 'hidden', marginTop: 5, backgroundColor: C.backgroundLight },
+  xpTrack: { height: 6, borderRadius: 3, overflow: 'hidden', marginTop: 5, backgroundColor: `${C.black}55`, borderWidth: 1, borderColor: `${C.rune || C.primary}25` },
   xpFill: { height: '100%', borderRadius: 3, backgroundColor: C.xp },
   xpDetail: { fontSize: 9, textAlign: 'right', marginTop: 2, color: C.textMuted },
-  modePanel: { marginHorizontal: 20, marginTop: 16, borderRadius: 14, padding: 14, borderWidth: 1, backgroundColor: C.card, borderColor: C.cardBorder },
+  modePanel: { marginHorizontal: 20, marginTop: 16, borderRadius: 12, padding: 14, borderWidth: 1, backgroundColor: `${C.card}E0`, borderColor: `${C.rune || C.primary}40` },
   modeHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
   modeHeaderText: { flex: 1 },
   modeTitle: { fontSize: 15, fontWeight: '900', color: C.text },
@@ -357,32 +364,32 @@ const createStyles = (C, titleSize) => StyleSheet.create({
   activeModePill: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 9, paddingVertical: 5, borderRadius: 10 },
   activeModeText: { fontSize: 10, fontWeight: '900', textTransform: 'uppercase' },
   modeGrid: { flexDirection: 'row', gap: 8, marginTop: 12 },
-  modeButton: { flex: 1, minHeight: 48, borderRadius: 12, borderWidth: 1.5, justifyContent: 'center', alignItems: 'center', gap: 4 },
+  modeButton: { flex: 1, minHeight: 48, borderRadius: 10, borderWidth: 1.5, justifyContent: 'center', alignItems: 'center', gap: 4 },
   modeButtonText: { fontSize: 11, fontWeight: '900', textTransform: 'uppercase' },
-  missionCard: { marginHorizontal: 20, marginTop: 12, borderRadius: 16, padding: 14, borderWidth: 1.5, backgroundColor: C.card },
+  missionCard: { marginHorizontal: 20, marginTop: 12, borderRadius: 12, padding: 14, borderWidth: 1.5, backgroundColor: `${C.card}E8`, shadowColor: C.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.16, shadowRadius: 12, elevation: 4 },
   missionTop: { flexDirection: 'row', gap: 12 },
-  missionIcon: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  missionIcon: { width: 48, height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: `${C.gold}35` },
   missionInfo: { flex: 1 },
   missionKicker: { fontSize: 10, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', color: C.textMuted },
   missionTitle: { fontSize: 16, fontWeight: '900', marginTop: 2, color: C.text },
   missionStory: { fontSize: 12, lineHeight: 17, marginTop: 3, color: C.textMuted },
-  lessonPreview: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 12, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 10, backgroundColor: C.backgroundLight },
+  lessonPreview: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 12, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 10, backgroundColor: `${C.backgroundLight}D0`, borderWidth: 1, borderColor: `${C.rune || C.primary}25` },
   lessonPreviewText: { flex: 1, fontSize: 11, lineHeight: 15, fontWeight: '800' },
   guideBtn: { width: 30, height: 30, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
   missionActions: { flexDirection: 'row', gap: 10, marginTop: 14 },
-  primaryMissionBtn: { flex: 1, minHeight: 44, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
+  primaryMissionBtn: { flex: 1, minHeight: 44, borderRadius: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, borderWidth: 1, borderColor: `${C.gold}55` },
   primaryMissionText: { fontSize: 14, fontWeight: '900', color: C.white },
-  secondaryMissionBtn: { flex: 1, minHeight: 44, borderRadius: 12, borderWidth: 1, borderColor: `${C.primary}60`, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, backgroundColor: `${C.primary}10` },
+  secondaryMissionBtn: { flex: 1, minHeight: 44, borderRadius: 10, borderWidth: 1, borderColor: `${C.primary}70`, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, backgroundColor: `${C.primary}14` },
   secondaryMissionText: { fontSize: 14, fontWeight: '900', color: C.primary },
   statsRow: { flexDirection: 'row', paddingHorizontal: 20, gap: 10, marginTop: 16 },
   statCard: { flex: 1, borderRadius: 14, padding: 12, alignItems: 'center', gap: 4 },
-  statCardGold: { flex: 1, borderRadius: 14, padding: 12, alignItems: 'center', gap: 4, backgroundColor: `${C.gold}12` },
-  statCardSuccess: { flex: 1, borderRadius: 14, padding: 12, alignItems: 'center', gap: 4, backgroundColor: `${C.success}12` },
-  statCardWarning: { flex: 1, borderRadius: 14, padding: 12, alignItems: 'center', gap: 4, backgroundColor: `${C.warning}12` },
+  statCardGold: { flex: 1, borderRadius: 12, padding: 12, alignItems: 'center', gap: 4, backgroundColor: `${C.gold}12`, borderWidth: 1, borderColor: `${C.gold}35` },
+  statCardSuccess: { flex: 1, borderRadius: 12, padding: 12, alignItems: 'center', gap: 4, backgroundColor: `${C.success}12`, borderWidth: 1, borderColor: `${C.success}35` },
+  statCardWarning: { flex: 1, borderRadius: 12, padding: 12, alignItems: 'center', gap: 4, backgroundColor: `${C.warning}12`, borderWidth: 1, borderColor: `${C.warning}35` },
   statValue: { fontSize: 16, fontWeight: 'bold', color: C.text },
   statLabel: { fontSize: 10, color: C.textMuted },
-  sectionTitle: { fontSize: 17, fontWeight: 'bold', marginTop: 24, marginBottom: 8, marginHorizontal: 20, color: C.text },
-  profileBtn: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 20, marginTop: 12, borderRadius: 14, padding: 14, gap: 10, borderWidth: 1, backgroundColor: C.card, borderColor: C.cardBorder },
+  sectionTitle: { fontSize: 17, fontWeight: 'bold', marginTop: 24, marginBottom: 8, marginHorizontal: 20, color: C.gold, letterSpacing: 1.2, textTransform: 'uppercase' },
+  profileBtn: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 20, marginTop: 12, borderRadius: 12, padding: 14, gap: 10, borderWidth: 1, backgroundColor: `${C.card}DD`, borderColor: `${C.gold}35` },
   profileBtnText: { flex: 1, fontSize: 14, fontWeight: '500', color: C.textLight },
   spacer: { height: 40 },
 });

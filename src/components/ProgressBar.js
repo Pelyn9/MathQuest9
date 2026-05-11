@@ -9,7 +9,7 @@ export default function ProgressBar({ current, total, color, showLabel = true })
 
   return (
     <View style={styles.container}>
-      <View style={[styles.track, { backgroundColor: C.backgroundLight }]}>
+      <View style={[styles.track, { backgroundColor: `${C.black}55`, borderColor: `${fillColor}35` }]}>
         <View style={[styles.fill, { width: `${pct * 100}%`, backgroundColor: fillColor }]} />
       </View>
       {showLabel && (
@@ -32,6 +32,7 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     overflow: 'hidden',
+    borderWidth: 1,
   },
   fill: {
     height: '100%',

@@ -42,6 +42,12 @@ export default function MapScreen({ navigation }) {
     STORY_MISSIONS.filter(mission => mission.regionId === regionId && isMissionCompleted(missionProgress, mission.id)).length
   );
 
+  const isUltimateBossUnlocked = () => {
+    // Mission 100 unlocks when all 99 previous missions are completed
+    const completed = missionProgress?.completed || [];
+    return completed.length >= 99;
+  };
+
   return (
     <View style={styles.wrapper}>
       <ScreenBackground preset="map" />
@@ -49,9 +55,9 @@ export default function MapScreen({ navigation }) {
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <View style={styles.headerCopy}>
-            <AppText style={styles.headerTitle} decorative>Numeria Mission Map</AppText>
+            <AppText style={styles.headerTitle} decorative>The Legend of Numeria</AppText>
             <AppText style={styles.headerSubtitle}>
-              {storyPath.label} - a separate 100-mission RPG path through the lost kingdom
+              A connected saga across 4 lands — {storyPath.label}
             </AppText>
           </View>
           <View style={styles.levelBadge}>
@@ -82,6 +88,14 @@ export default function MapScreen({ navigation }) {
             <AppText style={styles.mapStatLabel}>Route</AppText>
           </View>
         </View>
+      </View>
+
+      {/* Saga overview banner */}
+      <View style={[styles.sagaBanner, { borderColor: `${activeMode.color}50`, backgroundColor: `${C.card}D8` }]}>
+        <Ionicons name="book" size={16} color={activeMode.color} />
+        <AppText style={[styles.sagaText, { color: activeMode.color }]}>
+          The Crown of Numeria shattered into 4 fragments. Journey across all lands to recover them and face the Corrupted Crown.
+        </AppText>
       </View>
 
       <View style={styles.pathWrap}>
@@ -212,20 +226,20 @@ export default function MapScreen({ navigation }) {
 const createStyles = (C) => StyleSheet.create({
   wrapper: { flex: 1 },
   container: { flex: 1, backgroundColor: 'transparent' },
-  header: { backgroundColor: C.card, paddingHorizontal: 20, paddingTop: 50, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: C.backgroundLight },
+  header: { backgroundColor: 'transparent', paddingHorizontal: 20, paddingTop: 50, paddingBottom: 16 },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 },
   headerCopy: { flex: 1 },
-  headerTitle: { fontSize: 24, fontWeight: '900', color: C.text },
-  headerSubtitle: { fontSize: 13, color: C.textMuted, marginTop: 4, lineHeight: 18 },
-  levelBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: `${C.gold}20`, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10 },
+  headerTitle: { fontSize: 24, fontWeight: '900', color: C.gold, letterSpacing: 1.4, textTransform: 'uppercase', textShadowColor: 'rgba(244,197,106,0.32)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 10 },
+  headerSubtitle: { fontSize: 13, color: C.textLight, marginTop: 4, lineHeight: 18, fontStyle: 'italic' },
+  levelBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: `${C.gold}18`, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, borderWidth: 1, borderColor: `${C.gold}45` },
   levelText: { fontSize: 12, color: C.gold, fontWeight: '900' },
   mapStats: { flexDirection: 'row', flexWrap: 'wrap', gap: 9, marginTop: 16 },
-  mapStat: { flexGrow: 1, flexBasis: '47%', minHeight: 62, borderRadius: 12, alignItems: 'center', justifyContent: 'center', gap: 2, backgroundColor: C.card, borderWidth: 1, borderColor: C.cardBorder, shadowColor: C.black, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3, elevation: 2 },
+  mapStat: { flexGrow: 1, flexBasis: '47%', minHeight: 62, borderRadius: 10, alignItems: 'center', justifyContent: 'center', gap: 2, backgroundColor: `${C.card}D8`, borderWidth: 1, borderColor: `${C.rune || C.primary}35`, shadowColor: C.primary, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.14, shadowRadius: 8, elevation: 2 },
   mapStatValue: { fontSize: 13, fontWeight: '900', color: C.text },
   mapStatLabel: { fontSize: 10, color: C.textMuted },
   pathWrap: { paddingHorizontal: 16, paddingTop: 16 },
-  regionCard: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 14, borderWidth: 1.5, padding: 14, marginVertical: 10, backgroundColor: C.card },
-  regionIcon: { width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  regionCard: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 12, borderWidth: 1.5, padding: 14, marginVertical: 10, backgroundColor: `${C.card}E8`, shadowColor: C.gold, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.14, shadowRadius: 10, elevation: 3 },
+  regionIcon: { width: 46, height: 46, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: `${C.gold}35` },
   regionText: { flex: 1 },
   regionKicker: { fontSize: 10, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', color: C.textMuted },
   regionTitle: { fontSize: 16, fontWeight: '900', marginTop: 2, color: C.text },
@@ -235,19 +249,21 @@ const createStyles = (C) => StyleSheet.create({
   missionRow: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 104 },
   missionRowLeft: { justifyContent: 'flex-start' },
   missionRowRight: { flexDirection: 'row-reverse', justifyContent: 'flex-start' },
-  missionNode: { width: 82, height: 82, borderRadius: 18, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  missionNode: { width: 82, height: 82, borderRadius: 14, borderWidth: 2, alignItems: 'center', justifyContent: 'center', shadowColor: C.primary, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.14, shadowRadius: 8, elevation: 2 },
   lockedNode: { opacity: 0.58 },
-  nodeIconWrap: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  nodeIconWrap: { width: 32, height: 32, borderRadius: 9, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: `${C.gold}25` },
   nodeNumber: { fontSize: 14, fontWeight: '900', marginTop: 3 },
   nodeStars: { flexDirection: 'row', gap: 1, marginTop: 2 },
-  storyBubble: { flex: 1, minHeight: 86, borderRadius: 14, borderWidth: 1, padding: 11, justifyContent: 'center' },
+  storyBubble: { flex: 1, minHeight: 86, borderRadius: 12, borderWidth: 1, padding: 11, justifyContent: 'center' },
   storyTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   storyKicker: { fontSize: 9, fontWeight: '900', letterSpacing: 0.8, textTransform: 'uppercase' },
   storyTitle: { fontSize: 13, fontWeight: '900', marginTop: 3 },
   storyText: { fontSize: 11, lineHeight: 16, marginTop: 3, color: C.textMuted },
   connector: { alignItems: 'center', height: 16 },
-  connectorLine: { width: 3, height: 16, borderRadius: 2 },
-  legend: { flexDirection: 'row', justifyContent: 'center', gap: 18, paddingVertical: 14, marginHorizontal: 20, backgroundColor: C.card, borderRadius: 12, marginTop: 8 },
+  connectorLine: { width: 3, height: 16, borderRadius: 2, shadowColor: C.primary, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.35, shadowRadius: 6 },
+  sagaBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginTop: 12, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, borderWidth: 1, backgroundColor: `${C.card}C8` },
+  sagaText: { fontSize: 11, lineHeight: 16, fontWeight: '600', flex: 1 },
+  legend: { flexDirection: 'row', justifyContent: 'center', gap: 18, paddingVertical: 14, marginHorizontal: 20, backgroundColor: `${C.card}D8`, borderRadius: 12, marginTop: 8, borderWidth: 1, borderColor: `${C.gold}25` },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   legendText: { fontSize: 11, color: C.textMuted },
   bottomPadding: { height: 44 },
