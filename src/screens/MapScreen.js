@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Image, View, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import AppText from '../components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
@@ -20,8 +20,6 @@ import {
 import ScreenBackground from '../components/ScreenBackground';
 import useScreenMusic from '../hooks/useScreenMusic';
 import { soundManager } from '../utils/SoundManager';
-
-const castleBackground = require('../image/castle.png');
 
 export default function MapScreen({ navigation }) {
   const { colors: C } = useTheme();
@@ -63,7 +61,6 @@ export default function MapScreen({ navigation }) {
   return (
     <View style={styles.wrapper}>
       <ScreenBackground preset="map" />
-      <Image pointerEvents="none" source={castleBackground} resizeMode="cover" style={styles.castleBackdrop} />
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
         <View style={styles.headerTop}>
@@ -238,13 +235,6 @@ export default function MapScreen({ navigation }) {
 
 const createStyles = (C) => StyleSheet.create({
   wrapper: { flex: 1 },
-  castleBackdrop: {
-    ...StyleSheet.absoluteFillObject,
-    width: '100%',
-    height: '100%',
-    opacity: 0.28,
-    transform: [{ scale: 1.08 }],
-  },
   container: { flex: 1, backgroundColor: 'transparent' },
   header: { backgroundColor: 'transparent', paddingHorizontal: 20, paddingTop: 50, paddingBottom: 16 },
   headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 },

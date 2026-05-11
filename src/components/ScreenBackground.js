@@ -5,6 +5,19 @@ import { getScreenBackground, getLevelBackground } from '../utils/backgrounds';
 import { useTheme } from '../theme/ThemeContext';
 
 const heroImage = require('../image/hero.png');
+const presetBackdropImages = {
+  home: require('../image/homepage.png'),
+  map: require('../image/castle.png'),
+  profile: require('../image/profile.png'),
+  shop: require('../image/heroshop.png'),
+};
+
+const presetBackdropOverlays = {
+  home: ['rgba(2,7,17,0.18)', 'rgba(2,7,17,0.28)', 'rgba(2,7,17,0.72)'],
+  map: ['rgba(2,7,17,0.08)', 'rgba(2,7,17,0.16)', 'rgba(2,7,17,0.54)'],
+  profile: ['rgba(2,7,17,0.08)', 'rgba(2,7,17,0.18)', 'rgba(2,7,17,0.58)'],
+  shop: ['rgba(2,7,17,0.1)', 'rgba(2,7,17,0.2)', 'rgba(2,7,17,0.62)'],
+};
 
 const GLYPHS = [
   { value: '1', top: '21%', left: '9%' },
@@ -41,6 +54,26 @@ export default function ScreenBackground({ preset, moduleId, levelId }) {
 
   if (!config) {
     config = { colors: ['#020817', '#082A58', '#07101E'], start: { x: 0, y: 0 }, end: { x: 0, y: 1 } };
+  }
+
+  const presetBackdropImage = !moduleId && preset ? presetBackdropImages[preset] : null;
+
+  if (presetBackdropImage) {
+    return (
+      <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+        <Image
+          source={presetBackdropImage}
+          resizeMode="cover"
+          style={styles.photoBackdrop}
+        />
+        <LinearGradient
+          colors={presetBackdropOverlays[preset]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+      </View>
+    );
   }
 
   const imageOpacity = preset === 'home' ? 0.34 : preset === 'difficulty' ? 0.3 : 0.18;
@@ -107,6 +140,12 @@ const styles = StyleSheet.create({
   },
   heroImageLevel: {
     transform: [{ scale: 1.15 }],
+  },
+  photoBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
+    transform: [{ scale: 1.04 }],
   },
   baseGradient: {
     opacity: 0.83,
