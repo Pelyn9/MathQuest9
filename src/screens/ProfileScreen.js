@@ -46,7 +46,7 @@ export default function ProfileScreen({ navigation }) {
     { name: 'Blazing Hero', icon: 'flame' },
     { name: 'Trader Tycoon', icon: 'cash' },
     { name: 'Extreme Survivor', icon: 'skull' },
-    { name: "Numeria's Savior", icon: 'crown' },
+    { name: "Numeria's Savior", icon: 'trophy' },
     { name: 'Ancient Hero', icon: 'star' },
     { name: 'Golden Sage', icon: 'ribbon' },
   ];
@@ -218,7 +218,7 @@ export default function ProfileScreen({ navigation }) {
             QUEST LOG · ASSESSMENT
            ═══════════════════════════════════════ */}
         <View style={styles.sectionHeader}>
-          <MaterialCommunityIcons name="scroll-outline" size={14} color={C.textMuted} />
+          <MaterialCommunityIcons name="script-text-outline" size={14} color={C.textMuted} />
           <AppText style={styles.sectionLabel}>Quest Log</AppText>
         </View>
         <View style={styles.scrollCard}>

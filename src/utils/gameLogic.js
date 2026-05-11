@@ -183,7 +183,7 @@ export const BADGES = {
   perfectScore: { id: 'perfectScore', name: 'Perfect Score', desc: 'Complete a level with 100% accuracy', icon: 'checkmark-done' },
   speedDemon: { id: 'speedDemon', name: 'Speed Demon', desc: 'Complete timed challenge with full marks', icon: 'flash' },
   moduleMaster: { id: 'moduleMaster', name: 'Module Master', desc: 'Complete all levels in a module', icon: 'shield' },
-  savior: { id: 'savior', name: "Numeria's Savior", desc: 'Complete the entire game', icon: 'crown' },
+  savior: { id: 'savior', name: "Numeria's Savior", desc: 'Complete the entire game', icon: 'trophy' },
   trader: { id: 'trader', name: 'Trader Tycoon', desc: 'Collect 1000 coins', icon: 'cash' },
   bookworm: { id: 'bookworm', name: 'Bookworm', desc: 'View 10 solution explanations', icon: 'book' },
   comeback: { id: 'comeback', name: 'Comeback King', desc: 'Complete a level without losing lives', icon: 'repeat' },

@@ -3,11 +3,14 @@ let FileSystem = null;
 
 try {
   Audio = require('expo-av').Audio;
-  FileSystem = require('expo-file-system').default;
+  const ExpoFileSystem = require('expo-file-system/legacy');
+  FileSystem = ExpoFileSystem.default ?? ExpoFileSystem;
 } catch (e) {}
 
 const SFX_SAMPLE_RATE = 8000;
 const MUSIC_SAMPLE_RATE = 11025;
+const BASE64_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+const waitForUiTurn = () => new Promise(resolve => setTimeout(resolve, 0));
 
 function generateWavBuffer(samples, sampleRate = SFX_SAMPLE_RATE) {
   const numChannels = 1;
@@ -381,7 +384,10 @@ class ExpoAudioPlayer {
   constructor() {
     this.sounds = {};
     this.music = {};
+    this.loadingMusic = {};
+    this.soundDir = null;
     this.currentMusicName = null;
+    this.activeMusicName = null;
     this.enabled = true;
     this.initialized = false;
   }
@@ -389,31 +395,72 @@ class ExpoAudioPlayer {
   async init() {
     if (this.initialized || !Audio || !FileSystem) return;
     try {
-      await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
+      await Audio.setAudioModeAsync({
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: false,
+        shouldDuckAndroid: true,
+      });
       const soundDir = `${FileSystem.cacheDirectory}sounds/`;
       await FileSystem.makeDirectoryAsync(soundDir, { intermediates: true });
-      await this._loadGroup(soundDir, SOUND_DEFS, this.sounds, false);
-      await this._loadGroup(soundDir, MUSIC_DEFS, this.music, true);
+      this.soundDir = soundDir;
       this.initialized = true;
+      await this._loadGroup(SOUND_DEFS, this.sounds, false);
     } catch (e) {}
   }
 
-  async _loadGroup(soundDir, defs, target, isMusic) {
+  async _loadGroup(defs, target, isMusic) {
     for (const [name, gen] of Object.entries(defs)) {
-      try {
-        const path = `${soundDir}${isMusic ? 'music-' : ''}${name}.wav`;
-        await FileSystem.writeAsStringAsync(path, arrayBufferToBase64(gen()), { encoding: FileSystem.EncodingType.Base64 });
-        const { sound } = await Audio.Sound.createAsync(
-          { uri: path },
-          { shouldPlay: false, isLooping: isMusic, volume: isMusic ? 0.2 : 0.65 }
-        );
-        target[name] = sound;
-      } catch (e) {}
+      await this._loadSound(name, gen, target, isMusic);
+      await waitForUiTurn();
     }
+  }
+
+  async _ensureSoundFile(name, gen, isMusic) {
+    if (!this.soundDir) return null;
+    const path = `${this.soundDir}${isMusic ? 'music-' : ''}${name}.wav`;
+    try {
+      const info = await FileSystem.getInfoAsync(path);
+      if (info.exists) return path;
+    } catch (e) {}
+
+    await waitForUiTurn();
+    const encoding = FileSystem.EncodingType?.Base64 || 'base64';
+    await FileSystem.writeAsStringAsync(path, arrayBufferToBase64(gen()), { encoding });
+    return path;
+  }
+
+  async _loadSound(name, gen, target, isMusic) {
+    if (target[name]) return target[name];
+    try {
+      const path = await this._ensureSoundFile(name, gen, isMusic);
+      if (!path) return null;
+      const { sound } = await Audio.Sound.createAsync(
+        { uri: path },
+        { shouldPlay: false, isLooping: isMusic, volume: isMusic ? 0.2 : 0.65 }
+      );
+      target[name] = sound;
+      return sound;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async _loadMusic(name) {
+    if (this.music[name]) return this.music[name];
+    if (this.loadingMusic[name]) return this.loadingMusic[name];
+    const gen = MUSIC_DEFS[name];
+    if (!gen) return null;
+
+    this.loadingMusic[name] = this._loadSound(name, gen, this.music, true)
+      .finally(() => {
+        delete this.loadingMusic[name];
+      });
+    return this.loadingMusic[name];
   }
 
   async play(name) {
     if (!this.enabled) return;
+    if (!this.initialized) await this.init();
     const sound = this.sounds[name];
     if (!sound) return;
     try {
@@ -425,7 +472,10 @@ class ExpoAudioPlayer {
   async playMusic(name) {
     this.currentMusicName = name;
     if (!this.enabled || !name) return;
-    const next = this.music[name];
+    if (!this.initialized) await this.init();
+    if (this.activeMusicName === name) return;
+    const next = await this._loadMusic(name);
+    if (this.currentMusicName !== name || !this.enabled) return;
     if (!next) return;
     try {
       await this._stopCurrentMusic();
@@ -433,6 +483,7 @@ class ExpoAudioPlayer {
       await next.setVolumeAsync(0.2);
       await next.setPositionAsync(0);
       await next.playAsync();
+      this.activeMusicName = name;
     } catch {}
   }
 
@@ -446,6 +497,7 @@ class ExpoAudioPlayer {
 
   async stopMusic() {
     this.currentMusicName = null;
+    this.activeMusicName = null;
     for (const sound of Object.values(this.music)) {
       try { await sound.stopAsync(); } catch {}
     }
@@ -454,6 +506,7 @@ class ExpoAudioPlayer {
   setEnabled(val) {
     this.enabled = val;
     if (!val) {
+      this.activeMusicName = null;
       for (const sound of Object.values(this.music)) {
         try { sound.stopAsync(); } catch {}
       }
@@ -465,11 +518,17 @@ class ExpoAudioPlayer {
 
 function arrayBufferToBase64(buffer) {
   const bytes = new Uint8Array(buffer);
-  let binary = '';
-  for (let i = 0; i < bytes.length; i += 8192) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
+  let output = '';
+  for (let i = 0; i < bytes.length; i += 3) {
+    const a = bytes[i];
+    const b = bytes[i + 1];
+    const c = bytes[i + 2];
+    output += BASE64_CHARS[a >> 2];
+    output += BASE64_CHARS[((a & 3) << 4) | ((b ?? 0) >> 4)];
+    output += i + 1 < bytes.length ? BASE64_CHARS[((b & 15) << 2) | ((c ?? 0) >> 6)] : '=';
+    output += i + 2 < bytes.length ? BASE64_CHARS[c & 63] : '=';
   }
-  return btoa(binary);
+  return output;
 }
 
 class HybridSoundManager {
@@ -482,7 +541,9 @@ class HybridSoundManager {
 
   async init() {
     if (this.initPromise) return this.initPromise;
-    this.initPromise = this._init();
+    this.initPromise = this._init().catch(() => {
+      this.player = null;
+    });
     return this.initPromise;
   }
 
@@ -505,15 +566,29 @@ class HybridSoundManager {
   }
 
   play(name) {
-    if (!this.enabled || !this.player) return;
-    this.player.play(name);
+    if (!this.enabled || !name) return;
+    if (this.player) {
+      this.player.play(name);
+      return;
+    }
+    this.init().then(() => {
+      if (this.enabled) this.player?.play(name);
+    });
   }
 
   playMusic(name) {
     if (!name) return;
     this.currentMusicName = name;
-    if (!this.enabled || !this.player) return;
-    this.player.playMusic(name);
+    if (!this.enabled) return;
+    if (this.player) {
+      this.player.playMusic(name);
+      return;
+    }
+    this.init().then(() => {
+      if (this.enabled && this.currentMusicName === name) {
+        this.player?.playMusic(name);
+      }
+    });
   }
 
   stopMusic() {

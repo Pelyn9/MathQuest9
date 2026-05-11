@@ -24,7 +24,7 @@ const AVATARS = [
   { id: 4, name: 'Blazing Hero', icon: 'flame', price: 0, type: 'achievement', unlockBadge: 'onFire' },
   { id: 5, name: 'Trader Tycoon', icon: 'cash', price: 0, type: 'achievement', unlockBadge: 'trader' },
   { id: 6, name: 'Extreme Survivor', icon: 'skull', price: 0, type: 'achievement', unlockBadge: 'extremeSurvivor' },
-  { id: 7, name: "Numeria's Savior", icon: 'crown', price: 0, type: 'achievement', unlockBadge: 'savior' },
+  { id: 7, name: "Numeria's Savior", icon: 'trophy', price: 0, type: 'achievement', unlockBadge: 'savior' },
   // Coin-purchasable avatars
   { id: 8, name: 'Ancient Hero', icon: 'star', price: 300, type: 'coin' },
   { id: 9, name: 'Golden Sage', icon: 'ribbon', price: 600, type: 'coin' },
@@ -62,7 +62,7 @@ const THEMES = [
   { id: 'ember', name: 'Ember Peak', icon: 'flame', price: 250, desc: 'Fiery oranges for intense battles.' },
   { id: 'midnight', name: 'Midnight Eclipse', icon: 'cloudy-night', price: 350, desc: 'Deep purples and starry blacks.' },
   { id: 'crimson', name: 'Crimson Storm', icon: 'thunderstorm', price: 350, desc: 'Bold reds and stormy grays.' },
-  { id: 'aurora', name: 'Aurora Veil', icon: 'rainbow', price: 500, desc: 'Shifting northern lights palette.' },
+  { id: 'aurora', name: 'Aurora Veil', icon: 'color-palette', price: 500, desc: 'Shifting northern lights palette.' },
   { id: 'candy', name: 'Candy Land', icon: 'ice-cream', price: 500, desc: 'Playful pastels for a sweet vibe.' },
 ];
 
