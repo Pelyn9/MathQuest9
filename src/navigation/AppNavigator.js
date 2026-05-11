@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { Animated, Easing, StyleSheet } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 import { useGame } from '../context/GameContext';
 import { DIFFICULTY } from '../utils/gameLogic';
@@ -20,6 +21,69 @@ import DifficultySelectScreen from '../screens/DifficultySelectScreen';
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
+const tabTransitionSpec = {
+  animation: 'timing',
+  config: {
+    duration: 240,
+    easing: Easing.out(Easing.cubic),
+  },
+};
+
+const smoothStackOptions = {
+  headerShown: false,
+  animation: 'fade_from_bottom',
+  animationDuration: 360,
+  animationTypeForReplace: 'push',
+  gestureEnabled: true,
+  fullScreenGestureEnabled: true,
+  contentStyle: { backgroundColor: '#051126' },
+};
+
+function SmoothScreenLayout({ children, routeKey }) {
+  const entryAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    entryAnim.setValue(0);
+    Animated.timing(entryAnim, {
+      toValue: 1,
+      duration: 260,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [entryAnim, routeKey]);
+
+  return (
+    <Animated.View
+      style={[
+        styles.screenTransition,
+        {
+          opacity: entryAnim,
+          transform: [
+            {
+              translateY: entryAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [10, 0],
+              }),
+            },
+            {
+              scale: entryAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.985, 1],
+              }),
+            },
+          ],
+        },
+      ]}
+    >
+      {children}
+    </Animated.View>
+  );
+}
+
+const renderSmoothScreen = ({ children, route }) => (
+  <SmoothScreenLayout routeKey={route.key}>{children}</SmoothScreenLayout>
+);
+
 function TabNavigator() {
   const { colors: C } = useTheme();
   const { state } = useGame();
@@ -32,8 +96,11 @@ function TabNavigator() {
           soundManager.play('click');
         },
       }}
+      screenLayout={renderSmoothScreen}
       screenOptions={({ route }) => ({
         headerShown: false,
+        animation: 'shift',
+        transitionSpec: tabTransitionSpec,
         tabBarShowLabel: true,
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
@@ -87,7 +154,8 @@ export default function AppNavigator({ hasChosenDifficulty }) {
   return (
     <Stack.Navigator
       initialRouteName={hasChosenDifficulty ? 'Main' : 'DifficultySelect'}
-      screenOptions={{ headerShown: false }}
+      screenLayout={renderSmoothScreen}
+      screenOptions={smoothStackOptions}
     >
       <Stack.Screen name="DifficultySelect" component={DifficultySelectScreen} />
       <Stack.Screen name="Main" component={TabNavigator} />
@@ -99,3 +167,10 @@ export default function AppNavigator({ hasChosenDifficulty }) {
     </Stack.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  screenTransition: {
+    flex: 1,
+    backgroundColor: '#051126',
+  },
+});

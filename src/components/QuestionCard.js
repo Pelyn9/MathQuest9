@@ -1,4 +1,5 @@
-import { ImageBackground, View, TouchableOpacity, StyleSheet } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Animated, Easing, ImageBackground, View, TouchableOpacity, StyleSheet } from 'react-native';
 import AppText from './AppText';
 import { useTheme } from '../theme/ThemeContext';
 
@@ -7,6 +8,27 @@ const castleBackground = require('../image/castle.png');
 export default function QuestionCard({ question, selected, onSelect, showCorrect, usedFifty, disabled = false }) {
   const { colors: C } = useTheme();
   const choicesLocked = showCorrect || disabled;
+  const cardFade = useRef(new Animated.Value(1)).current;
+  const cardSlide = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    cardFade.setValue(0);
+    cardSlide.setValue(12);
+    Animated.parallel([
+      Animated.timing(cardFade, {
+        toValue: 1,
+        duration: 260,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(cardSlide, {
+        toValue: 0,
+        duration: 260,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [cardFade, cardSlide, question?.question]);
 
   const getOptionStyle = (index) => {
     if (showCorrect) {
@@ -34,7 +56,7 @@ export default function QuestionCard({ question, selected, onSelect, showCorrect
   };
 
   return (
-    <View style={styles.container}>
+    <Animated.View style={[styles.container, { opacity: cardFade, transform: [{ translateY: cardSlide }] }]}>
       <ImageBackground
         source={castleBackground}
         resizeMode="cover"
@@ -88,7 +110,7 @@ export default function QuestionCard({ question, selected, onSelect, showCorrect
           );
         })}
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
