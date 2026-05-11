@@ -12,6 +12,8 @@ import {
   getMissionById,
   getStoryDifficultyPath,
   getStoryLesson,
+  getMissionStats,
+  getDifficultyMissionProgress,
 } from '../data/storyMissions';
 import { soundManager } from '../utils/SoundManager';
 import LivesDisplay from '../components/LivesDisplay';
@@ -20,6 +22,8 @@ import QuestionCard from '../components/QuestionCard';
 import ProgressBar from '../components/ProgressBar';
 import Timer from '../components/Timer';
 import RewardModal from '../components/RewardModal';
+import StoryIntroModal from '../components/StoryIntroModal';
+import MissionGuideModal from '../components/MissionGuideModal';
 import ScreenBackground from '../components/ScreenBackground';
 
 const MODULES = {
@@ -60,6 +64,7 @@ export default function QuizScreen({ route, navigation }) {
   const [timerRunning, setTimerRunning] = useState(false);
   const [timerKey, setTimerKey] = useState(0);
   const [battleStatus, setBattleStatus] = useState('playing');
+  const [onboardingStep, setOnboardingStep] = useState('story'); // story -> guide -> gameplay
   const gameOverTriggeredRef = useRef(false);
   const answerLockedRef = useRef(false);
   const mountedRef = useRef(true);
@@ -76,6 +81,8 @@ export default function QuizScreen({ route, navigation }) {
   const mission = missionId ? getMissionById(missionId) : null;
   const storyPath = getStoryDifficultyPath(state.difficulty);
   const isStoryMission = activeModeKey === 'story' && !!mission;
+  const missionProgress = isStoryMission ? getDifficultyMissionProgress(state, state.difficulty) : null;
+  const missionStats = isStoryMission ? getMissionStats(missionProgress) : null;
   const storyLesson = isStoryMission
     ? getStoryLesson({ mission, level, difficulty: state.difficulty, questionCount: questions.length })
     : null;
@@ -84,6 +91,14 @@ export default function QuizScreen({ route, navigation }) {
   const timePerQ = activeModeKey === 'timer' ? Math.max(15, Math.round(baseTimePerQ * 0.65)) : baseTimePerQ;
 
   const isBattleLocked = battleStatus === 'gameOver' || finished || gameOverTriggeredRef.current;
+
+  useEffect(() => {
+    if (isStoryMission && mission && level) {
+      setOnboardingStep('story');
+    } else {
+      setOnboardingStep('gameplay');
+    }
+  }, [isStoryMission, mission, level]);
 
   useEffect(() => {
     return () => { mountedRef.current = false; };
@@ -423,6 +438,16 @@ export default function QuizScreen({ route, navigation }) {
     });
   }, [diffConfig.lives, navigation, refillLives, resetBattleState, state.maxLives]);
 
+  const handleStoryContinue = () => {
+    soundManager.play('click');
+    setOnboardingStep('guide');
+  };
+
+  const handleGuideContinue = () => {
+    soundManager.play('click');
+    setOnboardingStep('gameplay');
+  };
+
   if (!level) {
     return (
       <View style={styles.wrapper}>
@@ -465,10 +490,33 @@ export default function QuizScreen({ route, navigation }) {
           <View style={[styles.rpgPathGlow, { borderColor: `${storyPath.color}55` }]} />
         </View>
       )}
-      {!finished && (
+
+      {/* ── Step 1: Story Intro Modal ── */}
+      <StoryIntroModal
+        visible={onboardingStep === 'story'}
+        onContinue={handleStoryContinue}
+        mission={mission}
+        storyPath={storyPath}
+        missionStats={missionStats}
+      />
+
+      {/* ── Step 2: Guide Briefing Modal ── */}
+      <MissionGuideModal
+        visible={onboardingStep === 'guide'}
+        onClose={() => {}}
+        onContinue={handleGuideContinue}
+        lesson={storyLesson}
+      />
+
+      {/* ── Step 3: Gameplay (no story/guide content shown) ── */}
+      {onboardingStep === 'gameplay' && !finished && (
         <>
           <View style={[styles.topBar, isStoryMission && { borderBottomColor: `${storyPath.color}45` }]}>
-            <TouchableOpacity onPress={() => navigation.navigate('Main', { screen: 'Home' })} style={styles.closeBtn}>
+            <TouchableOpacity onPress={() => {
+              if (onboardingStep === 'gameplay') {
+                navigation.navigate('Main', { screen: 'Home' });
+              }
+            }} style={styles.closeBtn}>
               <Ionicons name="close" size={22} color={C.textLight} />
             </TouchableOpacity>
 
@@ -523,61 +571,6 @@ export default function QuizScreen({ route, navigation }) {
                 <AppText style={styles.statChipText}>{score} pts</AppText>
               </View>
             </View>
-
-            {mission && (
-              <View style={[styles.storyBanner, { borderColor: `${mission.color}65` }]}>
-                <View style={[styles.storyIcon, { backgroundColor: `${mission.color}20` }]}>
-                  <Ionicons name={mission.icon} size={18} color={mission.color} />
-                </View>
-                <View style={styles.storyCopy}>
-                  <AppText style={styles.storyKicker}>Mission {mission.id}/100 - {storyPath.label}</AppText>
-                  <AppText style={styles.storyTitle}>{mission.shortTitle}</AppText>
-                  <AppText style={styles.storyText} numberOfLines={3}>{getDifficultyMissionStory(mission, state.difficulty)}</AppText>
-                </View>
-              </View>
-            )}
-
-            {storyLesson && (
-              <View style={[styles.lessonCard, { borderColor: `${storyPath.color}70` }]}>
-                <View style={styles.lessonHeader}>
-                  <View style={[styles.characterPortrait, { backgroundColor: `${storyPath.color}22`, borderColor: storyPath.color }]}>
-                    <Ionicons name={storyPath.characterIcon} size={24} color={storyPath.color} />
-                  </View>
-                  <View style={styles.lessonHeaderText}>
-                    <AppText style={[styles.lessonKicker, { color: storyPath.color }]}>{storyPath.characterName} - {storyPath.characterRole}</AppText>
-                    <AppText style={styles.lessonTitle}>{storyLesson.title}</AppText>
-                    <AppText style={styles.lessonGuide}>{storyLesson.guide}</AppText>
-                  </View>
-                </View>
-
-                <View style={styles.guideCard}>
-                  <View style={styles.guideRow}>
-                    <Ionicons name="book" size={16} color={storyPath.color} />
-                    <AppText style={styles.guideText}>{storyLesson.rule}</AppText>
-                  </View>
-                  <View style={styles.guideRow}>
-                    <Ionicons name="footsteps" size={16} color={storyPath.color} />
-                    <AppText style={styles.guideText}>{storyLesson.activityText}</AppText>
-                  </View>
-                </View>
-
-                <View style={styles.dialogBox}>
-                  <AppText style={[styles.dialogName, { color: storyPath.color }]}>{storyPath.characterName}</AppText>
-                  <AppText style={styles.dialogText}>"{storyLesson.dialog}"</AppText>
-                </View>
-
-                <View style={styles.lessonMetaRow}>
-                  <View style={[styles.lessonPill, { backgroundColor: `${storyPath.color}18` }]}>
-                    <Ionicons name={storyPath.sceneIcon} size={12} color={storyPath.color} />
-                    <AppText style={[styles.lessonPillText, { color: storyPath.color }]}>{storyLesson.progressLabel}</AppText>
-                  </View>
-                  <View style={[styles.lessonPill, { backgroundColor: `${C.xp}18` }]}>
-                    <Ionicons name="flash" size={12} color={C.xp} />
-                    <AppText style={[styles.lessonPillText, { color: C.xp }]}>{storyLesson.rewardText}</AppText>
-                  </View>
-                </View>
-              </View>
-            )}
 
             {showHint && currentQ?.hint && (
               <View style={styles.hintBanner}>
@@ -846,53 +839,6 @@ const createStyles = (C) => StyleSheet.create({
     backgroundColor: C.card, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10,
   },
   statChipText: { fontSize: 11, color: C.textLight, fontWeight: '600' },
-  storyBanner: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    marginHorizontal: 16, marginBottom: 10, borderRadius: 14, borderWidth: 1.5,
-    padding: 12, backgroundColor: C.card,
-  },
-  storyIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  storyCopy: { flex: 1 },
-  storyKicker: { fontSize: 10, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', color: C.textMuted },
-  storyTitle: { fontSize: 14, fontWeight: '900', marginTop: 2, color: C.text },
-  storyText: { fontSize: 11, lineHeight: 16, marginTop: 2, color: C.textMuted },
-  lessonCard: {
-    marginHorizontal: 16,
-    marginBottom: 10,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    padding: 13,
-    backgroundColor: C.card,
-  },
-  lessonHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 11 },
-  characterPortrait: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  lessonHeaderText: { flex: 1 },
-  lessonKicker: { fontSize: 10, fontWeight: '900', letterSpacing: 0.8, textTransform: 'uppercase' },
-  lessonTitle: { fontSize: 15, fontWeight: '900', color: C.text, marginTop: 2 },
-  lessonGuide: { fontSize: 12, lineHeight: 17, color: C.textMuted, marginTop: 3 },
-  guideCard: { gap: 8, marginTop: 12, padding: 11, borderRadius: 12, backgroundColor: C.backgroundLight },
-  guideRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
-  guideText: { flex: 1, fontSize: 12, lineHeight: 17, color: C.textLight },
-  dialogBox: {
-    marginTop: 12,
-    padding: 12,
-    borderRadius: 12,
-    borderLeftWidth: 3,
-    borderLeftColor: C.gold,
-    backgroundColor: C.cardLight,
-  },
-  dialogName: { fontSize: 11, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 0.8 },
-  dialogText: { fontSize: 13, lineHeight: 19, color: C.text, marginTop: 3, fontWeight: '600' },
-  lessonMetaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
-  lessonPill: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 9 },
-  lessonPillText: { fontSize: 10, fontWeight: '900', textTransform: 'uppercase' },
   hintBanner: {
     flexDirection: 'row', alignItems: 'center', backgroundColor: `${C.warning}20`,
     marginHorizontal: 16, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 10, gap: 8, marginBottom: 8,

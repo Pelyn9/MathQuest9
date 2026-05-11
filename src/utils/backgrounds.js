@@ -1,7 +1,7 @@
 const LIGHT_SCREEN = {
   home: { colors: ['#FDF0D5', '#F8E0B0', '#F0D098'], start: { x: 0, y: 0 }, end: { x: 1, y: 1 } },
   map: { colors: ['#D0DCF0', '#C0CCE8', '#B0BCE0'], start: { x: 0, y: 0 }, end: { x: 1, y: 1 } },
-  profile: { colors: ['#E8D0F0', '#DCBCE8', '#D0A8E0'], start: { x: 0, y: 0 }, end: { x: 1, y: 1 } },
+  profile: { colors: ['#D8D0C0', '#CCC4B0', '#C0B8A0'], start: { x: 0, y: 0 }, end: { x: 1, y: 1 } },
   shop: { colors: ['#F5E6D0', '#F0D6B0', '#E8C498'], start: { x: 0, y: 0 }, end: { x: 1, y: 1 } },
   difficulty: { colors: ['#D0ECE8', '#C0E0DC', '#B0D4D0'], start: { x: 0, y: 0 }, end: { x: 0, y: 1 } },
   assessment: { colors: ['#D0E8F0', '#C0DCE8', '#B0D0E0'], start: { x: 0, y: 0 }, end: { x: 1, y: 0 } },
@@ -11,7 +11,7 @@ const LIGHT_SCREEN = {
 const DARK_SCREEN = {
   home: { colors: ['#0D0805', '#1A0F0A', '#241510'], start: { x: 0, y: 0 }, end: { x: 1, y: 1 } },
   map: { colors: ['#050510', '#0A0A1A', '#0D0D20'], start: { x: 0, y: 0 }, end: { x: 1, y: 1 } },
-  profile: { colors: ['#0D050D', '#1A0A1A', '#241020'], start: { x: 0, y: 0 }, end: { x: 1, y: 1 } },
+  profile: { colors: ['#0A0808', '#141010', '#1C1616'], start: { x: 0, y: 0 }, end: { x: 1, y: 1 } },
   shop: { colors: ['#150A05', '#241008', '#321A0E'], start: { x: 0, y: 0 }, end: { x: 1, y: 1 } },
   difficulty: { colors: ['#040208', '#08050E', '#0D0815'], start: { x: 0, y: 0 }, end: { x: 0, y: 1 } },
   assessment: { colors: ['#050A0D', '#0A0F15', '#0D1520'], start: { x: 0, y: 0 }, end: { x: 1, y: 0 } },

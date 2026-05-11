@@ -14,10 +14,12 @@ import {
   getMissionStats,
   getNextMissionId,
   getStoryDifficultyPath,
+  getStoryLesson,
 } from '../data/storyMissions';
 import LivesDisplay from '../components/LivesDisplay';
 import ModuleCard from '../components/ModuleCard';
 import DailyRewardModal from '../components/DailyRewardModal';
+import MissionGuideModal from '../components/MissionGuideModal';
 import ScreenBackground from '../components/ScreenBackground';
 
 export default function HomeScreen({ navigation }) {
@@ -37,6 +39,7 @@ export default function HomeScreen({ navigation }) {
   const nextMission = getMissionById(getNextMissionId(missionProgress));
 
   const [showDaily, setShowDaily] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
 
   useEffect(() => {
     if (!state.lastDailyReward) {
@@ -65,13 +68,24 @@ export default function HomeScreen({ navigation }) {
   };
 
   const startMission = () => {
-    if (!nextMission) return;
-    navigation.navigate('Quiz', {
-      moduleId: nextMission.moduleId,
-      levelId: nextMission.levelId,
-      missionId: nextMission.id,
-      mode: activeModeKey,
-    });
+    if (activeModeKey === 'story') {
+      if (!nextMission) return;
+      navigation.navigate('Quiz', {
+        moduleId: nextMission.moduleId,
+        levelId: nextMission.levelId,
+        missionId: nextMission.id,
+        mode: 'story',
+      });
+    } else {
+      // survival / timer — pick a random module/level
+      const randomModule = Math.floor(Math.random() * 4) + 1;
+      const randomLevel = Math.floor(Math.random() * 4) + 1;
+      navigation.navigate('Quiz', {
+        moduleId: randomModule,
+        levelId: randomLevel,
+        mode: activeModeKey,
+      });
+    }
   };
 
   return (
@@ -162,7 +176,7 @@ export default function HomeScreen({ navigation }) {
         </View>
       </View>
 
-      {nextMission && (
+      {activeModeKey === 'story' && nextMission && (
         <View style={[styles.missionCard, { borderColor: `${activeMode.color}55` }]}>
           <View style={styles.missionTop}>
             <View style={[styles.missionIcon, { backgroundColor: `${nextMission.color}20` }]}>
@@ -183,6 +197,13 @@ export default function HomeScreen({ navigation }) {
             <AppText style={[styles.lessonPreviewText, { color: storyPath.color }]}>
               {storyPath.characterName} prepares the lesson briefing. Clear bonus: +{storyPath.clearBonusXP} XP
             </AppText>
+            <TouchableOpacity
+              onPress={() => setShowGuide(true)}
+              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+              style={[styles.guideBtn, { backgroundColor: `${storyPath.color}20` }]}
+            >
+              <Ionicons name="book-outline" size={16} color={storyPath.color} />
+            </TouchableOpacity>
           </View>
           <View style={styles.missionActions}>
             <TouchableOpacity
@@ -202,6 +223,36 @@ export default function HomeScreen({ navigation }) {
             >
               <Ionicons name="map" size={17} color={C.primary} />
               <AppText style={styles.secondaryMissionText}>Mission Map</AppText>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* survival / timer — generic challenge card */}
+      {activeModeKey !== 'story' && (
+        <View style={[styles.missionCard, { borderColor: `${activeMode.color}55` }]}>
+          <View style={styles.missionTop}>
+            <View style={[styles.missionIcon, { backgroundColor: `${activeMode.color}20` }]}>
+              <Ionicons name={activeMode.icon} size={24} color={activeMode.color} />
+            </View>
+            <View style={styles.missionInfo}>
+              <AppText style={styles.missionKicker}>{activeMode.label} Challenge</AppText>
+              <AppText style={styles.missionTitle} decorative>Random Skirmish</AppText>
+              <AppText style={styles.missionStory}>
+                {activeModeKey === 'survival'
+                  ? 'Endless questions with no timer. Hold your ground as long as you can. Every correct answer keeps you alive.'
+                  : 'Race against the clock. Answer fast and accurate to survive the countdown pressure.'}
+              </AppText>
+            </View>
+          </View>
+          <View style={styles.missionActions}>
+            <TouchableOpacity
+              style={[styles.primaryMissionBtn, { backgroundColor: activeMode.color }]}
+              onPress={startMission}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="play" size={17} color={C.white} />
+              <AppText style={styles.primaryMissionText}>Battle</AppText>
             </TouchableOpacity>
           </View>
         </View>
@@ -247,6 +298,18 @@ export default function HomeScreen({ navigation }) {
       </TouchableOpacity>
 
       <View style={styles.spacer} />
+
+      <MissionGuideModal
+        visible={showGuide}
+        onClose={() => setShowGuide(false)}
+        onContinue={() => { setShowGuide(false); startMission(); }}
+        lesson={nextMission ? getStoryLesson({
+          mission: nextMission,
+          level: { title: nextMission.shortTitle, questions: [1,2,3,4] },
+          difficulty: state.difficulty,
+          questionCount: 4,
+        }) : null}
+      />
 
       <DailyRewardModal
         visible={showDaily}
@@ -305,6 +368,7 @@ const createStyles = (C, titleSize) => StyleSheet.create({
   missionStory: { fontSize: 12, lineHeight: 17, marginTop: 3, color: C.textMuted },
   lessonPreview: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 12, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 10, backgroundColor: C.backgroundLight },
   lessonPreviewText: { flex: 1, fontSize: 11, lineHeight: 15, fontWeight: '800' },
+  guideBtn: { width: 30, height: 30, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
   missionActions: { flexDirection: 'row', gap: 10, marginTop: 14 },
   primaryMissionBtn: { flex: 1, minHeight: 44, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
   primaryMissionText: { fontSize: 14, fontWeight: '900', color: C.white },
