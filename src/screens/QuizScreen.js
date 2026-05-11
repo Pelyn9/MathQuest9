@@ -23,7 +23,7 @@ import ProgressBar from '../components/ProgressBar';
 import Timer from '../components/Timer';
 import RewardModal from '../components/RewardModal';
 import StoryIntroModal from '../components/StoryIntroModal';
-import MissionGuideModal from '../components/MissionGuideModal';
+import RoyalGuideModal from '../components/RoyalGuideModal';
 import ScreenBackground from '../components/ScreenBackground';
 import useScreenMusic from '../hooks/useScreenMusic';
 
@@ -55,6 +55,7 @@ export default function QuizScreen({ route, navigation }) {
   const [usedCall, setUsedCall] = useState(false);
   const [hintLevel, setHintLevel] = useState(0);
   const [showHint, setShowHint] = useState(false);
+  const [showRoyalGuide, setShowRoyalGuide] = useState(false);
   const [showReward, setShowReward] = useState(false);
   const [lastBadge, setLastBadge] = useState(null);
   const [lastCoins, setLastCoins] = useState(0);
@@ -65,7 +66,7 @@ export default function QuizScreen({ route, navigation }) {
   const [timerRunning, setTimerRunning] = useState(false);
   const [timerKey, setTimerKey] = useState(0);
   const [battleStatus, setBattleStatus] = useState('playing');
-  const [onboardingStep, setOnboardingStep] = useState('story'); // story -> guide -> gameplay
+  const [onboardingStep, setOnboardingStep] = useState('story'); // story -> gameplay
   const gameOverTriggeredRef = useRef(false);
   const answerLockedRef = useRef(false);
   const mountedRef = useRef(true);
@@ -301,6 +302,7 @@ export default function QuizScreen({ route, navigation }) {
     setSelected(null);
     setShowCorrect(false);
     setShowHint(false);
+    setShowRoyalGuide(false);
     setHintLevel(0);
     if (isLast) {
       if (activeModeKey === 'survival' || activeModeKey === 'timer') {
@@ -428,6 +430,7 @@ export default function QuizScreen({ route, navigation }) {
     setUsedCall(false);
     setHintLevel(0);
     setShowHint(false);
+    setShowRoyalGuide(false);
     setShowReward(false);
     setLastBadge(null);
     setLastCoins(0);
@@ -456,17 +459,17 @@ export default function QuizScreen({ route, navigation }) {
 
   const handleStoryContinue = () => {
     soundManager.play('click');
-    setOnboardingStep('guide');
+    setOnboardingStep('gameplay');
   };
 
-  const handleGuideClose = () => {
+  const handleRoyalGuideOpen = () => {
+    soundManager.play('open');
+    setShowRoyalGuide(true);
+  };
+
+  const handleRoyalGuideClose = () => {
     soundManager.play('close');
-    setOnboardingStep('gameplay');
-  };
-
-  const handleGuideContinue = () => {
-    soundManager.play('click');
-    setOnboardingStep('gameplay');
+    setShowRoyalGuide(false);
   };
 
   if (!level) {
@@ -521,15 +524,18 @@ export default function QuizScreen({ route, navigation }) {
         missionStats={missionStats}
       />
 
-      {/* ── Step 2: Guide Briefing Modal ── */}
-      <MissionGuideModal
-        visible={onboardingStep === 'guide'}
-        onClose={handleGuideClose}
-        onContinue={handleGuideContinue}
+      {/* Gameplay Royal Guide */}
+      <RoyalGuideModal
+        visible={showRoyalGuide && onboardingStep === 'gameplay'}
+        onClose={handleRoyalGuideClose}
         lesson={storyLesson}
+        mission={mission}
+        question={currentQ}
+        selected={selected}
+        showCorrect={showCorrect}
       />
 
-      {/* ── Step 3: Gameplay (no story/guide content shown) ── */}
+      {/* Gameplay */}
       {onboardingStep === 'gameplay' && !finished && (
         <>
           <View style={[styles.topBar, isStoryMission && { borderBottomColor: `${storyPath.color}45` }]}>
@@ -622,6 +628,7 @@ export default function QuizScreen({ route, navigation }) {
                 showCorrect={showCorrect}
                 usedFifty={usedFifty}
                 disabled={isBattleLocked}
+                onOpenGuide={handleRoyalGuideOpen}
               />
             )}
 

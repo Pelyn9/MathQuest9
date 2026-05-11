@@ -14,12 +14,10 @@ import {
   getMissionStats,
   getNextMissionId,
   getStoryDifficultyPath,
-  getStoryLesson,
 } from '../data/storyMissions';
 import LivesDisplay from '../components/LivesDisplay';
 import ModuleCard from '../components/ModuleCard';
 import DailyRewardModal from '../components/DailyRewardModal';
-import MissionGuideModal from '../components/MissionGuideModal';
 import ScreenBackground from '../components/ScreenBackground';
 import useScreenMusic from '../hooks/useScreenMusic';
 import { soundManager } from '../utils/SoundManager';
@@ -57,7 +55,6 @@ export default function HomeScreen({ navigation }) {
   useScreenMusic('menu');
 
   const [showDaily, setShowDaily] = useState(false);
-  const [showGuide, setShowGuide] = useState(false);
 
   const openStackScreen = (screen, params) => {
     const parent = navigation.getParent?.();
@@ -254,22 +251,6 @@ export default function HomeScreen({ navigation }) {
               </AppText>
             </View>
           </View>
-          <View style={styles.lessonPreview}>
-            <Ionicons name={storyPath.characterIcon} size={15} color={storyPath.color} />
-            <AppText style={[styles.lessonPreviewText, { color: storyPath.color }]}>
-              {storyPath.characterName} prepares the lesson briefing. Clear bonus: +{storyPath.clearBonusXP} XP
-            </AppText>
-            <TouchableOpacity
-              onPress={() => {
-                soundManager.play('open');
-                setShowGuide(true);
-              }}
-              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-              style={[styles.guideBtn, { backgroundColor: `${storyPath.color}20` }]}
-            >
-              <Ionicons name="book-outline" size={16} color={storyPath.color} />
-            </TouchableOpacity>
-          </View>
           <View style={styles.missionActions}>
             <TouchableOpacity
               style={[styles.primaryMissionBtn, { backgroundColor: activeMode.color }]}
@@ -373,21 +354,6 @@ export default function HomeScreen({ navigation }) {
 
       <View style={styles.spacer} />
 
-      <MissionGuideModal
-        visible={showGuide}
-        onClose={() => {
-          soundManager.play('close');
-          setShowGuide(false);
-        }}
-        onContinue={() => { setShowGuide(false); startMission(); }}
-        lesson={nextMission ? getStoryLesson({
-          mission: nextMission,
-          level: { title: nextMission.shortTitle, questions: [1,2,3,4] },
-          difficulty: state.difficulty,
-          questionCount: 4,
-        }) : null}
-      />
-
       <DailyRewardModal
         visible={showDaily}
         streak={calcStreak()}
@@ -459,9 +425,6 @@ const createStyles = (C, titleSize) => StyleSheet.create({
   missionKicker: { fontSize: 10, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', color: C.textMuted },
   missionTitle: { fontSize: 16, fontWeight: '900', marginTop: 2, color: C.text },
   missionStory: { fontSize: 12, lineHeight: 17, marginTop: 3, color: C.textMuted },
-  lessonPreview: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 12, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 10, backgroundColor: `${C.backgroundLight}D0`, borderWidth: 1, borderColor: `${C.rune || C.primary}25` },
-  lessonPreviewText: { flex: 1, fontSize: 11, lineHeight: 15, fontWeight: '800' },
-  guideBtn: { width: 30, height: 30, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
   missionActions: { flexDirection: 'row', gap: 10, marginTop: 14 },
   primaryMissionBtn: { flex: 1, minHeight: 44, borderRadius: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, borderWidth: 1, borderColor: `${C.gold}55` },
   primaryMissionText: { fontSize: 14, fontWeight: '900', color: C.white },

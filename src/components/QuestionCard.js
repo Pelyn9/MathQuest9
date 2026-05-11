@@ -1,11 +1,12 @@
 import { useEffect, useRef } from 'react';
 import { Animated, Easing, ImageBackground, View, TouchableOpacity, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import AppText from './AppText';
 import { useTheme } from '../theme/ThemeContext';
 
 const castleBackground = require('../image/castle.png');
 
-export default function QuestionCard({ question, selected, onSelect, showCorrect, usedFifty, disabled = false }) {
+export default function QuestionCard({ question, selected, onSelect, showCorrect, usedFifty, disabled = false, onOpenGuide }) {
   const { colors: C } = useTheme();
   const choicesLocked = showCorrect || disabled;
   const cardFade = useRef(new Animated.Value(1)).current;
@@ -68,6 +69,17 @@ export default function QuestionCard({ question, selected, onSelect, showCorrect
           <AppText style={[styles.questionIconText, { color: C.white }]}>?</AppText>
         </View>
         <AppText style={[styles.questionText, { color: C.text }]}>{question.question}</AppText>
+        {!!onOpenGuide && (
+          <TouchableOpacity
+            style={[styles.guideBtn, { backgroundColor: `${C.gold}18`, borderColor: `${C.gold}45` }]}
+            onPress={onOpenGuide}
+            activeOpacity={0.78}
+            accessibilityRole="button"
+            accessibilityLabel="Open Royal Guide"
+          >
+            <Ionicons name="book-outline" size={17} color={C.gold} />
+          </TouchableOpacity>
+        )}
       </ImageBackground>
 
       <View style={styles.optionsContainer}>
@@ -157,6 +169,14 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     fontWeight: '500',
     flex: 1,
+  },
+  guideBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
   },
   optionsContainer: {
     gap: 8,
