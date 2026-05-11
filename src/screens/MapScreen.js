@@ -18,6 +18,8 @@ import {
   isMissionUnlocked,
 } from '../data/storyMissions';
 import ScreenBackground from '../components/ScreenBackground';
+import useScreenMusic from '../hooks/useScreenMusic';
+import { soundManager } from '../utils/SoundManager';
 
 export default function MapScreen({ navigation }) {
   const { colors: C } = useTheme();
@@ -28,14 +30,22 @@ export default function MapScreen({ navigation }) {
   const missionProgress = getDifficultyMissionProgress(state, state.difficulty);
   const missionStats = getMissionStats(missionProgress);
   const nextMissionId = getNextMissionId(missionProgress);
+  useScreenMusic('menu');
 
   const startMission = (mission) => {
-    navigation.navigate('Quiz', {
+    soundManager.play('start');
+    const parent = navigation.getParent?.();
+    const params = {
       moduleId: mission.moduleId,
       levelId: mission.levelId,
       missionId: mission.id,
       mode: state.activeMode || 'story',
-    });
+    };
+    if (parent) {
+      parent.navigate('Quiz', params);
+    } else {
+      navigation.navigate('Quiz', params);
+    }
   };
 
   const getRegionCompleteCount = (regionId) => (

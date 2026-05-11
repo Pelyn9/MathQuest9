@@ -7,6 +7,8 @@ import { MODULES } from '../theme/colors';
 import { useGame } from '../context/GameContext';
 import { STORY_MISSIONS } from '../data/storyMissions';
 import ScreenBackground from '../components/ScreenBackground';
+import useScreenMusic from '../hooks/useScreenMusic';
+import { soundManager } from '../utils/SoundManager';
 
 const MODULE_DATA = {
   1: require('../data/module1').default,
@@ -23,6 +25,7 @@ export default function LevelScreen({ route, navigation }) {
   const mod = MODULES.find(m => m.id === moduleId);
   const data = MODULE_DATA[moduleId];
   const progress = state.moduleProgress[moduleId];
+  useScreenMusic('menu');
 
   const isLevelUnlocked = (levelId) => {
     if (levelId === 1) return true;
@@ -62,7 +65,13 @@ export default function LevelScreen({ route, navigation }) {
       <ScreenBackground moduleId={moduleId} levelId={1} />
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         <View style={[styles.header, { borderBottomColor: mod.color }]}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => {
+              soundManager.play('close');
+              navigation.goBack();
+            }}
+          >
             <Ionicons name="arrow-back" size={22} color={C.text} />
           </TouchableOpacity>
           <View style={styles.headerInfo}>
@@ -102,6 +111,7 @@ export default function LevelScreen({ route, navigation }) {
                   !unlocked && { opacity: 0.5 },
                 ]}
                 onPress={() => {
+                  soundManager.play('start');
                   const mid = getMissionIdForLevel(level.id);
                   const params = { moduleId, levelId: level.id };
                   if (mid) params.missionId = mid;

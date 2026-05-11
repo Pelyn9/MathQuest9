@@ -21,6 +21,8 @@ import ModuleCard from '../components/ModuleCard';
 import DailyRewardModal from '../components/DailyRewardModal';
 import MissionGuideModal from '../components/MissionGuideModal';
 import ScreenBackground from '../components/ScreenBackground';
+import useScreenMusic from '../hooks/useScreenMusic';
+import { soundManager } from '../utils/SoundManager';
 
 export default function HomeScreen({ navigation }) {
   const { colors: C } = useTheme();
@@ -37,28 +39,41 @@ export default function HomeScreen({ navigation }) {
   const missionProgress = getDifficultyMissionProgress(state, state.difficulty);
   const missionStats = getMissionStats(missionProgress);
   const nextMission = getMissionById(getNextMissionId(missionProgress));
+  const dailyInfo = useMemo(() => {
+    if (!state.lastDailyReward) {
+      return { available: true, streak: 0, claimedToday: false };
+    }
+    const last = new Date(state.lastDailyReward);
+    const now = new Date();
+    const lastDay = new Date(last.getFullYear(), last.getMonth(), last.getDate()).getTime();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const diffDays = Math.max(0, Math.floor((today - lastDay) / (1000 * 60 * 60 * 24)));
+    return {
+      available: diffDays > 0,
+      streak: diffDays <= 1 ? 1 : 0,
+      claimedToday: diffDays === 0,
+    };
+  }, [state.lastDailyReward]);
+  useScreenMusic('menu');
 
   const [showDaily, setShowDaily] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
 
-  useEffect(() => {
-    if (!state.lastDailyReward) {
-      setShowDaily(true);
+  const openStackScreen = (screen, params) => {
+    const parent = navigation.getParent?.();
+    if (parent) {
+      parent.navigate(screen, params);
     } else {
-      const last = new Date(state.lastDailyReward);
-      const now = new Date();
-      const isNewDay = last.getDate() !== now.getDate() || last.getMonth() !== now.getMonth() || last.getFullYear() !== now.getFullYear();
-      if (isNewDay) setShowDaily(true);
+      navigation.navigate(screen, params);
     }
-  }, [state.lastDailyReward]);
+  };
+
+  useEffect(() => {
+    if (dailyInfo.available) setShowDaily(true);
+  }, [dailyInfo.available]);
 
   const calcStreak = () => {
-    if (!state.lastDailyReward) return 0;
-    const last = new Date(state.lastDailyReward);
-    const now = new Date();
-    const diffDays = Math.floor((now - last) / (1000 * 60 * 60 * 24));
-    if (diffDays <= 1) return 1;
-    return 0;
+    return dailyInfo.streak;
   };
 
   const getModuleProgress = (modId) => {
@@ -68,9 +83,10 @@ export default function HomeScreen({ navigation }) {
   };
 
   const startMission = () => {
+    soundManager.play('start');
     if (activeModeKey === 'story') {
       if (!nextMission) return;
-      navigation.navigate('Quiz', {
+      openStackScreen('Quiz', {
         moduleId: nextMission.moduleId,
         levelId: nextMission.levelId,
         missionId: nextMission.id,
@@ -80,7 +96,7 @@ export default function HomeScreen({ navigation }) {
       // survival / timer — pick a random module/level
       const randomModule = Math.floor(Math.random() * 4) + 1;
       const randomLevel = Math.floor(Math.random() * 4) + 1;
-      navigation.navigate('Quiz', {
+      openStackScreen('Quiz', {
         moduleId: randomModule,
         levelId: randomLevel,
         mode: activeModeKey,
@@ -111,7 +127,16 @@ export default function HomeScreen({ navigation }) {
           </View>
           <View style={styles.headerRight}>
             <LivesDisplay lives={state.lives} maxLives={state.maxLives} />
-            <TouchableOpacity style={styles.coinBadge}>
+            <TouchableOpacity
+              style={styles.coinBadge}
+              onPress={() => {
+                soundManager.play('coin');
+                openStackScreen('Shop');
+              }}
+              activeOpacity={0.75}
+              accessibilityRole="button"
+              accessibilityLabel="Open coin shop"
+            >
               <Ionicons name="cash-outline" size={14} color={C.gold} />
               <AppText style={styles.coinText}>{state.coins}</AppText>
             </TouchableOpacity>
@@ -140,6 +165,35 @@ export default function HomeScreen({ navigation }) {
             <AppText style={styles.xpDetail}>{currentXP}/{neededXP}</AppText>
           </View>
         </View>
+
+        <TouchableOpacity
+          style={[
+            styles.dailyRewardCard,
+            { borderColor: dailyInfo.available ? `${C.gold}70` : `${C.cardBorder}90` },
+          ]}
+          onPress={() => {
+            soundManager.play(dailyInfo.available ? 'open' : 'click');
+            setShowDaily(true);
+          }}
+          activeOpacity={0.78}
+          accessibilityRole="button"
+          accessibilityLabel="Open daily reward"
+        >
+          <View style={[styles.dailyGiftIcon, { backgroundColor: dailyInfo.available ? `${C.gold}24` : `${C.backgroundLight}D0` }]}>
+            <Ionicons name={dailyInfo.available ? 'gift' : 'checkmark-circle'} size={22} color={dailyInfo.available ? C.gold : C.success} />
+          </View>
+          <View style={styles.dailyRewardCopy}>
+            <AppText style={styles.dailyRewardTitle} decorative>Daily Reward</AppText>
+            <AppText style={styles.dailyRewardText}>
+              {dailyInfo.available ? 'Coins and XP are ready to claim.' : 'Reward claimed today. Come back tomorrow.'}
+            </AppText>
+          </View>
+          <View style={[styles.dailyRewardAction, { backgroundColor: dailyInfo.available ? C.gold : `${C.success}22` }]}>
+            <AppText style={[styles.dailyRewardActionText, { color: dailyInfo.available ? C.black : C.success }]}>
+              {dailyInfo.available ? 'Claim' : 'View'}
+            </AppText>
+          </View>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.modePanel}>
@@ -168,7 +222,10 @@ export default function HomeScreen({ navigation }) {
                     backgroundColor: selected ? `${mode.color}18` : C.card,
                   },
                 ]}
-                onPress={() => setPlayMode(mode.id)}
+                onPress={() => {
+                  soundManager.play(selected ? 'click' : 'select');
+                  setPlayMode(mode.id);
+                }}
                 activeOpacity={0.75}
               >
                 <Ionicons name={mode.icon} size={18} color={selected ? mode.color : C.textMuted} />
@@ -203,7 +260,10 @@ export default function HomeScreen({ navigation }) {
               {storyPath.characterName} prepares the lesson briefing. Clear bonus: +{storyPath.clearBonusXP} XP
             </AppText>
             <TouchableOpacity
-              onPress={() => setShowGuide(true)}
+              onPress={() => {
+                soundManager.play('open');
+                setShowGuide(true);
+              }}
               hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
               style={[styles.guideBtn, { backgroundColor: `${storyPath.color}20` }]}
             >
@@ -223,7 +283,10 @@ export default function HomeScreen({ navigation }) {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.secondaryMissionBtn}
-              onPress={() => navigation.navigate('Map')}
+              onPress={() => {
+                soundManager.play('click');
+                navigation.navigate('Map');
+              }}
               activeOpacity={0.8}
             >
               <Ionicons name="map" size={17} color={C.primary} />
@@ -289,13 +352,19 @@ export default function HomeScreen({ navigation }) {
         <ModuleCard
           key={mod.id}
           module={getModuleProgress(mod.id)}
-          onPress={() => navigation.navigate('Level', { moduleId: mod.id })}
+          onPress={() => {
+            soundManager.play('click');
+            openStackScreen('Level', { moduleId: mod.id });
+          }}
         />
       ))}
 
       <TouchableOpacity
         style={styles.profileBtn}
-        onPress={() => navigation.navigate('Profile')}
+        onPress={() => {
+          soundManager.play('click');
+          navigation.navigate('Profile');
+        }}
       >
         <Ionicons name="person-circle-outline" size={20} color={C.primary} />
         <AppText style={styles.profileBtnText}>View Profile & Achievements</AppText>
@@ -306,7 +375,10 @@ export default function HomeScreen({ navigation }) {
 
       <MissionGuideModal
         visible={showGuide}
-        onClose={() => setShowGuide(false)}
+        onClose={() => {
+          soundManager.play('close');
+          setShowGuide(false);
+        }}
         onContinue={() => { setShowGuide(false); startMission(); }}
         lesson={nextMission ? getStoryLesson({
           mission: nextMission,
@@ -319,8 +391,15 @@ export default function HomeScreen({ navigation }) {
       <DailyRewardModal
         visible={showDaily}
         streak={calcStreak()}
-        onClaim={(coins, xp) => claimDailyReward(coins, xp)}
-        onClose={() => setShowDaily(false)}
+        claimable={dailyInfo.available}
+        onClaim={(coins, xp) => {
+          soundManager.play('coin');
+          claimDailyReward(coins, xp);
+        }}
+        onClose={() => {
+          soundManager.play('close');
+          setShowDaily(false);
+        }}
       />
     </ScrollView>
     </View>
@@ -356,6 +435,13 @@ const createStyles = (C, titleSize) => StyleSheet.create({
   xpTrack: { height: 6, borderRadius: 3, overflow: 'hidden', marginTop: 5, backgroundColor: `${C.black}55`, borderWidth: 1, borderColor: `${C.rune || C.primary}25` },
   xpFill: { height: '100%', borderRadius: 3, backgroundColor: C.xp },
   xpDetail: { fontSize: 9, textAlign: 'right', marginTop: 2, color: C.textMuted },
+  dailyRewardCard: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 12, borderRadius: 12, padding: 12, borderWidth: 1.5, backgroundColor: `${C.card}E6`, shadowColor: C.gold, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.14, shadowRadius: 9, elevation: 3 },
+  dailyGiftIcon: { width: 42, height: 42, borderRadius: 12, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: `${C.gold}35` },
+  dailyRewardCopy: { flex: 1, minWidth: 0 },
+  dailyRewardTitle: { fontSize: 14, fontWeight: '900', color: C.text },
+  dailyRewardText: { fontSize: 11, lineHeight: 15, color: C.textMuted, marginTop: 2 },
+  dailyRewardAction: { minWidth: 58, minHeight: 32, borderRadius: 9, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 10 },
+  dailyRewardActionText: { fontSize: 11, fontWeight: '900', textTransform: 'uppercase' },
   modePanel: { marginHorizontal: 20, marginTop: 16, borderRadius: 12, padding: 14, borderWidth: 1, backgroundColor: `${C.card}E0`, borderColor: `${C.rune || C.primary}40` },
   modeHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
   modeHeaderText: { flex: 1 },

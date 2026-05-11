@@ -10,6 +10,8 @@ import { getXPProgress, getPlayerTitle, calculatePlayerLevel } from '../utils/ga
 import { PLAY_MODES, MISSION_TOTAL, getMissionById, getStoryDifficultyPath } from '../data/storyMissions';
 import LevelUpModal from '../components/LevelUpModal';
 import ScreenBackground from '../components/ScreenBackground';
+import useScreenMusic from '../hooks/useScreenMusic';
+import { soundManager } from '../utils/SoundManager';
 
 export default function ResultScreen({ route, navigation }) {
   const { moduleId, levelId, missionId, mode, score, total, correctCount, accuracy, coins, badge, xpEarned } = route.params;
@@ -22,14 +24,17 @@ export default function ResultScreen({ route, navigation }) {
   const storyPath = getStoryDifficultyPath(state.difficulty);
   const mission = missionId ? getMissionById(missionId) : null;
   const nextMission = missionId && missionId < MISSION_TOTAL ? getMissionById(Number(missionId) + 1) : null;
+  useScreenMusic('result');
 
   const oldLevel = calculatePlayerLevel(state.xp - (xpEarned || 0));
   const newLevel = state.xp ? calculatePlayerLevel(state.xp) : oldLevel;
   const leveledUp = newLevel > oldLevel;
 
   React.useEffect(() => {
+    soundManager.play(accuracy >= 70 ? 'victory' : 'coin');
     if (leveledUp) {
       showToast(`Level Up! You're now Level ${newLevel}!`, 'xp', 'arrow-up-circle');
+      soundManager.play('levelup');
       const timer = setTimeout(() => setShowLevelUp(true), 500);
       return () => clearTimeout(timer);
     }
@@ -52,6 +57,7 @@ export default function ResultScreen({ route, navigation }) {
   const msg = messages[Math.min(stars, 3)];
 
   const isModuleComplete = state.moduleProgress[moduleId]?.completed;
+  const goToMap = () => navigation.navigate('Main', { screen: 'Map' });
 
   return (
     <View style={styles.wrapper}>
@@ -145,7 +151,10 @@ export default function ResultScreen({ route, navigation }) {
       <View style={styles.buttonSection}>
         <TouchableOpacity
           style={styles.retryBtn}
-          onPress={() => navigation.replace('Quiz', { moduleId, levelId, missionId, mode: activeMode.id })}
+          onPress={() => {
+            soundManager.play('start');
+            navigation.replace('Quiz', { moduleId, levelId, missionId, mode: activeMode.id });
+          }}
         >
           <Ionicons name="refresh" size={20} color={C.primary} />
           <AppText style={styles.retryBtnText}>Retry Level</AppText>
@@ -154,6 +163,7 @@ export default function ResultScreen({ route, navigation }) {
         <TouchableOpacity
           style={styles.nextBtn}
           onPress={() => {
+            soundManager.play('start');
             if (nextMission) {
               navigation.replace('Quiz', {
                 moduleId: nextMission.moduleId,
@@ -162,13 +172,13 @@ export default function ResultScreen({ route, navigation }) {
                 mode: activeMode.id,
               });
             } else if (mission) {
-              navigation.navigate('Map');
+              goToMap();
             } else if (isModuleComplete && moduleId < 4) {
               navigation.navigate('Level', { moduleId: moduleId + 1 });
             } else if (levelId < 4) {
               navigation.navigate('Level', { moduleId });
             } else {
-              navigation.navigate('Map');
+              goToMap();
             }
           }}
         >
@@ -188,7 +198,10 @@ export default function ResultScreen({ route, navigation }) {
 
         <TouchableOpacity
           style={styles.mapBtn}
-          onPress={() => navigation.navigate('Map')}
+          onPress={() => {
+            soundManager.play('click');
+            goToMap();
+          }}
         >
           <AppText style={styles.mapBtnText}>Adventure Map</AppText>
         </TouchableOpacity>
@@ -198,7 +211,10 @@ export default function ResultScreen({ route, navigation }) {
         visible={showLevelUp}
         level={newLevel}
         xp={state.xp}
-        onClose={() => setShowLevelUp(false)}
+        onClose={() => {
+          soundManager.play('close');
+          setShowLevelUp(false);
+        }}
       />
 
       <View style={styles.bottomPadding} />

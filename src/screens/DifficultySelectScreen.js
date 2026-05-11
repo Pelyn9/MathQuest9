@@ -7,6 +7,8 @@ import { DIFFICULTY } from '../utils/gameLogic';
 import { getStoryDifficultyPath } from '../data/storyMissions';
 import { useGame } from '../context/GameContext';
 import ScreenBackground from '../components/ScreenBackground';
+import useScreenMusic from '../hooks/useScreenMusic';
+import { soundManager } from '../utils/SoundManager';
 
 const DIFF_ORDER = ['easy', 'normal', 'hard', 'extreme'];
 
@@ -17,6 +19,7 @@ export default function DifficultySelectScreen({ navigation }) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(60)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
+  useScreenMusic('menu');
 
   useEffect(() => {
     Animated.parallel([
@@ -32,6 +35,7 @@ export default function DifficultySelectScreen({ navigation }) {
   }, []);
 
   const handleSelect = (diff) => {
+    soundManager.play('start');
     setDifficulty(diff);
     navigation.replace('Main');
   };

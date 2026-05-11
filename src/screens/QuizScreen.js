@@ -25,6 +25,7 @@ import RewardModal from '../components/RewardModal';
 import StoryIntroModal from '../components/StoryIntroModal';
 import MissionGuideModal from '../components/MissionGuideModal';
 import ScreenBackground from '../components/ScreenBackground';
+import useScreenMusic from '../hooks/useScreenMusic';
 
 const MODULES = {
   1: require('../data/module1').default,
@@ -89,8 +90,16 @@ export default function QuizScreen({ route, navigation }) {
   const usesTimer = activeModeKey !== 'survival';
   const baseTimePerQ = diffConfig.timePerQuestion || 45;
   const timePerQ = activeModeKey === 'timer' ? Math.max(15, Math.round(baseTimePerQ * 0.65)) : baseTimePerQ;
+  const musicTrack = useMemo(() => {
+    if (!level) return 'menu';
+    if (level.isBoss || mission?.isBoss) return 'boss';
+    if (activeModeKey === 'survival') return 'survival';
+    if (activeModeKey === 'timer') return 'timer';
+    return onboardingStep === 'gameplay' ? 'answer' : 'menu';
+  }, [activeModeKey, level, mission, onboardingStep]);
 
   const isBattleLocked = battleStatus === 'gameOver' || finished || gameOverTriggeredRef.current;
+  useScreenMusic(musicTrack);
 
   useEffect(() => {
     if (isStoryMission && mission && level) {
@@ -287,6 +296,7 @@ export default function QuizScreen({ route, navigation }) {
 
   const handleNext = () => {
     if (isBattleLocked || gameOverTriggeredRef.current) return;
+    soundManager.play('click');
     answerLockedRef.current = false;
     setSelected(null);
     setShowCorrect(false);
@@ -306,6 +316,7 @@ export default function QuizScreen({ route, navigation }) {
   const finishLevel = () => {
     if (isBattleLocked || gameOverTriggeredRef.current) return;
     answerLockedRef.current = true;
+    soundManager.play('victory');
     soundManager.play('coin');
     const total = questions.length;
     const accuracy = Math.round((correctCount / total) * 100);
@@ -342,7 +353,8 @@ export default function QuizScreen({ route, navigation }) {
   const handleFiftyFifty = () => {
     if (isBattleLocked || answerLockedRef.current || showCorrect || !currentQ) return;
     if (usedFifty) return;
-    if (state.coins < 20) { showToast('Need 20 coins for 50/50!', 'info', 'cash'); return; }
+    if (state.coins < 20) { soundManager.play('wrong'); showToast('Need 20 coins for 50/50!', 'info', 'cash'); return; }
+    soundManager.play('lifeline');
     addCoins(-20);
     const incorrectIndices = currentQ.options.map((_, i) => i).filter(i => i !== currentQ.correct);
     const shuffled = incorrectIndices.sort(() => Math.random() - 0.5);
@@ -355,7 +367,8 @@ export default function QuizScreen({ route, navigation }) {
   const handleCallFriend = () => {
     if (isBattleLocked || answerLockedRef.current || showCorrect || !currentQ) return;
     if (usedCall) return;
-    if (state.coins < 40) { showToast('Need 40 coins for Call Friend!', 'info', 'cash'); return; }
+    if (state.coins < 40) { soundManager.play('wrong'); showToast('Need 40 coins for Call Friend!', 'info', 'cash'); return; }
+    soundManager.play('lifeline');
     addCoins(-40);
     setUsedCall(true);
     showToast('Friend is helping! Check the hint above.', 'info', 'people');
@@ -364,11 +377,13 @@ export default function QuizScreen({ route, navigation }) {
   const handleHint = () => {
     if (isBattleLocked || answerLockedRef.current || showCorrect || !currentQ) return;
     if (hintLevel === 0) {
+      soundManager.play('open');
       setShowHint(true); setHintLevel(1);
       showToast('Hint revealed! Click again to eliminate a wrong answer (10 coins).', 'info', 'bulb'); return;
     }
     if (hintLevel === 1) {
-      if (state.coins < 10) { showToast('Need 10 coins for the advanced hint!', 'info', 'cash'); return; }
+      if (state.coins < 10) { soundManager.play('wrong'); showToast('Need 10 coins for the advanced hint!', 'info', 'cash'); return; }
+      soundManager.play('lifeline');
       addCoins(-10);
       const incorrect = currentQ.options.map((_, i) => i).filter(i => i !== currentQ.correct);
       if (!currentQ.eliminated) currentQ.eliminated = [];
@@ -379,6 +394,7 @@ export default function QuizScreen({ route, navigation }) {
   };
 
   const handleRewardClose = () => {
+    soundManager.play('click');
     setShowReward(false);
     navigation.replace('Result', {
       moduleId, levelId, score, total: questions.length, correctCount,
@@ -443,6 +459,11 @@ export default function QuizScreen({ route, navigation }) {
     setOnboardingStep('guide');
   };
 
+  const handleGuideClose = () => {
+    soundManager.play('close');
+    setOnboardingStep('gameplay');
+  };
+
   const handleGuideContinue = () => {
     soundManager.play('click');
     setOnboardingStep('gameplay');
@@ -503,7 +524,7 @@ export default function QuizScreen({ route, navigation }) {
       {/* ── Step 2: Guide Briefing Modal ── */}
       <MissionGuideModal
         visible={onboardingStep === 'guide'}
-        onClose={() => {}}
+        onClose={handleGuideClose}
         onContinue={handleGuideContinue}
         lesson={storyLesson}
       />

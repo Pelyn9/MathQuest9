@@ -7,6 +7,8 @@ import { SHADOWS } from '../theme/colors';
 import { useGame } from '../context/GameContext';
 import { getUnlockedTitles } from '../utils/gameLogic';
 import ScreenBackground from '../components/ScreenBackground';
+import useScreenMusic from '../hooks/useScreenMusic';
+import { soundManager } from '../utils/SoundManager';
 
 const TABS = [
   { id: 'avatars', label: 'Avatars', icon: 'person' },
@@ -69,6 +71,7 @@ export default function ShopScreen({ navigation }) {
   const styles = useMemo(() => createStyles(C), [C]);
   const { state, addCoins, unlockAvatar, setAvatar, unlockTheme, setThemePreference } = useGame();
   const [activeTab, setActiveTab] = useState('avatars');
+  useScreenMusic('menu');
 
   const unlockedTitles = getUnlockedTitles(state.badges || []);
 
@@ -77,16 +80,19 @@ export default function ShopScreen({ navigation }) {
     if (avatar.unlockBadge) {
       const hasBadge = state.badges.includes(avatar.unlockBadge);
       if (!hasBadge) {
+        soundManager.play('wrong');
         Alert.alert('Locked', `Earn the achievement to unlock: ${BADGE_LABELS[avatar.unlockBadge]}`);
         return;
       }
       if (state.avatarIndex === avatar.id) return;
+      soundManager.play('power');
       setAvatar(avatar.id);
       return;
     }
 
     // Free avatar
     if (avatar.price === 0) {
+      soundManager.play('power');
       setAvatar(avatar.id);
       return;
     }
@@ -94,12 +100,14 @@ export default function ShopScreen({ navigation }) {
     // Already owned
     const owned = state.unlockedAvatars.includes(avatar.id);
     if (owned) {
+      soundManager.play('power');
       setAvatar(avatar.id);
       return;
     }
 
     // Coin purchase
     if (state.coins < avatar.price) {
+      soundManager.play('wrong');
       Alert.alert('Not enough coins', `You need ${avatar.price - state.coins} more coins.`);
       return;
     }
@@ -110,6 +118,7 @@ export default function ShopScreen({ navigation }) {
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Buy', onPress: () => {
+            soundManager.play('coin');
             addCoins(-avatar.price);
             unlockAvatar(avatar.id);
             setAvatar(avatar.id);
@@ -122,18 +131,21 @@ export default function ShopScreen({ navigation }) {
   const handleThemePurchase = (theme) => {
     const owned = state.unlockedThemes?.includes(theme.id);
     if (owned) {
+      soundManager.play('power');
       setThemePreference(theme.id);
       return;
     }
 
     // Royal Dawn is free starter
     if (theme.price === 0) {
+      soundManager.play('power');
       unlockTheme(theme.id);
       setThemePreference(theme.id);
       return;
     }
 
     if (state.coins < theme.price) {
+      soundManager.play('wrong');
       Alert.alert('Not enough coins', `You need ${theme.price - state.coins} more coins.`);
       return;
     }
@@ -145,6 +157,7 @@ export default function ShopScreen({ navigation }) {
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Buy', onPress: () => {
+            soundManager.play('coin');
             addCoins(-theme.price);
             unlockTheme(theme.id);
             setThemePreference(theme.id);
@@ -183,7 +196,13 @@ export default function ShopScreen({ navigation }) {
       <ScreenBackground preset="shop" />
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => {
+            soundManager.play('close');
+            navigation.goBack();
+          }}
+        >
           <Ionicons name="arrow-back" size={22} color={C.text} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
@@ -204,7 +223,10 @@ export default function ShopScreen({ navigation }) {
             <TouchableOpacity
               key={tab.id}
               style={[styles.tab, active && { backgroundColor: C.primary, borderColor: C.primary }]}
-              onPress={() => setActiveTab(tab.id)}
+              onPress={() => {
+                soundManager.play(activeTab === tab.id ? 'click' : 'select');
+                setActiveTab(tab.id);
+              }}
               activeOpacity={0.75}
             >
               <Ionicons name={tab.icon} size={16} color={active ? C.white : C.textMuted} />

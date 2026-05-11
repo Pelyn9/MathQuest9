@@ -16,7 +16,7 @@ const STREAK_REWARDS = [
   { day: 7, coins: 300, xp: 150 },
 ];
 
-export default function DailyRewardModal({ visible, streak, onClaim, onClose }) {
+export default function DailyRewardModal({ visible, streak, claimable = true, onClaim, onClose }) {
   const { colors: C } = useTheme();
   const scaleAnim = useRef(new Animated.Value(0)).current;
 
@@ -40,7 +40,9 @@ export default function DailyRewardModal({ visible, streak, onClaim, onClose }) 
           </View>
 
           <AppText style={[styles.title, { color: C.text }]}>Daily Reward!</AppText>
-          <AppText style={[styles.subtitle, { color: C.textMuted }]}>Day {streak + 1} streak</AppText>
+          <AppText style={[styles.subtitle, { color: C.textMuted }]}>
+            {claimable ? `Day ${streak + 1} streak` : 'Claimed today. Next reward unlocks tomorrow.'}
+          </AppText>
 
           <View style={styles.rewardsRow}>
             <View style={styles.rewardItem}>
@@ -67,17 +69,21 @@ export default function DailyRewardModal({ visible, streak, onClaim, onClose }) 
           </View>
 
           <TouchableOpacity
-            style={[styles.claimBtn, { backgroundColor: C.gold }]}
+            style={[styles.claimBtn, { backgroundColor: claimable ? C.gold : C.backgroundLight }, !claimable && styles.claimBtnDisabled]}
+            disabled={!claimable}
             onPress={() => {
+              if (!claimable) return;
               onClaim(reward.coins, reward.xp);
               onClose();
             }}
           >
-            <AppText style={[styles.claimBtnText, { color: C.black }]}>Claim Reward</AppText>
+            <AppText style={[styles.claimBtnText, { color: claimable ? C.black : C.textMuted }]}>
+              {claimable ? 'Claim Reward' : 'Claimed Today'}
+            </AppText>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.skipBtn} onPress={onClose}>
-            <AppText style={[styles.skipText, { color: C.textMuted }]}>Maybe Later</AppText>
+            <AppText style={[styles.skipText, { color: C.textMuted }]}>{claimable ? 'Maybe Later' : 'Close'}</AppText>
           </TouchableOpacity>
         </Animated.View>
       </View>
@@ -118,6 +124,9 @@ const styles = StyleSheet.create({
   claimBtn: {
     paddingVertical: 14, paddingHorizontal: 50,
     borderRadius: 10, marginTop: 20,
+  },
+  claimBtnDisabled: {
+    opacity: 0.7,
   },
   claimBtnText: { fontSize: 16, fontWeight: 'bold' },
   skipBtn: { marginTop: 12, paddingVertical: 6 },

@@ -7,6 +7,8 @@ import { useGame } from '../context/GameContext';
 import ProgressBar from '../components/ProgressBar';
 import Timer from '../components/Timer';
 import ScreenBackground from '../components/ScreenBackground';
+import useScreenMusic from '../hooks/useScreenMusic';
+import { soundManager } from '../utils/SoundManager';
 
 const MODULE_DATA = {
   1: require('../data/module1').default,
@@ -31,6 +33,7 @@ export default function AssessmentScreen({ route, navigation }) {
   const [finished, setFinished] = useState(false);
   const [timerRunning, setTimerRunning] = useState(true);
   const [timerKey, setTimerKey] = useState(0);
+  useScreenMusic('timer');
 
   useEffect(() => {
     const pool = [];
@@ -52,6 +55,7 @@ export default function AssessmentScreen({ route, navigation }) {
 
   const handleTimerExpiry = () => {
     if (showCorrect || finished) return;
+    soundManager.play('wrong');
     setSelected(-1);
     setShowCorrect(true);
     stopTimer();
@@ -73,10 +77,12 @@ export default function AssessmentScreen({ route, navigation }) {
       setPreTest(pct);
     }
     setFinished(true);
+    soundManager.play(pct >= 75 ? 'victory' : 'coin');
   };
 
   const handleSelect = (idx) => {
     if (showCorrect) return;
+    soundManager.play('click');
     setSelected(idx);
   };
 
@@ -85,10 +91,12 @@ export default function AssessmentScreen({ route, navigation }) {
     stopTimer();
     const correct = selected === currentQ.correct;
     setShowCorrect(true);
+    soundManager.play(correct ? 'correct' : 'wrong');
     if (correct) setCorrectCount(c => c + 1);
   };
 
   const handleNext = () => {
+    soundManager.play('click');
     setSelected(null);
     setShowCorrect(false);
     if (isLast) {
@@ -116,7 +124,13 @@ export default function AssessmentScreen({ route, navigation }) {
               {pct >= 75 ? 'Passed!' : 'Keep practicing!'}
             </AppText>
           </View>
-          <TouchableOpacity style={styles.doneBtn} onPress={() => navigation.goBack()}>
+          <TouchableOpacity
+            style={styles.doneBtn}
+            onPress={() => {
+              soundManager.play('close');
+              navigation.goBack();
+            }}
+          >
             <AppText style={styles.doneBtnText}>Back to Profile</AppText>
           </TouchableOpacity>
         </View>
@@ -141,7 +155,13 @@ export default function AssessmentScreen({ route, navigation }) {
       <ScreenBackground preset="assessment" />
       <View style={styles.container}>
       <View style={styles.topBar}>
-        <TouchableOpacity style={styles.closeBtn} onPress={() => navigation.goBack()}>
+        <TouchableOpacity
+          style={styles.closeBtn}
+          onPress={() => {
+            soundManager.play('close');
+            navigation.goBack();
+          }}
+        >
           <Ionicons name="close" size={22} color={C.textLight} />
         </TouchableOpacity>
         <View style={styles.topCenter}>

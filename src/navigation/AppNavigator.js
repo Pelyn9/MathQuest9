@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 import { useGame } from '../context/GameContext';
 import { DIFFICULTY } from '../utils/gameLogic';
+import { soundManager } from '../utils/SoundManager';
 
 import HomeScreen from '../screens/HomeScreen';
 import MapScreen from '../screens/MapScreen';
@@ -26,6 +27,11 @@ function TabNavigator() {
 
   return (
     <Tab.Navigator
+      screenListeners={{
+        tabPress: () => {
+          soundManager.play('click');
+        },
+      }}
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarShowLabel: true,

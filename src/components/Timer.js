@@ -3,6 +3,7 @@ import AppText from './AppText';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState, useEffect, useRef } from 'react';
 import { useTheme } from '../theme/ThemeContext';
+import { soundManager } from '../utils/SoundManager';
 
 export default function Timer({ seconds, onExpire, running, resetKey }) {
   const { colors: C } = useTheme();
@@ -54,6 +55,12 @@ export default function Timer({ seconds, onExpire, running, resetKey }) {
       }
     };
   }, [running, resetKey]);
+
+  useEffect(() => {
+    if (running && remaining > 0 && remaining <= 5) {
+      soundManager.play('tick');
+    }
+  }, [remaining, running]);
 
   const pct = remaining / seconds;
   const isLow = remaining <= 10;

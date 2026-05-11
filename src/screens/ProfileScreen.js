@@ -9,6 +9,7 @@ import { useToast } from '../context/ToastContext';
 import { BADGES, getPlayerTitle, getXPProgress, DIFFICULTY } from '../utils/gameLogic';
 import { soundManager } from '../utils/SoundManager';
 import ScreenBackground from '../components/ScreenBackground';
+import useScreenMusic from '../hooks/useScreenMusic';
 
 const DIFF_ORDER = ['easy', 'normal', 'hard', 'extreme'];
 const FANTASY_FONT = Platform.OS === 'ios' ? 'Times New Roman' : 'serif';
@@ -20,6 +21,7 @@ export default function ProfileScreen({ navigation }) {
   const activeDifficulty = DIFFICULTY[state.difficulty] || DIFFICULTY.normal;
   const accent = activeDifficulty.color;
   const styles = useMemo(() => createStyles(C, accent), [C, accent]);
+  useScreenMusic('menu');
 
   const allBadges = Object.values(BADGES);
   const earnedCount = allBadges.filter(b => state.badges.includes(b.id)).length;
@@ -27,6 +29,14 @@ export default function ProfileScreen({ navigation }) {
   const title = getPlayerTitle(playerLevel);
   const xpPct = Math.min((currentXP / neededXP) * 100, 100);
   const accuracy = state.totalAnswered > 0 ? Math.round((state.totalCorrect / state.totalAnswered) * 100) : 0;
+  const openStackScreen = useCallback((screen, params) => {
+    const parent = navigation.getParent?.();
+    if (parent) {
+      parent.navigate(screen, params);
+    } else {
+      navigation.navigate(screen, params);
+    }
+  }, [navigation]);
 
   const avatars = [
     { name: 'Math Knight', icon: 'shield-checkmark' },
@@ -81,7 +91,10 @@ export default function ProfileScreen({ navigation }) {
           {/* merchant / shop button (top right) */}
           <TouchableOpacity
             activeOpacity={0.7}
-            onPress={() => navigation.navigate('Shop')}
+            onPress={() => {
+              soundManager.play('click');
+              openStackScreen('Shop');
+            }}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             style={styles.merchantBtn}
           >
@@ -209,7 +222,13 @@ export default function ProfileScreen({ navigation }) {
           <AppText style={styles.sectionLabel}>Quest Log</AppText>
         </View>
         <View style={styles.scrollCard}>
-          <Pressable style={styles.questRow} onPress={() => navigation.navigate('Assessment', { type: 'pre' })}>
+          <Pressable
+            style={styles.questRow}
+            onPress={() => {
+              soundManager.play('start');
+              openStackScreen('Assessment', { type: 'pre' });
+            }}
+          >
             <View style={[styles.questMarker, { borderColor: `${C.info}55` }]}>
               <Ionicons name="document-text-outline" size={14} color={C.info} />
             </View>
@@ -222,7 +241,13 @@ export default function ProfileScreen({ navigation }) {
             </AppText>
           </Pressable>
           <View style={styles.questDivider} />
-          <Pressable style={styles.questRow} onPress={() => navigation.navigate('Assessment', { type: 'post' })}>
+          <Pressable
+            style={styles.questRow}
+            onPress={() => {
+              soundManager.play('start');
+              openStackScreen('Assessment', { type: 'post' });
+            }}
+          >
             <View style={[styles.questMarker, { borderColor: `${C.warning}55` }]}>
               <Ionicons name="document-text-outline" size={14} color={C.warning} />
             </View>

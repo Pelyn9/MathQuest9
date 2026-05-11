@@ -6,11 +6,14 @@ try {
   FileSystem = require('expo-file-system').default;
 } catch (e) {}
 
-function generateWavBuffer(samples, sampleRate = 8000) {
+const SFX_SAMPLE_RATE = 8000;
+const MUSIC_SAMPLE_RATE = 11025;
+
+function generateWavBuffer(samples, sampleRate = SFX_SAMPLE_RATE) {
   const numChannels = 1;
   const bitsPerSample = 16;
   const byteRate = sampleRate * numChannels * bitsPerSample / 8;
-  const blockAlign = numChannels * bitsPerSample / 8;
+  const blockAlign = sampleRate ? numChannels * bitsPerSample / 8 : 2;
   const dataSize = samples.length * blockAlign;
   const buf = new ArrayBuffer(44 + dataSize);
   const v = new DataView(buf);
@@ -35,25 +38,26 @@ function generateWavBuffer(samples, sampleRate = 8000) {
   return buf;
 }
 
-function makeTone(freq, duration, sampleRate = 8000) {
+function makeTone(freq, duration, sampleRate = SFX_SAMPLE_RATE, volume = 0.4) {
   const len = Math.floor(sampleRate * duration);
   const s = new Float32Array(len);
   for (let i = 0; i < len; i++) {
     const t = i / sampleRate;
-    const envelope = Math.min(1, (len - i) / (sampleRate * 0.05));
-    s[i] = Math.sin(2 * Math.PI * freq * t) * envelope * 0.4;
+    const fadeIn = Math.min(1, i / (sampleRate * 0.01));
+    const fadeOut = Math.min(1, (len - i) / (sampleRate * 0.05));
+    s[i] = Math.sin(2 * Math.PI * freq * t) * fadeIn * fadeOut * volume;
   }
   return s;
 }
 
-function makeSweep(startFreq, endFreq, duration, sampleRate = 8000) {
+function makeSweep(startFreq, endFreq, duration, sampleRate = SFX_SAMPLE_RATE, volume = 0.4) {
   const len = Math.floor(sampleRate * duration);
   const s = new Float32Array(len);
   for (let i = 0; i < len; i++) {
     const t = i / sampleRate;
     const freq = startFreq + (endFreq - startFreq) * (i / len);
-    const envelope = Math.min(1, (len - i) / (sampleRate * 0.05));
-    s[i] = Math.sin(2 * Math.PI * freq * t) * envelope * 0.4;
+    const fadeOut = Math.min(1, (len - i) / (sampleRate * 0.06));
+    s[i] = Math.sin(2 * Math.PI * freq * t) * fadeOut * volume;
   }
   return s;
 }
@@ -67,20 +71,210 @@ function concat(...arrays) {
   return r;
 }
 
+function midiToFreq(midi) {
+  return 440 * Math.pow(2, (midi - 69) / 12);
+}
+
+function waveSample(freq, t, wave = 'sine') {
+  const phase = (freq * t) % 1;
+  if (wave === 'triangle') return 1 - 4 * Math.abs(Math.round(phase - 0.25) - (phase - 0.25));
+  if (wave === 'square') return phase < 0.5 ? 1 : -1;
+  if (wave === 'softSquare') return Math.tanh(Math.sin(2 * Math.PI * freq * t) * 2.6);
+  return Math.sin(2 * Math.PI * freq * t);
+}
+
+function addNote(target, startSec, duration, midi, volume = 0.16, wave = 'sine', sampleRate = MUSIC_SAMPLE_RATE) {
+  const start = Math.max(0, Math.floor(startSec * sampleRate));
+  const len = Math.max(1, Math.floor(duration * sampleRate));
+  const freq = midiToFreq(midi);
+  for (let i = 0; i < len && start + i < target.length; i++) {
+    const t = i / sampleRate;
+    const attack = Math.min(1, i / (sampleRate * 0.025));
+    const release = Math.min(1, (len - i) / (sampleRate * 0.14));
+    const envelope = attack * release;
+    const shimmer = waveSample(freq * 2.01, t, 'sine') * 0.16;
+    target[start + i] += (waveSample(freq, t, wave) + shimmer) * envelope * volume;
+  }
+}
+
+function addKick(target, startSec, volume = 0.22, sampleRate = MUSIC_SAMPLE_RATE) {
+  const start = Math.max(0, Math.floor(startSec * sampleRate));
+  const len = Math.floor(0.18 * sampleRate);
+  for (let i = 0; i < len && start + i < target.length; i++) {
+    const t = i / sampleRate;
+    const freq = 90 - 55 * (i / len);
+    const envelope = Math.pow(1 - i / len, 2.3);
+    target[start + i] += Math.sin(2 * Math.PI * freq * t) * envelope * volume;
+  }
+}
+
+function addTick(target, startSec, volume = 0.1, sampleRate = MUSIC_SAMPLE_RATE) {
+  const start = Math.max(0, Math.floor(startSec * sampleRate));
+  const len = Math.floor(0.045 * sampleRate);
+  for (let i = 0; i < len && start + i < target.length; i++) {
+    const noise = Math.sin((i + 1) * 61.73) * Math.sin((i + 7) * 13.91);
+    target[start + i] += noise * (1 - i / len) * volume;
+  }
+}
+
+function normalize(samples, limit = 0.72) {
+  let peak = 0;
+  for (let i = 0; i < samples.length; i++) peak = Math.max(peak, Math.abs(samples[i]));
+  if (peak <= limit) return samples;
+  const scale = limit / peak;
+  for (let i = 0; i < samples.length; i++) samples[i] *= scale;
+  return samples;
+}
+
+function makeMusicLoop(config) {
+  const sampleRate = MUSIC_SAMPLE_RATE;
+  const beat = 60 / config.bpm;
+  const bars = config.bars || 4;
+  const beatsPerBar = config.beatsPerBar || 4;
+  const lengthSec = beat * beatsPerBar * bars;
+  const samples = new Float32Array(Math.floor(lengthSec * sampleRate));
+  const roots = config.roots || [48, 43, 45, 40];
+  const scale = config.scale || [0, 3, 7, 10];
+  const arp = config.arp || [0, 2, 1, 3, 2, 1, 0, 2];
+
+  roots.forEach((root, bar) => {
+    const barStart = bar * beatsPerBar * beat;
+    addNote(samples, barStart, beatsPerBar * beat * 0.92, root - 12, config.bassVolume || 0.12, config.bassWave || 'softSquare', sampleRate);
+    scale.forEach((step) => {
+      addNote(samples, barStart, beatsPerBar * beat * 0.88, root + step, config.padVolume || 0.04, 'sine', sampleRate);
+    });
+    arp.forEach((stepIndex, idx) => {
+      const note = root + 12 + scale[stepIndex % scale.length];
+      addNote(samples, barStart + idx * beat * 0.5, beat * 0.38, note, config.arpVolume || 0.08, config.arpWave || 'triangle', sampleRate);
+    });
+  });
+
+  if (config.lead) {
+    config.lead.forEach(([beatOffset, midi, dur = 0.45]) => {
+      addNote(samples, beatOffset * beat, dur * beat, midi, config.leadVolume || 0.08, config.leadWave || 'sine', sampleRate);
+    });
+  }
+
+  if (config.kickEvery) {
+    const totalBeats = beatsPerBar * bars;
+    for (let b = 0; b < totalBeats; b += config.kickEvery) addKick(samples, b * beat, config.kickVolume || 0.18, sampleRate);
+  }
+
+  if (config.tickEvery) {
+    const totalTicks = Math.floor((beatsPerBar * bars) / config.tickEvery);
+    for (let i = 0; i < totalTicks; i++) addTick(samples, i * config.tickEvery * beat, config.tickVolume || 0.09, sampleRate);
+  }
+
+  return generateWavBuffer(normalize(samples, 0.66), sampleRate);
+}
+
 const SOUND_DEFS = {
   correct: () => generateWavBuffer(concat(makeTone(660, 0.1), makeTone(880, 0.15))),
   wrong: () => generateWavBuffer(concat(makeTone(300, 0.15), makeTone(200, 0.2))),
-  click: () => generateWavBuffer(makeTone(1000, 0.05)),
+  click: () => generateWavBuffer(makeTone(1000, 0.05, SFX_SAMPLE_RATE, 0.28)),
+  select: () => generateWavBuffer(concat(makeTone(740, 0.045, SFX_SAMPLE_RATE, 0.25), makeTone(990, 0.05, SFX_SAMPLE_RATE, 0.22))),
+  start: () => generateWavBuffer(concat(makeTone(392, 0.08), makeTone(523, 0.08), makeTone(784, 0.16))),
+  open: () => generateWavBuffer(makeSweep(520, 980, 0.18, SFX_SAMPLE_RATE, 0.24)),
+  close: () => generateWavBuffer(makeSweep(760, 360, 0.16, SFX_SAMPLE_RATE, 0.22)),
+  power: () => generateWavBuffer(makeSweep(300, 1050, 0.28, SFX_SAMPLE_RATE, 0.25)),
+  lifeline: () => generateWavBuffer(concat(makeTone(450, 0.05, SFX_SAMPLE_RATE, 0.24), makeSweep(620, 1200, 0.18, SFX_SAMPLE_RATE, 0.22))),
+  tick: () => generateWavBuffer(makeTone(1400, 0.035, SFX_SAMPLE_RATE, 0.18)),
   levelup: () => generateWavBuffer(concat(makeTone(523, 0.12), makeTone(659, 0.12), makeTone(784, 0.12), makeTone(1047, 0.2))),
-  coin: () => generateWavBuffer(makeTone(1200, 0.12)),
+  coin: () => generateWavBuffer(concat(makeTone(1200, 0.08), makeTone(1600, 0.1, SFX_SAMPLE_RATE, 0.3))),
   badge: () => generateWavBuffer(makeSweep(500, 1500, 0.4)),
+  victory: () => generateWavBuffer(concat(makeTone(523, 0.1), makeTone(659, 0.1), makeTone(784, 0.12), makeTone(1047, 0.26))),
   gameover: () => generateWavBuffer(makeSweep(400, 100, 0.6)),
+};
+
+const MUSIC_DEFS = {
+  menu: () => makeMusicLoop({
+    bpm: 84,
+    roots: [48, 43, 45, 40],
+    scale: [0, 4, 7, 11],
+    arp: [0, 1, 2, 1, 3, 2, 1, 2],
+    bassVolume: 0.1,
+    padVolume: 0.035,
+    arpVolume: 0.065,
+    lead: [[1, 72, 0.8], [3, 76, 0.7], [7, 74, 0.8], [11, 79, 0.8], [14, 76, 1]],
+    leadVolume: 0.055,
+  }),
+  answer: () => makeMusicLoop({
+    bpm: 104,
+    roots: [50, 45, 48, 43],
+    scale: [0, 3, 7, 10],
+    arp: [0, 2, 1, 3, 1, 2, 0, 1],
+    bassWave: 'triangle',
+    bassVolume: 0.11,
+    padVolume: 0.032,
+    arpVolume: 0.075,
+    kickEvery: 2,
+    kickVolume: 0.12,
+  }),
+  boss: () => makeMusicLoop({
+    bpm: 132,
+    roots: [36, 36, 39, 35],
+    scale: [0, 3, 6, 10],
+    arp: [0, 0, 2, 1, 0, 3, 2, 1],
+    bassWave: 'softSquare',
+    bassVolume: 0.19,
+    padVolume: 0.025,
+    arpVolume: 0.09,
+    arpWave: 'softSquare',
+    lead: [[0, 60, 0.6], [1.5, 63, 0.45], [3, 66, 0.55], [6, 65, 0.5], [8, 63, 0.6], [11, 70, 0.5], [14, 66, 0.7]],
+    leadWave: 'softSquare',
+    leadVolume: 0.07,
+    kickEvery: 1,
+    kickVolume: 0.2,
+    tickEvery: 0.5,
+    tickVolume: 0.045,
+  }),
+  survival: () => makeMusicLoop({
+    bpm: 96,
+    roots: [45, 43, 40, 43],
+    scale: [0, 3, 7, 10],
+    arp: [0, 1, 0, 2, 0, 3, 2, 1],
+    bassVolume: 0.15,
+    padVolume: 0.03,
+    arpVolume: 0.07,
+    kickEvery: 2,
+    kickVolume: 0.18,
+    lead: [[2, 69, 0.6], [5, 67, 0.5], [9, 72, 0.7], [13, 70, 0.7]],
+    leadVolume: 0.055,
+  }),
+  timer: () => makeMusicLoop({
+    bpm: 144,
+    roots: [47, 50, 43, 45],
+    scale: [0, 3, 7, 10],
+    arp: [0, 1, 2, 3, 2, 1, 3, 2],
+    bassVolume: 0.11,
+    padVolume: 0.025,
+    arpVolume: 0.095,
+    tickEvery: 0.5,
+    tickVolume: 0.085,
+    kickEvery: 2,
+    kickVolume: 0.12,
+  }),
+  result: () => makeMusicLoop({
+    bpm: 92,
+    roots: [48, 55, 53, 55],
+    scale: [0, 4, 7, 12],
+    arp: [0, 1, 2, 3, 2, 1, 0, 2],
+    bassVolume: 0.09,
+    padVolume: 0.04,
+    arpVolume: 0.07,
+    lead: [[0, 72, 0.6], [2, 76, 0.6], [4, 79, 0.9], [8, 84, 0.9], [12, 79, 1]],
+    leadVolume: 0.065,
+  }),
 };
 
 class WebAudioPlayer {
   constructor() {
     this.ctx = null;
     this.buffers = {};
+    this.musicBuffers = {};
+    this.musicNode = null;
+    this.musicGain = null;
+    this.currentMusicName = null;
     this.enabled = true;
   }
 
@@ -89,6 +283,9 @@ class WebAudioPlayer {
       const Ctor = window.AudioContext || window.webkitAudioContext;
       if (!Ctor) return false;
       this.ctx = new Ctor();
+      this.musicGain = this.ctx.createGain();
+      this.musicGain.gain.value = 0.18;
+      this.musicGain.connect(this.ctx.destination);
       return true;
     } catch (e) { return false; }
   }
@@ -101,13 +298,25 @@ class WebAudioPlayer {
 
   loadBuffers() {
     for (const [name, gen] of Object.entries(SOUND_DEFS)) {
-      try {
-        const wavBuf = gen();
-        this.ctx.decodeAudioData(wavBuf.slice(0), (buf) => {
-          this.buffers[name] = buf;
-        }, () => {});
-      } catch (e) {}
+      this._decode(name, gen, this.buffers);
     }
+    for (const [name, gen] of Object.entries(MUSIC_DEFS)) {
+      this._decode(name, gen, this.musicBuffers, () => {
+        if (this.enabled && this.currentMusicName === name && !this.musicNode) {
+          this.playMusic(name);
+        }
+      });
+    }
+  }
+
+  _decode(name, gen, target, onLoaded) {
+    try {
+      const wavBuf = gen();
+      this.ctx.decodeAudioData(wavBuf.slice(0), (buf) => {
+        target[name] = buf;
+        onLoaded?.();
+      }, () => {});
+    } catch (e) {}
   }
 
   play(name) {
@@ -115,45 +324,92 @@ class WebAudioPlayer {
     this._ensureContext();
     try {
       const src = this.ctx.createBufferSource();
+      const gain = this.ctx.createGain();
+      gain.gain.value = 0.65;
       src.buffer = this.buffers[name];
-      src.connect(this.ctx.destination);
+      src.connect(gain);
+      gain.connect(this.ctx.destination);
       src.start(0);
     } catch (e) {}
   }
 
-  setEnabled(val) { this.enabled = val; }
+  playMusic(name) {
+    if (!this.ctx || !name) return;
+    this.currentMusicName = name;
+    if (!this.enabled) return;
+    if (this.musicNode && this.musicNode._musicName === name) return;
+    const buffer = this.musicBuffers[name];
+    if (!buffer) return;
+    this._ensureContext();
+    this._stopMusicNode();
+    try {
+      const src = this.ctx.createBufferSource();
+      src.buffer = buffer;
+      src.loop = true;
+      src._musicName = name;
+      src.connect(this.musicGain);
+      src.start(0);
+      this.musicNode = src;
+    } catch (e) {}
+  }
+
+  _stopMusicNode() {
+    if (!this.musicNode) return;
+    try {
+      this.musicNode.stop(0);
+      this.musicNode.disconnect();
+    } catch (e) {}
+    this.musicNode = null;
+  }
+
+  stopMusic() {
+    this._stopMusicNode();
+    this.currentMusicName = null;
+  }
+
+  setEnabled(val) {
+    this.enabled = val;
+    if (!val) {
+      this._stopMusicNode();
+      return;
+    }
+    if (this.currentMusicName) this.playMusic(this.currentMusicName);
+  }
 }
 
 class ExpoAudioPlayer {
   constructor() {
     this.sounds = {};
+    this.music = {};
+    this.currentMusicName = null;
     this.enabled = true;
     this.initialized = false;
   }
 
   async init() {
-    if (this.initialized || !Audio) return;
+    if (this.initialized || !Audio || !FileSystem) return;
     try {
       await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
       const soundDir = `${FileSystem.cacheDirectory}sounds/`;
       await FileSystem.makeDirectoryAsync(soundDir, { intermediates: true });
-      for (const [name, gen] of Object.entries(SOUND_DEFS)) {
-        try {
-          const wavBuf = gen();
-          const bytes = new Uint8Array(wavBuf);
-          let binary = '';
-          for (let i = 0; i < bytes.length; i += 8192) {
-            binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
-          }
-          const b64 = btoa(binary);
-          const path = `${soundDir}${name}.wav`;
-          await FileSystem.writeAsStringAsync(path, b64, { encoding: FileSystem.EncodingType.Base64 });
-          const { sound } = await Audio.Sound.createAsync({ uri: path }, { shouldPlay: false });
-          this.sounds[name] = sound;
-        } catch (e) {}
-      }
+      await this._loadGroup(soundDir, SOUND_DEFS, this.sounds, false);
+      await this._loadGroup(soundDir, MUSIC_DEFS, this.music, true);
       this.initialized = true;
     } catch (e) {}
+  }
+
+  async _loadGroup(soundDir, defs, target, isMusic) {
+    for (const [name, gen] of Object.entries(defs)) {
+      try {
+        const path = `${soundDir}${isMusic ? 'music-' : ''}${name}.wav`;
+        await FileSystem.writeAsStringAsync(path, arrayBufferToBase64(gen()), { encoding: FileSystem.EncodingType.Base64 });
+        const { sound } = await Audio.Sound.createAsync(
+          { uri: path },
+          { shouldPlay: false, isLooping: isMusic, volume: isMusic ? 0.2 : 0.65 }
+        );
+        target[name] = sound;
+      } catch (e) {}
+    }
   }
 
   async play(name) {
@@ -166,32 +422,103 @@ class ExpoAudioPlayer {
     } catch {}
   }
 
-  setEnabled(val) { this.enabled = val; }
+  async playMusic(name) {
+    this.currentMusicName = name;
+    if (!this.enabled || !name) return;
+    const next = this.music[name];
+    if (!next) return;
+    try {
+      await this._stopCurrentMusic();
+      await next.setIsLoopingAsync(true);
+      await next.setVolumeAsync(0.2);
+      await next.setPositionAsync(0);
+      await next.playAsync();
+    } catch {}
+  }
+
+  async _stopCurrentMusic() {
+    for (const [name, sound] of Object.entries(this.music)) {
+      if (name !== this.currentMusicName) {
+        try { await sound.stopAsync(); } catch {}
+      }
+    }
+  }
+
+  async stopMusic() {
+    this.currentMusicName = null;
+    for (const sound of Object.values(this.music)) {
+      try { await sound.stopAsync(); } catch {}
+    }
+  }
+
+  setEnabled(val) {
+    this.enabled = val;
+    if (!val) {
+      for (const sound of Object.values(this.music)) {
+        try { sound.stopAsync(); } catch {}
+      }
+    } else if (this.currentMusicName) {
+      this.playMusic(this.currentMusicName);
+    }
+  }
+}
+
+function arrayBufferToBase64(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += 8192) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
+  }
+  return btoa(binary);
 }
 
 class HybridSoundManager {
   constructor() {
     this.player = null;
     this.enabled = true;
+    this.currentMusicName = null;
+    this.initPromise = null;
   }
 
   async init() {
+    if (this.initPromise) return this.initPromise;
+    this.initPromise = this._init();
+    return this.initPromise;
+  }
+
+  async _init() {
     if (typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext)) {
       const web = new WebAudioPlayer();
       if (web.init()) {
         web.loadBuffers();
+        web.setEnabled(this.enabled);
         this.player = web;
+        if (this.currentMusicName) web.playMusic(this.currentMusicName);
         return;
       }
     }
     const expo = new ExpoAudioPlayer();
     await expo.init();
+    expo.setEnabled(this.enabled);
     this.player = expo;
+    if (this.currentMusicName) expo.playMusic(this.currentMusicName);
   }
 
   play(name) {
     if (!this.enabled || !this.player) return;
     this.player.play(name);
+  }
+
+  playMusic(name) {
+    if (!name) return;
+    this.currentMusicName = name;
+    if (!this.enabled || !this.player) return;
+    this.player.playMusic(name);
+  }
+
+  stopMusic() {
+    this.currentMusicName = null;
+    this.player?.stopMusic?.();
   }
 
   setEnabled(val) {
