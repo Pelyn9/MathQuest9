@@ -1,0 +1,5 @@
+feat: add ScreenBackground component and background utilities
+
+- Introduced ScreenBackground component for dynamic background rendering based on module and level IDs.
+- Created utility functions to retrieve screen and level backgrounds with light and dark mode support.
+- Defined color gradients for various screens and modules to enhance visual consistency across the application.

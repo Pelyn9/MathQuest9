@@ -1,0 +1,6 @@
+0000000000000000000000000000000000000000 b391099d070f4d90493532bd67e0ce7c4a4e0544 Pelyn9 <peejaymarco@gmail.com> 1778339971 +0800	commit (initial): Initial commit
+b391099d070f4d90493532bd67e0ce7c4a4e0544 fbcc26cbbccff7cbe995a2f11da74ae6b9354191 Pelyn9 <peejaymarco@gmail.com> 1778346907 +0800	commit: feat: add ShopScreen and SplashScreen components with theme context integration
+fbcc26cbbccff7cbe995a2f11da74ae6b9354191 d66dd6568c7b2075083a85b6efa4d38c786ec5e5 Pelyn9 <peejaymarco@gmail.com> 1778347522 +0800	commit: feat: update web configuration in app.json and add vercel.json for deployment
+d66dd6568c7b2075083a85b6efa4d38c786ec5e5 d3271f19dcf9c5d40a20dc140958295e4f3f9ba5 Pelyn9 <peejaymarco@gmail.com> 1778423681 +0800	commit: feat: Enhance ResultScreen with mission details and navigation improvements
+d3271f19dcf9c5d40a20dc140958295e4f3f9ba5 a1b2c077125b52b9bcd6ca954b8807a59d199f75 Pelyn9 <peejaymarco@gmail.com> 1778430601 +0800	commit: feat: Add theme management and unlock functionality, update UI components, and enhance splash screen
+a1b2c077125b52b9bcd6ca954b8807a59d199f75 a8ae3f8d1f80b3259ca4d4ca112480bf59828328 Pelyn9 <peejaymarco@gmail.com> 1778459293 +0800	commit: feat: add ScreenBackground component and background utilities
