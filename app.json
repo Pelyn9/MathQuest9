@@ -4,11 +4,11 @@
     "slug": "MathQuest9",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./src/image/dcmg9logo.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./src/image/dcmg9logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#050814"
     },
@@ -19,14 +19,14 @@
     "android": {
       "package": "com.mathquest9.app",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./src/image/dcmg9logo.png",
         "backgroundColor": "#6C63FF"
       },
       "edgeToEdgeEnabled": true,
       "versionCode": 1
     },
     "web": {
-      "favicon": "./assets/favicon.png",
+      "favicon": "./src/image/dcmg9logo.png",
       "bundler": "metro",
       "output": "single"
     },
