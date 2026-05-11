@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { Image, View, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import AppText from '../components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
@@ -9,6 +9,8 @@ import { STORY_MISSIONS } from '../data/storyMissions';
 import ScreenBackground from '../components/ScreenBackground';
 import useScreenMusic from '../hooks/useScreenMusic';
 import { soundManager } from '../utils/SoundManager';
+
+const castleBackground = require('../image/castle.png');
 
 const MODULE_DATA = {
   1: require('../data/module1').default,
@@ -38,6 +40,7 @@ export default function LevelScreen({ route, navigation }) {
     return (
       <View style={styles.wrapper}>
         <ScreenBackground moduleId={moduleId} />
+        <Image pointerEvents="none" source={castleBackground} resizeMode="cover" style={styles.castleBackdrop} />
         <View style={styles.container}>
           <AppText style={styles.errorText}>Module data not found</AppText>
         </View>
@@ -63,6 +66,7 @@ export default function LevelScreen({ route, navigation }) {
   return (
     <View style={styles.wrapper}>
       <ScreenBackground moduleId={moduleId} levelId={1} />
+      <Image pointerEvents="none" source={castleBackground} resizeMode="cover" style={styles.castleBackdrop} />
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         <View style={[styles.header, { borderBottomColor: mod.color }]}>
           <TouchableOpacity
@@ -160,6 +164,13 @@ export default function LevelScreen({ route, navigation }) {
 
 const createStyles = (C) => StyleSheet.create({
   wrapper: { flex: 1 },
+  castleBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
+    opacity: 0.28,
+    transform: [{ scale: 1.08 }],
+  },
   container: { flex: 1, backgroundColor: 'transparent' },
   errorText: { color: C.text },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 50, paddingBottom: 20, borderBottomWidth: 1.5, backgroundColor: `${C.card}D8`, borderBottomColor: `${C.gold}35` },

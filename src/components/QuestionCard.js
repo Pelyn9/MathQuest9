@@ -1,6 +1,8 @@
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { ImageBackground, View, TouchableOpacity, StyleSheet } from 'react-native';
 import AppText from './AppText';
 import { useTheme } from '../theme/ThemeContext';
+
+const castleBackground = require('../image/castle.png');
 
 export default function QuestionCard({ question, selected, onSelect, showCorrect, usedFifty, disabled = false }) {
   const { colors: C } = useTheme();
@@ -33,12 +35,18 @@ export default function QuestionCard({ question, selected, onSelect, showCorrect
 
   return (
     <View style={styles.container}>
-      <View style={[styles.questionBox, { backgroundColor: `${C.card}E8`, borderColor: `${C.gold}45`, shadowColor: C.primary }]}>
+      <ImageBackground
+        source={castleBackground}
+        resizeMode="cover"
+        style={[styles.questionBox, { backgroundColor: `${C.card}E8`, borderColor: `${C.gold}45`, shadowColor: C.primary }]}
+        imageStyle={styles.cardImage}
+      >
+        <View pointerEvents="none" style={styles.cardTint} />
         <View style={[styles.questionIcon, { backgroundColor: `${C.primary}22`, borderColor: `${C.gold}45` }]}>
           <AppText style={[styles.questionIconText, { color: C.white }]}>?</AppText>
         </View>
         <AppText style={[styles.questionText, { color: C.text }]}>{question.question}</AppText>
-      </View>
+      </ImageBackground>
 
       <View style={styles.optionsContainer}>
         {question.options.map((opt, i) => {
@@ -53,21 +61,29 @@ export default function QuestionCard({ question, selected, onSelect, showCorrect
               disabled={choicesLocked || isEliminated}
               activeOpacity={0.7}
             >
-              <View style={styles.optionRow}>
-                <View style={getLetterStyle(i)}>
-                  <AppText style={[{ fontSize: 13 }, getLetterText(i)]}>
-                    {String.fromCharCode(65 + i)}
-                  </AppText>
-                </View>
-                <AppText style={[styles.optionText, { color: C.text }, selected === i && !showCorrect && { fontWeight: '600' }]}>
-                  {opt}
-                </AppText>
-                {showCorrect && i === question.correct && (
-                  <View style={[styles.correctCheck, { backgroundColor: C.success }]}>
-                    <AppText style={[styles.correctCheckText, { color: C.white }]}>&#10003;</AppText>
+              <ImageBackground
+                source={castleBackground}
+                resizeMode="cover"
+                style={styles.optionBackground}
+                imageStyle={styles.optionImage}
+              >
+                <View pointerEvents="none" style={styles.optionTint} />
+                <View style={styles.optionRow}>
+                  <View style={getLetterStyle(i)}>
+                    <AppText style={[{ fontSize: 13 }, getLetterText(i)]}>
+                      {String.fromCharCode(65 + i)}
+                    </AppText>
                   </View>
-                )}
-              </View>
+                  <AppText style={[styles.optionText, { color: C.text }, selected === i && !showCorrect && { fontWeight: '600' }]}>
+                    {opt}
+                  </AppText>
+                  {showCorrect && i === question.correct && (
+                    <View style={[styles.correctCheck, { backgroundColor: C.success }]}>
+                      <AppText style={[styles.correctCheckText, { color: C.white }]}>&#10003;</AppText>
+                    </View>
+                  )}
+                </View>
+              </ImageBackground>
             </TouchableOpacity>
           );
         })}
@@ -92,6 +108,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.16,
     shadowRadius: 12,
     elevation: 3,
+    overflow: 'hidden',
+  },
+  cardImage: {
+    borderRadius: 12,
+    opacity: 0.28,
+  },
+  cardTint: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(8, 11, 22, 0.55)',
   },
   questionIcon: {
     width: 32,
@@ -116,8 +141,19 @@ const styles = StyleSheet.create({
   },
   option: {
     borderRadius: 10,
-    padding: 14,
     borderWidth: 1,
+    overflow: 'hidden',
+  },
+  optionBackground: {
+    padding: 14,
+  },
+  optionImage: {
+    borderRadius: 10,
+    opacity: 0.2,
+  },
+  optionTint: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(8, 11, 22, 0.48)',
   },
   optionDisabled: {
     opacity: 0.55,
