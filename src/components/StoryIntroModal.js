@@ -69,7 +69,7 @@ export default function StoryIntroModal({ visible, onContinue, mission, storyPat
           {/* story */}
           <View style={[styles.storyBox, { backgroundColor: C.backgroundLight, borderColor: C.cardBorder }]}>
             <Ionicons name="book" size={14} color={accent} style={{ marginBottom: 6 }} />
-            <AppText style={styles.storyText}>{mission.opening} {mission.arc[0]}</AppText>
+            <AppText style={styles.storyText}>{mission.story}</AppText>
           </View>
 
           {/* continue button with glow */}

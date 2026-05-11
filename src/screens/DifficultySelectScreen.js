@@ -1,4 +1,4 @@
-import { View, TouchableOpacity, StyleSheet, Animated, ScrollView } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Animated, Easing, ScrollView } from 'react-native';
 import AppText from '../components/AppText';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useRef, useEffect, useMemo } from 'react';
