@@ -15,8 +15,6 @@ export const STORY_DIFFICULTY_PATHS = {
     ridge: '#0D3041',
     road: '#3C2A17',
     clearBonusXP: 8,
-    storyPrefix: 'On the Apprentice Trail, the kingdom keeps the danger low while Lira teaches the first method.',
-    storyTwist: 'Your goal is to learn the pattern, protect the people nearby, and earn steady XP.',
     guide: 'Read the clue, identify the topic, then answer at a relaxed pace before the timer runs out.',
   },
   normal: {
@@ -33,8 +31,6 @@ export const STORY_DIFFICULTY_PATHS = {
     ridge: '#0A2B58',
     road: '#3C2A17',
     clearBonusXP: 14,
-    storyPrefix: 'On the Knight Route, Numeria sends you into the main campaign where lessons and battles stay balanced.',
-    storyTwist: 'Clear the mission to advance your knight progress and gain stronger XP rewards.',
     guide: 'Study the guide, listen to the tutor, then solve each challenge with balanced time pressure.',
   },
   hard: {
@@ -51,8 +47,6 @@ export const STORY_DIFFICULTY_PATHS = {
     ridge: '#2A2032',
     road: '#4A2E19',
     clearBonusXP: 24,
-    storyPrefix: 'On the Warden March, enemies change the rules faster and every lesson must be used with precision.',
-    storyTwist: 'Survive the tougher route to push a separate hard-mode progress path and earn higher XP.',
     guide: 'Use the topic rule quickly, check each option, and protect your lives because mistakes cost more here.',
   },
   extreme: {
@@ -69,8 +63,6 @@ export const STORY_DIFFICULTY_PATHS = {
     ridge: '#2A1018',
     road: '#2B1720',
     clearBonusXP: 40,
-    storyPrefix: 'On the Crown Trial, the corrupted relic tests your mastery with the most dangerous version of the story.',
-    storyTwist: 'Only this difficulty records Crown progress, and victory grants the largest XP reward.',
     guide: 'Plan before tapping, use hints wisely, and treat every question like a boss strike.',
   },
 };
@@ -253,6 +245,39 @@ const getChapter = (localId) => Math.ceil(localId / 5);
 
 const getLevelId = (localId) => ((localId - 1) % 4) + 1;
 
+const STORY_QUESTION_PROMPTS = {
+  1: {
+    1: 'A market scout finds a missing trade entry near {target}. Solve it to restore the {region} ledger.',
+    2: 'A family budget page linked to {target} is fading from the records. Balance it to protect the village books.',
+    3: 'The exchange board near {target} shows broken sales marks. Read the pattern so the market can move again.',
+    4: 'Inside the Debt Warden\'s treasury, a corrupted account blocks {target}. Break it with this calculation.',
+  },
+  2: {
+    1: 'A mason finds a warped corner near {target}. Read the angle clue to rebuild the crossing.',
+    2: 'A support at {target} shifts out of place. Solve the angle relationship to lock the stones together.',
+    3: 'A transversal rune cuts across {target}. Use the parallel-line clue to restore the blueprint.',
+    4: 'The Angle Wraith twists the spire walls around {target}. Solve this boss clue to straighten the path.',
+  },
+  3: {
+    1: 'A function machine near {target} is losing its outputs. Find the missing value to reconnect the data route.',
+    2: 'Messenger pairs around {target} are scattered. Match the mapping rule so the route can be restored.',
+    3: 'The archive beneath {target} hides a broken domain-and-range record. Read it to recover the pattern.',
+    4: 'The Function Phantom floods {target} with false mappings. Identify the true rule to trap it.',
+  },
+  4: {
+    1: 'A frozen road marker at {target} waits for the correct line. Check the point or intercept to restart it.',
+    2: 'A stalled cart near {target} leaves slope marks on the road. Measure the change to move again.',
+    3: 'A route through {target} has lost its real-world model. Build the equation to thaw the road.',
+    4: 'The Slope Shadow bends the highway around {target}. Solve this boss line to reopen the final path.',
+  },
+};
+
+const getMissionObjectiveText = (region, localId, isBoss, isUltimateBoss) => {
+  if (isUltimateBoss) return 'Face the Corrupted Crown and restore the Crown of Numeria.';
+  if (isBoss) return `Defeat ${region.boss} and reclaim the Crown fragment from ${region.name}.`;
+  return `Solve ${region.topic} clues to advance through ${missionObjects[localId - 1]} in ${region.name}.`;
+};
+
 // Connected saga narrative for each mission — ties all 100 missions into one story
 const SAGA_OVERVIEW = {
   1: 'A dark curse has fallen upon the kingdom of Numeria. The legendary Crown of Numeria — Source of all wisdom and order — has been shattered into four fragments. Each fragment was entrusted to a guardian of a different land. But the fragments have awakened twisted versions of the guardians. You must journey across all four lands, defeat each corrupted guardian, recover the fragments, and face the final boss — the Corrupted Crown itself — to restore peace to Numeria.',
@@ -336,7 +361,7 @@ const buildMission = (_, index) => {
     icon: isUltimateBoss ? 'skull' : isBoss ? 'skull' : isGate ? 'flag' : region.icon,
     title,
     shortTitle: isUltimateBoss ? 'The Corrupted Crown' : isBoss ? `${region.boss}'s Keep` : missionObjects[localId - 1],
-    objective: isUltimateBoss ? 'Face the Corrupted Crown in the ultimate battle for Numeria!' : `Win a ${region.topic} battle to recover a Numerian relic.`,
+    objective: getMissionObjectiveText(region, localId, isBoss, isUltimateBoss),
     story,
     isBoss: isBoss || isUltimateBoss,
     isGate,
@@ -372,10 +397,22 @@ export const getDifficultyMissionProgress = (state, difficulty) => {
   return createEmptyMissionProgress();
 };
 
-export const getDifficultyMissionStory = (mission, difficulty) => {
+export const getDifficultyMissionStory = (mission) => {
   if (!mission) return '';
-  const path = getStoryDifficultyPath(difficulty);
-  return `${path.storyPrefix} ${mission.story} ${path.storyTwist}`;
+  return mission.story;
+};
+
+export const getStoryQuestionPrompt = (mission) => {
+  if (!mission) return '';
+  const promptsByLevel = STORY_QUESTION_PROMPTS[mission.moduleId];
+  const prompt = promptsByLevel?.[mission.levelId];
+  if (prompt) {
+    return prompt
+      .replace('{target}', mission.shortTitle)
+      .replace('{region}', mission.regionName);
+  }
+  if (mission.isBoss) return `A boss seal blocks ${mission.shortTitle}. Solve this challenge to weaken it.`;
+  return `A clue appears near ${mission.shortTitle}. Solve it to move the story forward.`;
 };
 
 export const getStoryLesson = ({ mission, level, difficulty, questionCount = 0 }) => {

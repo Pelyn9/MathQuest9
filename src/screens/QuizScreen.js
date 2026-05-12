@@ -8,10 +8,10 @@ import { useTheme } from '../theme/ThemeContext';
 import { calculateScore, calculateXP, BADGES, DIFFICULTY } from '../utils/gameLogic';
 import {
   PLAY_MODES,
-  getDifficultyMissionStory,
   getMissionById,
   getStoryDifficultyPath,
   getStoryLesson,
+  getStoryQuestionPrompt,
   getMissionStats,
   getDifficultyMissionProgress,
 } from '../data/storyMissions';
@@ -142,6 +142,18 @@ export default function QuizScreen({ route, navigation }) {
   const buildQuestionSet = useCallback(() => {
     if (!level) return [];
 
+    if (isStoryMission && mission) {
+      return level.questions.map((question, index) => ({
+        ...question,
+        id: `${mission.id}-${question.id || index}`,
+        difficulty: question.difficulty || level.difficulty,
+        storyContext: mission.isBoss
+          ? `Boss Mission ${mission.id}: ${mission.shortTitle}`
+          : `Mission ${mission.id}: ${mission.shortTitle}`,
+        storyPrompt: getStoryQuestionPrompt(mission, index),
+      }));
+    }
+
     if (activeModeKey === 'survival') {
       const hardPool = [];
       Object.values(MODULES).forEach(module => {
@@ -178,7 +190,7 @@ export default function QuizScreen({ route, navigation }) {
       filtered = [...filtered, ...shuffledRest];
     }
     return filtered.sort(() => Math.random() - 0.5).slice(0, needed);
-  }, [activeModeKey, level, modData, state.difficulty]);
+  }, [activeModeKey, isStoryMission, level, mission, modData, state.difficulty]);
 
   useEffect(() => {
     setQuestions(buildQuestionSet());

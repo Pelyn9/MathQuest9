@@ -68,7 +68,22 @@ export default function QuestionCard({ question, selected, onSelect, showCorrect
         <View style={[styles.questionIcon, { backgroundColor: `${C.primary}22`, borderColor: `${C.gold}45` }]}>
           <AppText style={[styles.questionIconText, { color: C.white }]}>?</AppText>
         </View>
-        <AppText style={[styles.questionText, { color: C.text }]}>{question.question}</AppText>
+        <View style={styles.questionCopy}>
+          {!!question.storyContext && (
+            <View style={[styles.storyBadge, { borderColor: `${C.gold}38`, backgroundColor: `${C.gold}14` }]}>
+              <Ionicons name="flag-outline" size={12} color={C.gold} />
+              <AppText style={[styles.storyBadgeText, { color: C.gold }]} numberOfLines={1}>
+                {question.storyContext}
+              </AppText>
+            </View>
+          )}
+          {!!question.storyPrompt && (
+            <AppText style={[styles.storyPrompt, { color: C.textMuted }]} numberOfLines={2}>
+              {question.storyPrompt}
+            </AppText>
+          )}
+          <AppText style={[styles.questionText, { color: C.text }]}>{question.question}</AppText>
+        </View>
         {!!onOpenGuide && (
           <TouchableOpacity
             style={[styles.guideBtn, { backgroundColor: `${C.gold}18`, borderColor: `${C.gold}45` }]}
@@ -168,7 +183,35 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     fontWeight: '500',
+  },
+  questionCopy: {
     flex: 1,
+    minWidth: 0,
+  },
+  storyBadge: {
+    alignSelf: 'flex-start',
+    maxWidth: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginBottom: 7,
+  },
+  storyBadgeText: {
+    flexShrink: 1,
+    minWidth: 0,
+    fontSize: 10,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  storyPrompt: {
+    fontSize: 12,
+    lineHeight: 17,
+    marginBottom: 7,
   },
   guideBtn: {
     width: 32,
