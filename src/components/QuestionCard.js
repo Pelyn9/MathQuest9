@@ -161,11 +161,11 @@ const styles = StyleSheet.create({
   },
   cardImage: {
     borderRadius: 12,
-    opacity: 0.28,
+    opacity: 0.14,
   },
   cardTint: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(8, 11, 22, 0.55)',
+    backgroundColor: 'rgba(8, 11, 22, 0.68)',
   },
   questionIcon: {
     width: 32,
@@ -234,11 +234,11 @@ const styles = StyleSheet.create({
   },
   optionImage: {
     borderRadius: 10,
-    opacity: 0.2,
+    opacity: 0.1,
   },
   optionTint: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(8, 11, 22, 0.48)',
+    backgroundColor: 'rgba(8, 11, 22, 0.6)',
   },
   optionDisabled: {
     opacity: 0.55,

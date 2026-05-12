@@ -9,7 +9,16 @@ import {
 
 const bossImage = require('../image/boss.png');
 
-export default function BossLoadingScreen({ title = 'Boss Battle', finalBoss = false, onFinish }) {
+export default function BossLoadingScreen({
+  title = 'Boss Battle',
+  finalBoss = false,
+  onFinish,
+  backgroundSource = bossImage,
+  loadingText,
+  accentColor = '#FFD45A',
+  titleShadowColor = 'rgba(255, 64, 96, 0.65)',
+  copyBlockStyle,
+}) {
   const barAnim = useRef(new Animated.Value(0)).current;
   const loadingTextAnim = useRef(new Animated.Value(0)).current;
 
@@ -56,7 +65,7 @@ export default function BossLoadingScreen({ title = 'Boss Battle', finalBoss = f
     <View style={styles.container}>
       <StatusBar hidden />
       <Animated.Image
-        source={bossImage}
+        source={backgroundSource}
         resizeMode="cover"
         style={styles.bossImage}
       />
@@ -64,18 +73,18 @@ export default function BossLoadingScreen({ title = 'Boss Battle', finalBoss = f
       <View style={styles.vignetteTop} />
       <View style={styles.vignetteBottom} />
 
-      <View style={styles.copyBlock}>
+      <View style={[styles.copyBlock, copyBlockStyle]}>
         <Animated.Text style={[styles.loadingText, { opacity: loadingTextAnim }]}>
-          {finalBoss ? 'Final Boss Loading...' : 'Boss Battle Loading...'}
+          {loadingText || (finalBoss ? 'Final Boss Loading...' : 'Boss Battle Loading...')}
         </Animated.Text>
-        <Animated.Text style={[styles.titleText, { opacity: loadingTextAnim }]}>
+        <Animated.Text style={[styles.titleText, { color: accentColor, textShadowColor: titleShadowColor, opacity: loadingTextAnim }]}>
           {title}
         </Animated.Text>
       </View>
 
       <View style={styles.loadingLineWrap}>
         <View style={styles.loadingLineTrack}>
-          <Animated.View style={[styles.loadingLineFill, { width: loadPct }]} />
+          <Animated.View style={[styles.loadingLineFill, { width: loadPct, backgroundColor: accentColor }]} />
         </View>
       </View>
     </View>
@@ -134,10 +143,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 18,
     lineHeight: 24,
-    color: '#FFD45A',
     fontWeight: '800',
     fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif',
-    textShadowColor: 'rgba(255, 64, 96, 0.65)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 12,
   },
@@ -156,6 +163,5 @@ const styles = StyleSheet.create({
   loadingLineFill: {
     height: '100%',
     borderRadius: 999,
-    backgroundColor: '#FFD45A',
   },
 });

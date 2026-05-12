@@ -7,16 +7,18 @@ import { useTheme } from '../theme/ThemeContext';
 const heroImage = require('../image/hero.png');
 const presetBackdropImages = {
   home: require('../image/homepage.png'),
+  difficulty: require('../image/selectdifficulty.png'),
   map: require('../image/castle.png'),
   profile: require('../image/profile.png'),
   shop: require('../image/heroshop.png'),
 };
 
 const presetBackdropOverlays = {
-  home: ['rgba(2,7,17,0.18)', 'rgba(2,7,17,0.28)', 'rgba(2,7,17,0.72)'],
-  map: ['rgba(2,7,17,0.08)', 'rgba(2,7,17,0.16)', 'rgba(2,7,17,0.54)'],
-  profile: ['rgba(2,7,17,0.08)', 'rgba(2,7,17,0.18)', 'rgba(2,7,17,0.58)'],
-  shop: ['rgba(2,7,17,0.1)', 'rgba(2,7,17,0.2)', 'rgba(2,7,17,0.62)'],
+  home: ['rgba(2,7,17,0.48)', 'rgba(2,7,17,0.64)', 'rgba(2,7,17,0.9)'],
+  difficulty: ['rgba(2,7,17,0.46)', 'rgba(2,7,17,0.62)', 'rgba(2,7,17,0.9)'],
+  map: ['rgba(2,7,17,0.44)', 'rgba(2,7,17,0.6)', 'rgba(2,7,17,0.86)'],
+  profile: ['rgba(2,7,17,0.42)', 'rgba(2,7,17,0.58)', 'rgba(2,7,17,0.86)'],
+  shop: ['rgba(2,7,17,0.44)', 'rgba(2,7,17,0.6)', 'rgba(2,7,17,0.88)'],
 };
 
 const GLYPHS = [
@@ -60,7 +62,7 @@ export default function ScreenBackground({ preset, moduleId, levelId }) {
 
   if (presetBackdropImage) {
     return (
-      <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+      <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.photoBackdropBase]}>
         <Image
           source={presetBackdropImage}
           resizeMode="cover"
@@ -76,7 +78,7 @@ export default function ScreenBackground({ preset, moduleId, levelId }) {
     );
   }
 
-  const imageOpacity = preset === 'home' ? 0.34 : preset === 'difficulty' ? 0.3 : 0.18;
+  const imageOpacity = preset === 'home' ? 0.18 : preset === 'difficulty' ? 0.16 : 0.1;
 
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
@@ -96,7 +98,7 @@ export default function ScreenBackground({ preset, moduleId, levelId }) {
         style={[StyleSheet.absoluteFill, styles.baseGradient]}
       />
       <LinearGradient
-        colors={['rgba(2,7,17,0.1)', 'rgba(2,7,17,0.42)', 'rgba(2,7,17,0.86)']}
+        colors={['rgba(2,7,17,0.28)', 'rgba(2,7,17,0.58)', 'rgba(2,7,17,0.92)']}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={StyleSheet.absoluteFill}
@@ -141,10 +143,14 @@ const styles = StyleSheet.create({
   heroImageLevel: {
     transform: [{ scale: 1.15 }],
   },
+  photoBackdropBase: {
+    backgroundColor: '#020711',
+  },
   photoBackdrop: {
     ...StyleSheet.absoluteFillObject,
     width: '100%',
     height: '100%',
+    opacity: 0.42,
     transform: [{ scale: 1.04 }],
   },
   baseGradient: {

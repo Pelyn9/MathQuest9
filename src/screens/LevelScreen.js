@@ -175,7 +175,7 @@ const createStyles = (C) => StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     width: '100%',
     height: '100%',
-    opacity: 0.28,
+    opacity: 0.12,
     transform: [{ scale: 1.08 }],
   },
   container: { flex: 1, backgroundColor: 'transparent' },

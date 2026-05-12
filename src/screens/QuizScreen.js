@@ -63,6 +63,8 @@ const getAllModuleQuestions = () => {
 };
 
 const bossBackground = require('../image/boss.png');
+const timerLoadingBackground = require('../image/mathmage.jpg');
+const storyLoadingBackground = require('../image/storymode.png');
 
 export default function QuizScreen({ route, navigation }) {
   const { moduleId, levelId, missionId, mode } = route.params;
@@ -75,7 +77,10 @@ export default function QuizScreen({ route, navigation }) {
   const styles = useMemo(() => createStyles(C), [C]);
   const initialMission = missionId ? getMissionById(missionId) : null;
   const initialActiveModeKey = initialMission ? 'story' : mode || state.activeMode || 'story';
-  const startsAsBossEncounter = initialActiveModeKey === 'survival' || Boolean(initialMission ? initialMission.isBoss : level?.isBoss);
+  const startsWithLoadingScreen = initialActiveModeKey === 'survival'
+    || initialActiveModeKey === 'timer'
+    || initialActiveModeKey === 'story'
+    || Boolean(initialMission ? initialMission.isBoss : level?.isBoss);
 
   const [qIndex, setQIndex] = useState(0);
   const [selected, setSelected] = useState(null);
@@ -100,7 +105,7 @@ export default function QuizScreen({ route, navigation }) {
   const [timerKey, setTimerKey] = useState(0);
   const [battleStatus, setBattleStatus] = useState('playing');
   const [onboardingStep, setOnboardingStep] = useState('story'); // story -> gameplay
-  const [showBossLoading, setShowBossLoading] = useState(startsAsBossEncounter);
+  const [showBossLoading, setShowBossLoading] = useState(startsWithLoadingScreen);
   const bossLoadingKeyRef = useRef(null);
   const gameOverTriggeredRef = useRef(false);
   const answerLockedRef = useRef(false);
@@ -117,10 +122,12 @@ export default function QuizScreen({ route, navigation }) {
   const activeMode = PLAY_MODES[activeModeKey] || PLAY_MODES.story;
   const mission = initialMission;
   const storyPath = getStoryDifficultyPath(state.difficulty);
+  const isStoryMode = activeModeKey === 'story';
   const isStoryMission = activeModeKey === 'story' && !!mission;
   const isSurvivalMode = activeModeKey === 'survival';
+  const isTimerMode = activeModeKey === 'timer';
   const isBossEncounter = isSurvivalMode || Boolean(mission ? mission.isBoss : level?.isBoss);
-  const bossEncounterKey = isBossEncounter
+  const loadingScreenKey = (isBossEncounter || isTimerMode || isStoryMode)
     ? `${activeModeKey}-${mission?.id || `${moduleId}-${levelId}`}`
     : null;
   const missionProgress = isStoryMission ? getDifficultyMissionProgress(state, state.difficulty) : null;
@@ -143,16 +150,16 @@ export default function QuizScreen({ route, navigation }) {
   useScreenMusic(musicTrack);
 
   useEffect(() => {
-    if (bossEncounterKey && bossLoadingKeyRef.current !== bossEncounterKey) {
-      bossLoadingKeyRef.current = bossEncounterKey;
+    if (loadingScreenKey && bossLoadingKeyRef.current !== loadingScreenKey) {
+      bossLoadingKeyRef.current = loadingScreenKey;
       setShowBossLoading(true);
       return;
     }
 
-    if (!bossEncounterKey) {
+    if (!loadingScreenKey) {
       setShowBossLoading(false);
     }
-  }, [bossEncounterKey]);
+  }, [loadingScreenKey]);
 
   useEffect(() => {
     if (isStoryMission && mission && level) {
@@ -572,11 +579,22 @@ export default function QuizScreen({ route, navigation }) {
     outputRange: [0.4, 1],
   });
 
-  if (showBossLoading && isBossEncounter) {
+  if (showBossLoading && (isBossEncounter || isTimerMode || isStoryMode)) {
     return (
       <BossLoadingScreen
-        title={isSurvivalMode ? 'Survival Boss Battle' : mission?.shortTitle || level?.title || 'Boss Battle'}
+        title={isTimerMode ? 'Timer Mode' : isSurvivalMode ? 'Survival Boss Battle' : isStoryMode ? 'Story Mode' : mission?.shortTitle || level?.title || 'Boss Battle'}
         finalBoss={!!mission?.isUltimateBoss}
+        backgroundSource={isTimerMode ? timerLoadingBackground : isStoryMode ? storyLoadingBackground : undefined}
+        loadingText={isTimerMode ? 'Time Challenge Loading...' : isStoryMode ? 'Story Quest Loading...' : undefined}
+        accentColor={isTimerMode || isSurvivalMode || isStoryMode ? '#FFF1A8' : undefined}
+        titleShadowColor={isTimerMode || isSurvivalMode || isStoryMode ? 'rgba(0, 0, 0, 0.96)' : undefined}
+        copyBlockStyle={isTimerMode || isSurvivalMode || isStoryMode ? {
+          backgroundColor: 'rgba(2, 7, 17, 0.68)',
+          borderColor: 'rgba(255, 241, 168, 0.42)',
+          borderWidth: 1,
+          borderRadius: 12,
+          paddingVertical: 12,
+        } : undefined}
         onFinish={handleBossLoadingFinish}
       />
     );
@@ -844,15 +862,15 @@ const createStyles = (C) => StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     width: '100%',
     height: '100%',
-    opacity: 0.42,
+    opacity: 0.24,
   },
   survivalBossRedWash: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(120, 0, 18, 0.46)',
+    backgroundColor: 'rgba(120, 0, 18, 0.54)',
   },
   survivalBossShade: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(8, 2, 8, 0.42)',
+    backgroundColor: 'rgba(8, 2, 8, 0.56)',
   },
   rpgBackdrop: {
     ...StyleSheet.absoluteFillObject,
