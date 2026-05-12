@@ -4,15 +4,12 @@ import { Ionicons } from '@expo/vector-icons';
 import AppText from './AppText';
 import { useTheme } from '../theme/ThemeContext';
 
-const getLetter = (index) => String.fromCharCode(65 + index);
-
 export default function RoyalGuideModal({
   visible,
   onClose,
   lesson,
   mission,
   question,
-  selected,
   showCorrect,
 }) {
   const { colors: C } = useTheme();
@@ -23,13 +20,16 @@ export default function RoyalGuideModal({
   const path = lesson?.path || {
     color: C.gold,
     characterName: 'Royal Guide',
-    characterRole: 'Question Journal',
+    characterRole: 'Math Guide',
     characterIcon: 'book',
   };
   const accent = path.color || C.gold;
-  const selectedAnswer = selected !== null && selected >= 0 ? question.options?.[selected] : null;
-  const correctAnswer = question.options?.[question.correct];
-  const storyText = mission?.story || lesson?.dialog || 'The Royal Guide is ready to help you read this challenge carefully.';
+  const guideText = lesson?.dialog || lesson?.guide || mission?.objective || 'The Royal Guide is ready to help you read this challenge carefully.';
+  const ruleText = lesson?.rule || mission?.objective || 'Look for the important numbers and decide which operation the problem needs.';
+  const hintText = question.hint || lesson?.activity || 'Read the clue slowly, label the given values, then compare your work with the choices.';
+  const noteText = showCorrect && question.explanation
+    ? question.explanation
+    : 'Use these clues to narrow the choices. The guide gives direction, not the answer.';
   const modalMaxHeight = Math.min(height - 44, 600);
   const scrollMaxHeight = Math.max(260, modalMaxHeight - 70);
 
@@ -64,67 +64,35 @@ export default function RoyalGuideModal({
           >
             <View style={[styles.sectionCard, { backgroundColor: `${C.backgroundLight}D4`, borderColor: `${C.gold}25` }]}>
               <View style={styles.sectionHeader}>
-                <Ionicons name="book-outline" size={15} color={accent} />
-                <AppText style={[styles.sectionLabel, { color: accent }]}>Story</AppText>
+                <Ionicons name="compass-outline" size={15} color={accent} />
+                <AppText style={[styles.sectionLabel, { color: accent }]}>Guide</AppText>
               </View>
-              <AppText style={[styles.bodyText, styles.justifyText, { color: C.textLight }]}>{storyText}</AppText>
+              <AppText style={[styles.bodyText, styles.justifyText, { color: C.textLight }]}>{guideText}</AppText>
             </View>
 
             <View style={[styles.sectionCard, { backgroundColor: `${C.backgroundLight}D4`, borderColor: `${accent}30` }]}>
               <View style={styles.sectionHeader}>
-                <Ionicons name="help-circle-outline" size={15} color={accent} />
-                <AppText style={[styles.sectionLabel, { color: accent }]}>Question</AppText>
+                <Ionicons name="school-outline" size={15} color={accent} />
+                <AppText style={[styles.sectionLabel, { color: accent }]}>Key Rule</AppText>
               </View>
-              <AppText style={[styles.questionText, { color: C.text }]}>{question.question}</AppText>
+              <AppText style={[styles.bodyText, { color: C.textLight }]}>{ruleText}</AppText>
             </View>
 
             <View style={[styles.sectionCard, { backgroundColor: `${C.backgroundLight}D4`, borderColor: `${C.gold}25` }]}>
               <View style={styles.sectionHeader}>
-                <Ionicons name="list-outline" size={15} color={accent} />
-                <AppText style={[styles.sectionLabel, { color: accent }]}>Answers</AppText>
+                <Ionicons name="bulb-outline" size={15} color={accent} />
+                <AppText style={[styles.sectionLabel, { color: accent }]}>Hint</AppText>
               </View>
-
-              {question.options?.map((option, index) => {
-                const isSelected = selected === index;
-                const isCorrect = showCorrect && index === question.correct;
-                const isWrong = showCorrect && isSelected && index !== question.correct;
-                const borderColor = isCorrect ? C.success : isWrong ? C.danger : isSelected ? accent : `${C.gold}22`;
-                const backgroundColor = isCorrect
-                  ? `${C.success}20`
-                  : isWrong
-                    ? `${C.danger}20`
-                    : isSelected
-                      ? `${accent}18`
-                      : `${C.card}80`;
-
-                return (
-                  <View key={`${option}-${index}`} style={[styles.answerRow, { backgroundColor, borderColor }]}>
-                    <View style={[styles.answerLetter, { borderColor, backgroundColor: `${C.black || '#000'}18` }]}>
-                      <AppText style={[styles.answerLetterText, { color: isCorrect ? C.success : isWrong ? C.danger : C.textLight }]}>
-                        {getLetter(index)}
-                      </AppText>
-                    </View>
-                    <AppText style={[styles.answerText, { color: C.textLight }]}>{option}</AppText>
-                    {isCorrect && <Ionicons name="checkmark-circle" size={17} color={C.success} />}
-                    {isWrong && <Ionicons name="close-circle" size={17} color={C.danger} />}
-                  </View>
-                );
-              })}
+              <AppText style={[styles.bodyText, { color: C.textLight }]}>{hintText}</AppText>
             </View>
 
             <View style={[styles.noteBox, { backgroundColor: `${accent}14`, borderColor: `${accent}35` }]}>
-              <Ionicons name={showCorrect ? 'school-outline' : 'lock-closed-outline'} size={15} color={accent} />
+              <Ionicons name={showCorrect ? 'reader-outline' : 'sparkles-outline'} size={15} color={accent} />
               <View style={styles.noteTextWrap}>
                 <AppText style={[styles.noteTitle, { color: accent }]}>
-                  {showCorrect ? 'Royal Answer' : 'Royal Guide Note'}
+                  {showCorrect ? 'After Check' : 'Royal Guide Note'}
                 </AppText>
-                <AppText style={[styles.bodyText, { color: C.textLight }]}>
-                  {showCorrect
-                    ? `Correct answer: ${correctAnswer}. ${question.explanation || ''}`
-                    : selectedAnswer
-                      ? `Your selected answer is ${selectedAnswer}. Confirm it to reveal the Royal Answer.`
-                      : 'Choose an answer first. The Royal Answer appears here after you confirm.'}
-                </AppText>
+                <AppText style={[styles.bodyText, { color: C.textLight }]}>{noteText}</AppText>
               </View>
             </View>
           </ScrollView>

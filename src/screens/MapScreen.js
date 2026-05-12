@@ -39,7 +39,7 @@ export default function MapScreen({ navigation }) {
       moduleId: mission.moduleId,
       levelId: mission.levelId,
       missionId: mission.id,
-      mode: state.activeMode || 'story',
+      mode: 'story',
     };
     if (parent) {
       parent.navigate('Quiz', params);

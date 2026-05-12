@@ -47,7 +47,7 @@ export default function QuizScreen({ route, navigation }) {
   const { colors: C } = useTheme();
   const styles = useMemo(() => createStyles(C), [C]);
   const initialMission = missionId ? getMissionById(missionId) : null;
-  const initialActiveModeKey = mode || state.activeMode || 'story';
+  const initialActiveModeKey = initialMission ? 'story' : mode || state.activeMode || 'story';
   const startsAsBossEncounter = initialActiveModeKey === 'survival' || Boolean(initialMission ? initialMission.isBoss : level?.isBoss);
 
   const [qIndex, setQIndex] = useState(0);
@@ -599,7 +599,6 @@ export default function QuizScreen({ route, navigation }) {
         lesson={storyLesson}
         mission={mission}
         question={currentQ}
-        selected={selected}
         showCorrect={showCorrect}
       />
 
