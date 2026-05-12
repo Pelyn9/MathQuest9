@@ -146,18 +146,19 @@ function gameReducer(state, action) {
       const { moduleId, levelId, missionId, score, maxScore, accuracy, xpEarned, difficulty } = action.payload;
       const difficultyKey = difficulty || state.difficulty || 'normal';
       const mod = state.moduleProgress[moduleId];
-      const stars = calculateStars(score, maxScore);
+      const stars = calculateStars(score, maxScore, accuracy);
+      const passed = stars > 0;
       const prevBest = mod.bestScores[levelId] || 0;
-      const newLevels = mod.levelsCompleted.includes(levelId)
+      const newLevels = !passed || mod.levelsCompleted.includes(levelId)
         ? mod.levelsCompleted
         : [...mod.levelsCompleted, levelId];
       const newScores = { ...mod.bestScores, [levelId]: Math.max(prevBest, score) };
       const newAccuracy = { ...mod.accuracy, [levelId]: accuracy };
       const newStars = { ...mod.stars, [levelId]: Math.max(mod.stars[levelId] || 0, stars) };
-      const allLevelsDone = Object.keys(newScores).length >= 4;
+      const allLevelsDone = newLevels.length >= 4;
 
       let newExtreme = state.completedLevelsOnExtreme;
-      if (state.difficulty === 'extreme') {
+      if (passed && state.difficulty === 'extreme') {
         newExtreme = state.completedLevelsOnExtreme.includes(`${moduleId}-${levelId}`)
           ? state.completedLevelsOnExtreme
           : [...state.completedLevelsOnExtreme, `${moduleId}-${levelId}`];
@@ -179,7 +180,7 @@ function gameReducer(state, action) {
         const completedMissions = currentMissionProgress.completed || [];
         newMissionProgress = {
           ...currentMissionProgress,
-          completed: completedMissions.includes(missionKey)
+          completed: !passed || completedMissions.includes(missionKey)
             ? completedMissions
             : [...completedMissions, missionKey],
           bestScores: {

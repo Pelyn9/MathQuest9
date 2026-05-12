@@ -444,9 +444,14 @@ export const getMissionStars = (missionProgress, missionId) => (
   missionProgress?.stars?.[missionId] || 0
 );
 
-export const isMissionCompleted = (missionProgress, missionId) => (
-  missionProgress?.completed?.includes(Number(missionId)) || false
-);
+export const isMissionCompleted = (missionProgress, missionId) => {
+  const id = Number(missionId);
+  const completed = missionProgress?.completed?.includes(id) || false;
+  if (!completed) return false;
+  const stars = missionProgress?.stars || {};
+  const hasStarRecord = Object.prototype.hasOwnProperty.call(stars, id);
+  return !hasStarRecord || (stars[id] || 0) > 0;
+};
 
 export const isMissionUnlocked = (missionProgress, missionId) => {
   const id = Number(missionId);
@@ -455,13 +460,12 @@ export const isMissionUnlocked = (missionProgress, missionId) => {
 };
 
 export const getNextMissionId = (missionProgress) => {
-  const completed = missionProgress?.completed || [];
-  const next = STORY_MISSIONS.find(mission => !completed.includes(mission.id));
+  const next = STORY_MISSIONS.find(mission => !isMissionCompleted(missionProgress, mission.id));
   return next?.id || MISSION_TOTAL;
 };
 
 export const getMissionStats = (missionProgress) => {
-  const completed = missionProgress?.completed?.length || 0;
+  const completed = STORY_MISSIONS.filter(mission => isMissionCompleted(missionProgress, mission.id)).length;
   const totalStars = Object.values(missionProgress?.stars || {}).reduce((sum, stars) => sum + stars, 0);
   return {
     completed,

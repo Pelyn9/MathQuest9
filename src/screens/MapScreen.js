@@ -54,8 +54,9 @@ export default function MapScreen({ navigation }) {
 
   const isUltimateBossUnlocked = () => {
     // Mission 100 unlocks when all 99 previous missions are completed
-    const completed = missionProgress?.completed || [];
-    return completed.length >= 99;
+    return STORY_MISSIONS
+      .filter(mission => mission.id < 100)
+      .every(mission => isMissionCompleted(missionProgress, mission.id));
   };
 
   return (
@@ -193,10 +194,10 @@ export default function MapScreen({ navigation }) {
                     </AppText>
                     {completed && <Ionicons name="checkmark-circle" size={14} color={C.success} />}
                   </View>
-                  <AppText style={[styles.storyTitle, { color: unlocked ? C.text : C.textMuted }]} decorative>
+                  <AppText style={[styles.storyTitle, { color: unlocked ? C.text : C.textMuted }]} decorative numberOfLines={1}>
                     {mission.shortTitle}
                   </AppText>
-                  <AppText style={styles.storyText}>
+                  <AppText style={styles.storyText} numberOfLines={3}>
                     {unlocked ? getDifficultyMissionStory(mission, state.difficulty) : 'Clear the previous mission on this difficulty to unlock this part of the kingdom.'}
                   </AppText>
                 </TouchableOpacity>
@@ -264,11 +265,11 @@ const createStyles = (C) => StyleSheet.create({
   nodeIconWrap: { width: 32, height: 32, borderRadius: 9, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: `${C.gold}25` },
   nodeNumber: { fontSize: 14, fontWeight: '900', marginTop: 3 },
   nodeStars: { flexDirection: 'row', gap: 1, marginTop: 2 },
-  storyBubble: { flex: 1, minHeight: 108, borderRadius: 12, borderWidth: 1, padding: 12, justifyContent: 'center' },
+  storyBubble: { flex: 1, height: 108, borderRadius: 12, borderWidth: 1, padding: 12, justifyContent: 'center', overflow: 'hidden' },
   storyTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   storyKicker: { fontSize: 9, fontWeight: '900', letterSpacing: 0.8, textTransform: 'uppercase' },
   storyTitle: { fontSize: 13, fontWeight: '900', marginTop: 3 },
-  storyText: { fontSize: 11, lineHeight: 17, marginTop: 4, color: C.textMuted, textAlign: 'justify' },
+  storyText: { fontSize: 11, lineHeight: 16, marginTop: 4, color: C.textMuted, textAlign: 'left' },
   connector: { alignItems: 'center', height: 16 },
   connectorLine: { width: 3, height: 16, borderRadius: 2, shadowColor: C.primary, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.35, shadowRadius: 6 },
   sagaBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginTop: 12, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, borderWidth: 1, backgroundColor: `${C.card}C8` },

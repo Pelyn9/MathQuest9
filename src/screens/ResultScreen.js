@@ -6,7 +6,7 @@ import { SHADOWS } from '../theme/colors';
 import { useTheme } from '../theme/ThemeContext';
 import { useGame } from '../context/GameContext';
 import { useToast } from '../context/ToastContext';
-import { getXPProgress, getPlayerTitle, calculatePlayerLevel } from '../utils/gameLogic';
+import { getXPProgress, getPlayerTitle, calculatePlayerLevel, calculateStarsFromAccuracy } from '../utils/gameLogic';
 import { PLAY_MODES, MISSION_TOTAL, getMissionById, getStoryDifficultyPath } from '../data/storyMissions';
 import LevelUpModal from '../components/LevelUpModal';
 import ScreenBackground from '../components/ScreenBackground';
@@ -40,14 +40,8 @@ export default function ResultScreen({ route, navigation }) {
     }
   }, []);
 
-  const getStarCount = () => {
-    if (accuracy >= 90) return 3;
-    if (accuracy >= 70) return 2;
-    if (accuracy >= 40) return 1;
-    return 0;
-  };
-
-  const stars = getStarCount();
+  const stars = calculateStarsFromAccuracy(accuracy);
+  const canProceed = stars > 0;
   const messages = [
     { icon: 'fitness', text: "Keep practicing! You'll get better!" },
     { icon: 'thumbs-up', text: 'Good effort! Review the solutions and try again.' },
@@ -74,7 +68,7 @@ export default function ResultScreen({ route, navigation }) {
             />
           ))}
         </View>
-        <AppText style={styles.title} decorative>{mission ? 'Mission Complete!' : 'Level Complete!'}</AppText>
+        <AppText style={styles.title} decorative>{canProceed ? (mission ? 'Mission Complete!' : 'Level Complete!') : 'Try Again!'}</AppText>
         <View style={styles.messageRow}>
           <Ionicons name={msg.icon} size={18} color={C.textLight} />
           <AppText style={styles.message}>{msg.text}</AppText>
@@ -90,7 +84,11 @@ export default function ResultScreen({ route, navigation }) {
             <AppText style={styles.missionKicker}>Mission {mission.id}/100 - {activeMode.title} - {storyPath.label}</AppText>
               <AppText style={styles.missionTitle} decorative>{mission.shortTitle}</AppText>
             <AppText style={styles.missionStory} numberOfLines={2}>
-              {nextMission ? `Path opened: ${nextMission.shortTitle}` : 'The Lost Kingdom of Numeria is restored.'}
+              {canProceed
+                ? nextMission
+                  ? `Path opened: ${nextMission.shortTitle}`
+                  : 'The Lost Kingdom of Numeria is restored.'
+                : 'Earn at least 1 star to open the next path.'}
             </AppText>
           </View>
         </View>
@@ -164,6 +162,10 @@ export default function ResultScreen({ route, navigation }) {
           style={styles.nextBtn}
           onPress={() => {
             soundManager.play('start');
+            if (!canProceed) {
+              navigation.replace('Quiz', { moduleId, levelId, missionId, mode: activeMode.id });
+              return;
+            }
             if (nextMission) {
               navigation.replace('Quiz', {
                 moduleId: nextMission.moduleId,
@@ -184,14 +186,14 @@ export default function ResultScreen({ route, navigation }) {
         >
           <AppText style={styles.nextBtnText}>
             {nextMission
-              ? 'Next Mission'
+              ? canProceed ? 'Next Mission' : 'Retry to Continue'
               : mission
-                ? 'Back to Map'
+                ? canProceed ? 'Back to Map' : 'Retry to Continue'
                 : isModuleComplete && moduleId < 4
-              ? 'Next Module'
+              ? canProceed ? 'Next Module' : 'Retry to Continue'
               : levelId < 4
-                ? 'Next Level'
-                : 'Back to Map'}
+                ? canProceed ? 'Next Level' : 'Retry to Continue'
+                : canProceed ? 'Back to Map' : 'Retry to Continue'}
           </AppText>
           <Ionicons name="arrow-forward" size={20} color={C.white} />
         </TouchableOpacity>

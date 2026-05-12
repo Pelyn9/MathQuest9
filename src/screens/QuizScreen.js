@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useGame } from '../context/GameContext';
 import { useToast } from '../context/ToastContext';
 import { useTheme } from '../theme/ThemeContext';
-import { calculateScore, calculateXP, BADGES, DIFFICULTY } from '../utils/gameLogic';
+import { calculateScore, calculateXP, calculateStarsFromAccuracy, BADGES, DIFFICULTY } from '../utils/gameLogic';
 import {
   PLAY_MODES,
   getMissionById,
@@ -381,9 +381,10 @@ export default function QuizScreen({ route, navigation }) {
     soundManager.play('coin');
     const total = questions.length;
     const accuracy = Math.round((correctCount / total) * 100);
+    const starsEarned = calculateStarsFromAccuracy(accuracy);
     const maxScore = total * 100 * 2;
     const coinsEarned = Math.round(score / 20) + (accuracy === 100 ? 50 : 0);
-    const xpAward = totalXP + (isStoryMission ? storyPath.clearBonusXP : 0);
+    const xpAward = totalXP + (isStoryMission && starsEarned > 0 ? storyPath.clearBonusXP : 0);
     completeLevel({
       moduleId,
       levelId,

@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 import { MODULES } from '../theme/colors';
 import { useGame } from '../context/GameContext';
-import { STORY_MISSIONS } from '../data/storyMissions';
+import { STORY_MISSIONS, isMissionCompleted } from '../data/storyMissions';
 import ScreenBackground from '../components/ScreenBackground';
 import useScreenMusic from '../hooks/useScreenMusic';
 import { soundManager } from '../utils/SoundManager';
@@ -29,9 +29,15 @@ export default function LevelScreen({ route, navigation }) {
   const progress = state.moduleProgress[moduleId];
   useScreenMusic('menu');
 
+  const hasPassingStars = (levelId) => {
+    const stars = progress.stars[levelId] || 0;
+    const hasStarRecord = Object.prototype.hasOwnProperty.call(progress.stars || {}, levelId);
+    return stars > 0 || (progress.levelsCompleted.includes(levelId) && !hasStarRecord);
+  };
+
   const isLevelUnlocked = (levelId) => {
     if (levelId === 1) return true;
-    return progress.levelsCompleted.includes(levelId - 1);
+    return hasPassingStars(levelId - 1);
   };
 
   const getStars = (levelId) => progress.stars[levelId] || 0;
@@ -48,14 +54,14 @@ export default function LevelScreen({ route, navigation }) {
     );
   }
 
-  const completedCount = progress.levelsCompleted.length;
+  const completedCount = data.levels.filter(level => hasPassingStars(level.id)).length;
 
   const getMissionIdForLevel = (lid) => {
     // Find first uncompleted mission matching this moduleId and levelId
     const diffProgress = state.missionProgressByDifficulty?.[state.difficulty];
     const uncompleted = STORY_MISSIONS.filter(m =>
       m.moduleId === moduleId && m.levelId === lid &&
-      !diffProgress?.completed?.includes(m.id)
+      !isMissionCompleted(diffProgress, m.id)
     );
     if (uncompleted.length > 0) return uncompleted[0].id;
     // Fallback: first mission matching this moduleId and levelId
@@ -102,7 +108,7 @@ export default function LevelScreen({ route, navigation }) {
         <View style={styles.levelsList}>
           {data.levels.map((level, idx) => {
             const unlocked = isLevelUnlocked(level.id);
-            const completed = progress.levelsCompleted.includes(level.id);
+            const completed = hasPassingStars(level.id);
             const stars = getStars(level.id);
             const icons = ['school', 'book', 'bulb', 'trophy'];
 

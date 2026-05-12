@@ -145,7 +145,15 @@ export const calculateXP = ({ correct, difficulty, streak }) => {
   return Math.round((baseXP + streakBonus) * config.xpMult);
 };
 
-export const calculateStars = (score, maxScore) => {
+export const calculateStarsFromAccuracy = (accuracy = 0) => {
+  if (accuracy >= 90) return 3;
+  if (accuracy >= 70) return 2;
+  if (accuracy >= 40) return 1;
+  return 0;
+};
+
+export const calculateStars = (score, maxScore, accuracy = null) => {
+  if (typeof accuracy === 'number') return calculateStarsFromAccuracy(accuracy);
   const ratio = maxScore > 0 ? score / maxScore : 0;
   if (ratio >= 0.9) return 3;
   if (ratio >= 0.7) return 2;
