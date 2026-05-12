@@ -6,6 +6,7 @@ import {
   StatusBar,
   Platform,
 } from 'react-native';
+import { soundManager } from '../utils/SoundManager';
 
 const heroImage = require('../image/hero.png');
 
@@ -14,6 +15,8 @@ export default function SplashScreen() {
   const loadingTextAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    soundManager.playMusic('menu');
+
     // Loading bar animation
     Animated.timing(barAnim, {
       toValue: 1,

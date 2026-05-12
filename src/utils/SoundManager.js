@@ -1,10 +1,12 @@
 let Audio = null;
 let FileSystem = null;
+let Asset = null;
 
 try {
   Audio = require('expo-av').Audio;
   const ExpoFileSystem = require('expo-file-system/legacy');
   FileSystem = ExpoFileSystem.default ?? ExpoFileSystem;
+  Asset = require('expo-asset').Asset;
 } catch (e) {}
 
 const SFX_SAMPLE_RATE = 8000;
@@ -12,6 +14,23 @@ const MUSIC_SAMPLE_RATE = 11025;
 const AUDIO_CACHE_VERSION = 'v2';
 const BASE64_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 const waitForUiTurn = () => new Promise(resolve => setTimeout(resolve, 0));
+const MAIN_PAGE_MUSIC = require('../backgroundmusic/mainpagemusic.mp3');
+const ASSET_MUSIC_VOLUME = 1;
+const ASSET_MUSIC_DEFS = {
+  menu: MAIN_PAGE_MUSIC,
+};
+
+async function resolveAssetUri(assetModule) {
+  if (typeof assetModule === 'string') return assetModule;
+  if (assetModule?.uri) return assetModule.uri;
+  if (!Asset?.fromModule) return null;
+
+  const asset = Asset.fromModule(assetModule);
+  if (!asset.downloaded && asset.downloadAsync) {
+    try { await asset.downloadAsync(); } catch (e) {}
+  }
+  return asset.localUri || asset.uri || null;
+}
 
 function generateWavBuffer(samples, sampleRate = SFX_SAMPLE_RATE) {
   const numChannels = 1;
@@ -304,9 +323,13 @@ class WebAudioPlayer {
     this.ctx = null;
     this.buffers = {};
     this.musicBuffers = {};
+    this.assetMusic = {};
+    this.loadingAssetMusic = {};
     this.musicNode = null;
     this.musicGain = null;
     this.currentMusicName = null;
+    this.activeAssetMusicName = null;
+    this.unlockHandler = null;
     this.enabled = true;
   }
 
@@ -318,6 +341,7 @@ class WebAudioPlayer {
       this.musicGain = this.ctx.createGain();
       this.musicGain.gain.value = 0.18;
       this.musicGain.connect(this.ctx.destination);
+      this._attachUnlockListeners();
       return true;
     } catch (e) { return false; }
   }
@@ -328,11 +352,22 @@ class WebAudioPlayer {
     }
   }
 
+  _attachUnlockListeners() {
+    if (typeof window === 'undefined' || this.unlockHandler) return;
+    this.unlockHandler = () => {
+      this._ensureContext();
+      if (this.currentMusicName) this.playMusic(this.currentMusicName);
+    };
+    window.addEventListener('pointerdown', this.unlockHandler, true);
+    window.addEventListener('keydown', this.unlockHandler, true);
+  }
+
   loadBuffers() {
     for (const [name, gen] of Object.entries(SOUND_DEFS)) {
       this._decode(name, gen, this.buffers);
     }
     for (const [name, gen] of Object.entries(MUSIC_DEFS)) {
+      if (ASSET_MUSIC_DEFS[name]) continue;
       this._decode(name, gen, this.musicBuffers, () => {
         if (this.enabled && this.currentMusicName === name && !this.musicNode) {
           this.playMusic(name);
@@ -369,6 +404,11 @@ class WebAudioPlayer {
     if (!this.ctx || !name) return;
     this.currentMusicName = name;
     if (!this.enabled) return;
+    if (ASSET_MUSIC_DEFS[name]) {
+      this._playAssetMusic(name);
+      return;
+    }
+    this._stopAssetMusic();
     if (this.musicNode && this.musicNode._musicName === name) return;
     const buffer = this.musicBuffers[name];
     if (!buffer) return;
@@ -385,6 +425,57 @@ class WebAudioPlayer {
     } catch (e) {}
   }
 
+  async _playAssetMusic(name) {
+    if (typeof window === 'undefined') return;
+    this._stopMusicNode();
+    let audio = this.assetMusic[name];
+
+    if (!audio) {
+      if (!this.loadingAssetMusic[name]) {
+        this.loadingAssetMusic[name] = resolveAssetUri(ASSET_MUSIC_DEFS[name])
+          .then((uri) => {
+            if (!uri) return null;
+            const nextAudio = new window.Audio(uri);
+            nextAudio.loop = true;
+            nextAudio.preload = 'auto';
+            nextAudio.volume = ASSET_MUSIC_VOLUME;
+            this.assetMusic[name] = nextAudio;
+            return nextAudio;
+          })
+          .finally(() => {
+            delete this.loadingAssetMusic[name];
+          });
+      }
+      audio = await this.loadingAssetMusic[name];
+    }
+
+    if (!audio || this.currentMusicName !== name || !this.enabled) return;
+    this._stopAssetMusic(name);
+    try {
+      audio.loop = true;
+      audio.volume = ASSET_MUSIC_VOLUME;
+      if (this.activeAssetMusicName !== name) {
+        audio.currentTime = 0;
+      }
+      const playPromise = audio.play();
+      if (playPromise?.catch) playPromise.catch(() => {});
+      this.activeAssetMusicName = name;
+    } catch (e) {}
+  }
+
+  _stopAssetMusic(exceptName = null) {
+    for (const [name, audio] of Object.entries(this.assetMusic)) {
+      if (name === exceptName) continue;
+      try {
+        audio.pause();
+        audio.currentTime = 0;
+      } catch (e) {}
+    }
+    if (this.activeAssetMusicName !== exceptName) {
+      this.activeAssetMusicName = exceptName;
+    }
+  }
+
   _stopMusicNode() {
     if (!this.musicNode) return;
     try {
@@ -396,6 +487,7 @@ class WebAudioPlayer {
 
   stopMusic() {
     this._stopMusicNode();
+    this._stopAssetMusic();
     this.currentMusicName = null;
   }
 
@@ -403,6 +495,7 @@ class WebAudioPlayer {
     this.enabled = val;
     if (!val) {
       this._stopMusicNode();
+      this._stopAssetMusic();
       return;
     }
     if (this.currentMusicName) this.playMusic(this.currentMusicName);
@@ -477,6 +570,21 @@ class ExpoAudioPlayer {
   async _loadMusic(name) {
     if (this.music[name]) return this.music[name];
     if (this.loadingMusic[name]) return this.loadingMusic[name];
+    if (ASSET_MUSIC_DEFS[name]) {
+      this.loadingMusic[name] = Audio.Sound.createAsync(
+        ASSET_MUSIC_DEFS[name],
+        { shouldPlay: false, isLooping: true, volume: ASSET_MUSIC_VOLUME }
+      )
+        .then(({ sound }) => {
+          this.music[name] = sound;
+          return sound;
+        })
+        .catch(() => null)
+        .finally(() => {
+          delete this.loadingMusic[name];
+        });
+      return this.loadingMusic[name];
+    }
     const gen = MUSIC_DEFS[name];
     if (!gen) return null;
 
@@ -509,7 +617,7 @@ class ExpoAudioPlayer {
     try {
       await this._stopCurrentMusic();
       await next.setIsLoopingAsync(true);
-      await next.setVolumeAsync(0.2);
+      await next.setVolumeAsync(ASSET_MUSIC_DEFS[name] ? ASSET_MUSIC_VOLUME : 0.2);
       await next.setPositionAsync(0);
       await next.playAsync();
       this.activeMusicName = name;
