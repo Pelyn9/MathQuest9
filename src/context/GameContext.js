@@ -15,6 +15,37 @@ const createDefaultMissionProgress = () => ({
   stars: {},
 });
 
+const createDefaultModuleProgress = () => ({
+  completed: false,
+  levelsCompleted: [],
+  bestScores: {},
+  accuracy: {},
+  stars: {},
+});
+
+const createModuleProgress = () => ({
+  1: createDefaultModuleProgress(),
+  2: createDefaultModuleProgress(),
+  3: createDefaultModuleProgress(),
+  4: createDefaultModuleProgress(),
+  5: createDefaultModuleProgress(),
+});
+
+const normalizeModuleProgress = (progress) => {
+  const normalized = createModuleProgress();
+  Object.keys(normalized).forEach((key) => {
+    normalized[key] = {
+      ...normalized[key],
+      ...(progress?.[key] || {}),
+      bestScores: progress?.[key]?.bestScores || {},
+      accuracy: progress?.[key]?.accuracy || {},
+      stars: progress?.[key]?.stars || {},
+      levelsCompleted: Array.isArray(progress?.[key]?.levelsCompleted) ? progress[key].levelsCompleted : [],
+    };
+  });
+  return normalized;
+};
+
 const normalizeMissionProgress = (progress) => ({
   completed: Array.isArray(progress?.completed) ? progress.completed : [],
   bestScores: progress?.bestScores || {},
@@ -65,12 +96,7 @@ const initialState = {
   unlockedAvatars: [0],
   selectedTheme: 'light',
   unlockedThemes: ['light'],
-  moduleProgress: {
-    1: { completed: false, levelsCompleted: [], bestScores: {}, accuracy: {}, stars: {} },
-    2: { completed: false, levelsCompleted: [], bestScores: {}, accuracy: {}, stars: {} },
-    3: { completed: false, levelsCompleted: [], bestScores: {}, accuracy: {}, stars: {} },
-    4: { completed: false, levelsCompleted: [], bestScores: {}, accuracy: {}, stars: {} },
-  },
+  moduleProgress: createModuleProgress(),
   missionProgress: createDefaultMissionProgress(),
   missionProgressByDifficulty: createMissionProgressByDifficulty(),
   totalCorrect: 0,
@@ -92,6 +118,7 @@ function gameReducer(state, action) {
       return {
         ...state,
         ...payload,
+        moduleProgress: normalizeModuleProgress(payload.moduleProgress || state.moduleProgress),
         missionProgress,
         missionProgressByDifficulty: normalizeMissionProgressByDifficulty(
           payload.missionProgressByDifficulty,
@@ -145,7 +172,7 @@ function gameReducer(state, action) {
     case 'COMPLETE_LEVEL': {
       const { moduleId, levelId, missionId, score, maxScore, accuracy, xpEarned, difficulty } = action.payload;
       const difficultyKey = difficulty || state.difficulty || 'normal';
-      const mod = state.moduleProgress[moduleId];
+      const mod = state.moduleProgress[moduleId] || createDefaultModuleProgress();
       const stars = calculateStars(score, maxScore, accuracy);
       const passed = stars > 0;
       const prevBest = mod.bestScores[levelId] || 0;

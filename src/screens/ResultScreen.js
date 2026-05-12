@@ -2,7 +2,7 @@ import { View, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import AppText from '../components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState, useMemo } from 'react';
-import { SHADOWS } from '../theme/colors';
+import { MODULES as MODULE_META, SHADOWS } from '../theme/colors';
 import { useTheme } from '../theme/ThemeContext';
 import { useGame } from '../context/GameContext';
 import { useToast } from '../context/ToastContext';
@@ -51,6 +51,7 @@ export default function ResultScreen({ route, navigation }) {
   const msg = messages[Math.min(stars, 3)];
 
   const isModuleComplete = state.moduleProgress[moduleId]?.completed;
+  const lastModuleId = Math.max(...MODULE_META.map(module => module.id));
   const goToMap = () => navigation.navigate('Main', { screen: 'Map' });
 
   return (
@@ -175,7 +176,7 @@ export default function ResultScreen({ route, navigation }) {
               });
             } else if (mission) {
               goToMap();
-            } else if (isModuleComplete && moduleId < 4) {
+            } else if (isModuleComplete && moduleId < lastModuleId) {
               navigation.navigate('Level', { moduleId: moduleId + 1 });
             } else if (levelId < 4) {
               navigation.navigate('Level', { moduleId });
@@ -189,7 +190,7 @@ export default function ResultScreen({ route, navigation }) {
               ? canProceed ? 'Next Mission' : 'Retry to Continue'
               : mission
                 ? canProceed ? 'Back to Map' : 'Retry to Continue'
-                : isModuleComplete && moduleId < 4
+                : isModuleComplete && moduleId < lastModuleId
               ? canProceed ? 'Next Module' : 'Retry to Continue'
               : levelId < 4
                 ? canProceed ? 'Next Level' : 'Retry to Continue'

@@ -26,12 +26,12 @@ export const SHADOWS = {
 export const MODULES = [
   {
     id: 1,
-    title: 'Arithmetic & Math Literacy',
+    title: 'Arithmetic Operations',
     subtitle: 'Village of Traders',
     color: '#38D996',
     lightColor: '#123D34',
     icon: 'cart',
-    boss: 'The Interest Goblin',
+    boss: 'The Debt Warden',
     levels: 4,
   },
   {
@@ -62,6 +62,16 @@ export const MODULES = [
     lightColor: '#4A251D',
     icon: 'map',
     boss: 'The Slope Shadow',
+    levels: 4,
+  },
+  {
+    id: 5,
+    title: 'Mixed Review & Performance Tasks',
+    subtitle: 'Capstone Market',
+    color: '#F4C56A',
+    lightColor: '#4A3A1D',
+    icon: 'medal',
+    boss: 'The Capstone Trial',
     levels: 4,
   },
 ];

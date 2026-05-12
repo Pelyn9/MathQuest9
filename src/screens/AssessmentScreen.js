@@ -15,6 +15,7 @@ const MODULE_DATA = {
   2: require('../data/module2').default,
   3: require('../data/module3').default,
   4: require('../data/module4').default,
+  5: require('../data/module5').default,
 };
 
 const ASSESSMENT_COUNT = 10;

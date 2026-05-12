@@ -18,6 +18,14 @@ const createMissionProgressByDifficulty = () => ({
   extreme: createMissionProgress(),
 });
 
+const createModuleProgress = () => ({
+  completed: false,
+  levelsCompleted: [],
+  bestScores: {},
+  accuracy: {},
+  stars: {},
+});
+
 const DEFAULT_STATE = {
   lives: 3,
   maxLives: 3,
@@ -35,10 +43,11 @@ const DEFAULT_STATE = {
   selectedTheme: 'light',
   unlockedThemes: ['light'],
   moduleProgress: {
-    1: { completed: false, levelsCompleted: [], bestScores: {}, accuracy: {}, stars: {} },
-    2: { completed: false, levelsCompleted: [], bestScores: {}, accuracy: {}, stars: {} },
-    3: { completed: false, levelsCompleted: [], bestScores: {}, accuracy: {}, stars: {} },
-    4: { completed: false, levelsCompleted: [], bestScores: {}, accuracy: {}, stars: {} },
+    1: createModuleProgress(),
+    2: createModuleProgress(),
+    3: createModuleProgress(),
+    4: createModuleProgress(),
+    5: createModuleProgress(),
   },
   missionProgress: createMissionProgress(),
   missionProgressByDifficulty: createMissionProgressByDifficulty(),
@@ -62,7 +71,14 @@ export const loadGameState = async () => {
     ]);
     if (json) {
       const saved = JSON.parse(json);
-      return { ...DEFAULT_STATE, ...saved };
+      return {
+        ...DEFAULT_STATE,
+        ...saved,
+        moduleProgress: {
+          ...DEFAULT_STATE.moduleProgress,
+          ...(saved.moduleProgress || {}),
+        },
+      };
     }
     return { ...DEFAULT_STATE };
   } catch {

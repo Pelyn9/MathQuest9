@@ -33,6 +33,33 @@ const MODULES = {
   2: require('../data/module2').default,
   3: require('../data/module3').default,
   4: require('../data/module4').default,
+  5: require('../data/module5').default,
+};
+
+const shuffleQuestions = (items) => [...items].sort(() => Math.random() - 0.5);
+
+const usesFullLevelBank = (difficulty) => difficulty === 'hard' || difficulty === 'extreme';
+
+const limitQuestionsForDifficulty = (items, difficulty, count) => {
+  if (usesFullLevelBank(difficulty)) return items;
+  return items.slice(0, Math.min(items.length, count || 5));
+};
+
+const getAllModuleQuestions = () => {
+  const pool = [];
+  Object.values(MODULES).forEach(module => {
+    module.levels.forEach(moduleLevel => {
+      moduleLevel.questions.forEach(question => {
+        pool.push({
+          ...question,
+          difficulty: question.difficulty || moduleLevel.difficulty,
+          sourceModuleId: module.id,
+          sourceLevelId: moduleLevel.id,
+        });
+      });
+    });
+  });
+  return pool;
 };
 
 const bossBackground = require('../image/boss.png');
@@ -142,8 +169,21 @@ export default function QuizScreen({ route, navigation }) {
   const buildQuestionSet = useCallback(() => {
     if (!level) return [];
 
+    if (activeModeKey === 'survival' || activeModeKey === 'timer') {
+      return shuffleQuestions(getAllModuleQuestions());
+    }
+
+    const questionLimit = diffConfig.questionsCount || 5;
+
     if (isStoryMission && mission) {
-      return level.questions.map((question, index) => ({
+      const startIndex = (mission.id - 1) % level.questions.length;
+      const orderedQuestions = [
+        ...level.questions.slice(startIndex),
+        ...level.questions.slice(0, startIndex),
+      ];
+      const missionQuestions = limitQuestionsForDifficulty(orderedQuestions, state.difficulty, questionLimit);
+
+      return missionQuestions.map((question, index) => ({
         ...question,
         id: `${mission.id}-${question.id || index}`,
         difficulty: question.difficulty || level.difficulty,
@@ -154,43 +194,17 @@ export default function QuizScreen({ route, navigation }) {
       }));
     }
 
-    if (activeModeKey === 'survival') {
-      const hardPool = [];
-      Object.values(MODULES).forEach(module => {
-        module.levels.forEach(moduleLevel => {
-          moduleLevel.questions.forEach(question => {
-            const questionDifficulty = question.difficulty || moduleLevel.difficulty;
-            if (questionDifficulty === 'hard' || questionDifficulty === 'extreme') {
-              hardPool.push({
-                ...question,
-                difficulty: questionDifficulty,
-                sourceModuleId: module.id,
-                sourceLevelId: moduleLevel.id,
-              });
-            }
-          });
-        });
-      });
-      return hardPool.sort(() => Math.random() - 0.5);
-    }
+    const levelQuestions = shuffleQuestions(
+      level.questions.map(question => ({
+        ...question,
+        difficulty: question.difficulty || level.difficulty,
+        sourceModuleId: modData.id,
+        sourceLevelId: level.id,
+      }))
+    );
 
-    const diffMap = { easy: 'easy', normal: 'medium', hard: 'hard', extreme: 'hard' };
-    const targetDifficulty = diffMap[state.difficulty] || 'medium';
-    const activeDiffConfig = DIFFICULTY[state.difficulty] || DIFFICULTY.normal;
-    const modeBonus = activeModeKey === 'survival' ? 2 : activeModeKey === 'timer' ? 1 : 0;
-    const needed = (activeDiffConfig.questionsCount || 5) + modeBonus;
-    let pool = [];
-    modData.levels.forEach(l => {
-      l.questions.forEach(q => { pool.push({ ...q, difficulty: l.difficulty }); });
-    });
-    let filtered = pool.filter(q => q.difficulty === targetDifficulty);
-    if (filtered.length < needed) {
-      const rest = pool.filter(q => q.difficulty !== targetDifficulty);
-      const shuffledRest = rest.sort(() => Math.random() - 0.5);
-      filtered = [...filtered, ...shuffledRest];
-    }
-    return filtered.sort(() => Math.random() - 0.5).slice(0, needed);
-  }, [activeModeKey, isStoryMission, level, mission, modData, state.difficulty]);
+    return limitQuestionsForDifficulty(levelQuestions, state.difficulty, questionLimit);
+  }, [activeModeKey, diffConfig.questionsCount, isStoryMission, level, mission, modData, state.difficulty]);
 
   useEffect(() => {
     setQuestions(buildQuestionSet());

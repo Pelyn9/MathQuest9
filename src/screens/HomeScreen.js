@@ -91,7 +91,7 @@ export default function HomeScreen({ navigation }) {
       });
     } else {
       // survival / timer — pick a random module/level
-      const randomModule = Math.floor(Math.random() * 4) + 1;
+      const randomModule = MODULES[Math.floor(Math.random() * MODULES.length)].id;
       const randomLevel = Math.floor(Math.random() * 4) + 1;
       openStackScreen('Quiz', {
         moduleId: randomModule,

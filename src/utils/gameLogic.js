@@ -30,7 +30,7 @@ export const DIFFICULTY = {
     scoreMult: 2.0,
     questionsCount: 8,
     timePerQuestion: 30,
-    desc: '3 lives, 8 questions, tougher',
+    desc: '3 lives, full level bank, tougher',
   },
   extreme: {
     label: 'Extreme',
@@ -41,7 +41,7 @@ export const DIFFICULTY = {
     scoreMult: 3.0,
     questionsCount: 10,
     timePerQuestion: 20,
-    desc: '1 life, 10 questions, highest stakes',
+    desc: '1 life, full level bank, highest stakes',
   },
 };
 
