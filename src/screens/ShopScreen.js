@@ -1,4 +1,4 @@
-import { View, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
+import { View, TouchableOpacity, ScrollView, StyleSheet, Modal, Pressable } from 'react-native';
 import AppText from '../components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo, useState } from 'react';
@@ -71,9 +71,62 @@ export default function ShopScreen({ navigation }) {
   const styles = useMemo(() => createStyles(C), [C]);
   const { state, addCoins, unlockAvatar, setAvatar, unlockTheme, setThemePreference } = useGame();
   const [activeTab, setActiveTab] = useState('avatars');
+  const [shopDialog, setShopDialog] = useState(null);
   useScreenMusic('menu');
 
   const unlockedTitles = getUnlockedTitles(state.badges || []);
+
+  const closeShopDialog = () => setShopDialog(null);
+
+  const showNoticeDialog = ({ title, message, icon = 'information-circle', tone = 'info' }) => {
+    setShopDialog({ type: 'notice', title, message, icon, tone });
+  };
+
+  const showNotEnoughDialog = (item) => {
+    const missingCoins = Math.max(0, item.price - state.coins);
+    showNoticeDialog({
+      title: 'Not enough coins',
+      message: `${item.name} costs ${item.price} coins. You need ${missingCoins} more coins before you can buy it.`,
+      icon: 'cash-outline',
+      tone: 'danger',
+    });
+  };
+
+  const showPurchaseDialog = (category, item) => {
+    setShopDialog({
+      type: 'confirm',
+      category,
+      item,
+      title: `Buy ${item.name}?`,
+      message: `This will cost ${item.price} coins. You have ${state.coins} coins.`,
+      icon: item.icon || 'cash-outline',
+      tone: 'gold',
+    });
+  };
+
+  const handleDialogConfirm = () => {
+    if (shopDialog?.type !== 'confirm') return;
+
+    const { category, item } = shopDialog;
+    if (state.coins < item.price) {
+      soundManager.play('wrong');
+      showNotEnoughDialog(item);
+      return;
+    }
+
+    soundManager.play('coin');
+    addCoins(-item.price);
+
+    if (category === 'avatar') {
+      unlockAvatar(item.id);
+      setAvatar(item.id);
+    } else if (category === 'theme') {
+      unlockTheme(item.id);
+      setThemePreference(item.id);
+    }
+
+    closeShopDialog();
+  };
 
   const handlePurchase = (avatar) => {
     // Achievement-based avatar
@@ -81,7 +134,12 @@ export default function ShopScreen({ navigation }) {
       const hasBadge = state.badges.includes(avatar.unlockBadge);
       if (!hasBadge) {
         soundManager.play('wrong');
-        Alert.alert('Locked', `Earn the achievement to unlock: ${BADGE_LABELS[avatar.unlockBadge]}`);
+        showNoticeDialog({
+          title: 'Locked',
+          message: `Earn the achievement to unlock: ${BADGE_LABELS[avatar.unlockBadge]}`,
+          icon: 'lock-closed',
+          tone: 'danger',
+        });
         return;
       }
       if (state.avatarIndex === avatar.id) return;
@@ -108,24 +166,10 @@ export default function ShopScreen({ navigation }) {
     // Coin purchase
     if (state.coins < avatar.price) {
       soundManager.play('wrong');
-      Alert.alert('Not enough coins', `You need ${avatar.price - state.coins} more coins.`);
+      showNotEnoughDialog(avatar);
       return;
     }
-    Alert.alert(
-      `Buy ${avatar.name}?`,
-      `This will cost ${avatar.price} coins. You have ${state.coins} coins.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Buy', onPress: () => {
-            soundManager.play('coin');
-            addCoins(-avatar.price);
-            unlockAvatar(avatar.id);
-            setAvatar(avatar.id);
-          },
-        },
-      ]
-    );
+    showPurchaseDialog('avatar', avatar);
   };
 
   const handleThemePurchase = (theme) => {
@@ -146,25 +190,11 @@ export default function ShopScreen({ navigation }) {
 
     if (state.coins < theme.price) {
       soundManager.play('wrong');
-      Alert.alert('Not enough coins', `You need ${theme.price - state.coins} more coins.`);
+      showNotEnoughDialog(theme);
       return;
     }
 
-    Alert.alert(
-      `Buy ${theme.name}?`,
-      `This will cost ${theme.price} coins. You have ${state.coins} coins.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Buy', onPress: () => {
-            soundManager.play('coin');
-            addCoins(-theme.price);
-            unlockTheme(theme.id);
-            setThemePreference(theme.id);
-          },
-        },
-      ]
-    );
+    showPurchaseDialog('theme', theme);
   };
 
   const renderBadgeStatus = (avatar) => {
@@ -446,7 +476,52 @@ export default function ShopScreen({ navigation }) {
 
       <View style={styles.spacer} />
     </ScrollView>
+    <ShopDialog
+      dialog={shopDialog}
+      colors={C}
+      styles={styles}
+      onClose={closeShopDialog}
+      onConfirm={handleDialogConfirm}
+    />
     </View>
+  );
+}
+
+function ShopDialog({ dialog, colors: C, styles, onClose, onConfirm }) {
+  if (!dialog) return null;
+
+  const isConfirm = dialog.type === 'confirm';
+  const accent = dialog.tone === 'danger' ? C.danger : C.gold;
+
+  return (
+    <Modal visible transparent animationType="fade" onRequestClose={onClose}>
+      <View style={styles.dialogBackdrop}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        <View style={styles.dialogPanel}>
+          <View style={[styles.dialogIconWrap, { backgroundColor: `${accent}22`, borderColor: `${accent}70` }]}>
+            <Ionicons name={dialog.icon} size={32} color={accent} />
+          </View>
+          <AppText decorative style={[styles.dialogTitle, { color: accent }]}>
+            {dialog.title}
+          </AppText>
+          <AppText style={styles.dialogMessage}>{dialog.message}</AppText>
+
+          <View style={styles.dialogActions}>
+            {isConfirm && (
+              <Pressable style={[styles.dialogButton, styles.dialogNoButton]} onPress={onClose}>
+                <AppText style={styles.dialogNoText}>No</AppText>
+              </Pressable>
+            )}
+            <Pressable
+              style={[styles.dialogButton, styles.dialogYesButton, !isConfirm && styles.dialogOkButton]}
+              onPress={isConfirm ? onConfirm : onClose}
+            >
+              <AppText style={styles.dialogYesText}>{isConfirm ? 'Yes' : 'OK'}</AppText>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    </Modal>
   );
 }
 
@@ -544,5 +619,90 @@ const createStyles = (C) => StyleSheet.create({
     borderWidth: 1.5, marginLeft: 8,
   },
   actionBtnText: { fontSize: 13, fontWeight: '800' },
+  dialogBackdrop: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 22,
+    backgroundColor: 'rgba(2, 7, 17, 0.76)',
+  },
+  dialogPanel: {
+    width: '100%',
+    maxWidth: 360,
+    alignItems: 'center',
+    paddingHorizontal: 22,
+    paddingVertical: 26,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: `${C.gold}55`,
+    backgroundColor: `${C.card}FA`,
+    shadowColor: C.gold,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.24,
+    shadowRadius: 18,
+    elevation: 12,
+  },
+  dialogIconWrap: {
+    width: 68,
+    height: 68,
+    borderRadius: 18,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  dialogTitle: {
+    fontSize: 24,
+    lineHeight: 30,
+    fontWeight: '900',
+    textAlign: 'center',
+    textTransform: 'uppercase',
+  },
+  dialogMessage: {
+    marginTop: 10,
+    color: C.textLight,
+    fontSize: 14,
+    lineHeight: 21,
+    textAlign: 'center',
+  },
+  dialogActions: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 10,
+    marginTop: 22,
+  },
+  dialogButton: {
+    flex: 1,
+    minHeight: 48,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  dialogNoButton: {
+    backgroundColor: `${C.backgroundLight}F2`,
+    borderColor: `${C.cardBorder}AA`,
+  },
+  dialogYesButton: {
+    backgroundColor: C.primary,
+    borderColor: `${C.gold}55`,
+  },
+  dialogOkButton: {
+    flex: 0,
+    width: '60%',
+    maxWidth: 180,
+    alignSelf: 'center',
+  },
+  dialogNoText: {
+    color: C.textLight,
+    fontSize: 15,
+    fontWeight: '900',
+  },
+  dialogYesText: {
+    color: C.white,
+    fontSize: 15,
+    fontWeight: '900',
+  },
   spacer: { height: 50 },
 });

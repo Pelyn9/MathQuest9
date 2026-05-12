@@ -116,6 +116,7 @@ export default function QuizScreen({ route, navigation }) {
   const brokenHeartScale = useRef(new Animated.Value(0.7)).current;
   const brokenHeartTilt = useRef(new Animated.Value(0)).current;
   const gameOverGlowAnim = useRef(new Animated.Value(0)).current;
+  const gameOverGlowLoopRef = useRef(null);
 
   const diffConfig = DIFFICULTY[state.difficulty] || DIFFICULTY.normal;
   const activeModeKey = initialActiveModeKey;
@@ -170,7 +171,10 @@ export default function QuizScreen({ route, navigation }) {
   }, [isStoryMission, mission, level]);
 
   useEffect(() => {
-    return () => { mountedRef.current = false; };
+    return () => {
+      mountedRef.current = false;
+      gameOverGlowLoopRef.current?.stop?.();
+    };
   }, []);
 
   const buildQuestionSet = useCallback(() => {
@@ -229,6 +233,8 @@ export default function QuizScreen({ route, navigation }) {
     setShowCorrect(false);
     stopTimer();
 
+    gameOverGlowLoopRef.current?.stop?.();
+    gameOverGlowLoopRef.current = null;
     damageFlashOpacity.stopAnimation();
     gameOverOpacity.stopAnimation();
     gameOverGlowAnim.stopAnimation();
@@ -251,20 +257,23 @@ export default function QuizScreen({ route, navigation }) {
       }),
     ]).start();
 
+    const glowLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(gameOverGlowAnim, {
+          toValue: 1, duration: 1500, easing: Easing.inOut(Easing.sin), useNativeDriver: true,
+        }),
+        Animated.timing(gameOverGlowAnim, {
+          toValue: 0, duration: 1500, easing: Easing.inOut(Easing.sin), useNativeDriver: true,
+        }),
+      ])
+    );
+    gameOverGlowLoopRef.current = glowLoop;
+
     Animated.parallel([
       Animated.timing(gameOverOpacity, {
         toValue: 1, duration: 400, delay: 150, easing: Easing.out(Easing.cubic), useNativeDriver: true,
       }),
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(gameOverGlowAnim, {
-            toValue: 1, duration: 1500, easing: Easing.inOut(Easing.sin), useNativeDriver: true,
-          }),
-          Animated.timing(gameOverGlowAnim, {
-            toValue: 0, duration: 1500, easing: Easing.inOut(Easing.sin), useNativeDriver: true,
-          }),
-        ])
-      ),
+      glowLoop,
       Animated.sequence([
         Animated.delay(160),
         Animated.spring(brokenHeartScale, {
@@ -489,6 +498,8 @@ export default function QuizScreen({ route, navigation }) {
   const resetBattleState = useCallback((nextLives = state.maxLives) => {
     answerLockedRef.current = false;
     gameOverTriggeredRef.current = false;
+    gameOverGlowLoopRef.current?.stop?.();
+    gameOverGlowLoopRef.current = null;
     damageFlashOpacity.stopAnimation();
     gameOverOpacity.stopAnimation();
     gameOverGlowAnim.stopAnimation();
@@ -612,7 +623,7 @@ export default function QuizScreen({ route, navigation }) {
       )}
       <View style={[styles.container, (isStoryMission || isSurvivalMode) && { backgroundColor: 'transparent' }]}>
       {isStoryMission && (
-        <View style={[styles.rpgBackdrop, { pointerEvents: 'none' }]}>
+        <View pointerEvents="none" style={styles.rpgBackdrop}>
           <View style={[styles.rpgSky, { backgroundColor: storyPath.sky }]} />
           <View style={[styles.rpgSunsetBand, { backgroundColor: `${storyPath.color}24` }]} />
           <View style={[styles.rpgRidge, { backgroundColor: storyPath.ridge }]} />
@@ -800,11 +811,11 @@ export default function QuizScreen({ route, navigation }) {
 
       <RewardModal visible={showReward} coins={lastCoins} badge={lastBadge} onClose={handleRewardClose} />
 
-      <Animated.View style={[styles.damageFlash, { opacity: damageFlashOpacity, pointerEvents: 'none' }]} />
+      <Animated.View pointerEvents="none" style={[styles.damageFlash, { opacity: damageFlashOpacity }]} />
 
     </View>
       {battleStatus === 'gameOver' && (
-        <Animated.View style={[styles.gameOverOverlay, { opacity: gameOverOpacity, pointerEvents: 'auto' }]}>
+        <Animated.View pointerEvents="auto" style={[styles.gameOverOverlay, { opacity: gameOverOpacity }]}>
           <View style={styles.gameOverPanel}>
             <View style={styles.gameOverRune} />
             <Animated.View
