@@ -5,13 +5,11 @@ import {
   View,
   StatusBar,
   Platform,
-  useWindowDimensions,
 } from 'react-native';
 
 const heroImage = require('../image/hero.png');
 
 export default function SplashScreen() {
-  const { width, height } = useWindowDimensions();
   const barAnim = useRef(new Animated.Value(0)).current;
   const loadingTextAnim = useRef(new Animated.Value(0)).current;
 
@@ -44,11 +42,6 @@ export default function SplashScreen() {
     inputRange: [0, 1],
     outputRange: ['0%', '100%'],
   });
-  const posterRatio = 942 / 1536;
-  const frameRatio = width / height;
-  const posterStyle = frameRatio > posterRatio
-    ? { height: '100%', width: height * posterRatio }
-    : { width: '100%', height: width / posterRatio };
 
   return (
     <View style={styles.container}>
@@ -57,8 +50,8 @@ export default function SplashScreen() {
       {/* Background Image */}
       <Animated.Image
         source={heroImage}
-        resizeMode="contain"
-        style={[styles.hero, posterStyle]}
+        resizeMode="cover"
+        style={styles.hero}
       />
 
       {/* Light overlay */}
@@ -99,9 +92,9 @@ const styles = StyleSheet.create({
   },
 
   hero: {
-    position: 'absolute',
-    top: 0,
-    alignSelf: 'center',
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
   },
 
   scrim: {
@@ -109,7 +102,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(2,8,23,0.08)',
   },
 
-  // 🎮 Loading text (fixed position + Times New Roman)
+  // Loading text uses a fixed position so it stays clear of the artwork.
   loadingText: {
     position: 'absolute',
     bottom: 60,

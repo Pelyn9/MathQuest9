@@ -4,14 +4,12 @@ import {
   Platform,
   StatusBar,
   StyleSheet,
-  useWindowDimensions,
   View,
 } from 'react-native';
 
 const bossImage = require('../image/boss.png');
 
 export default function BossLoadingScreen({ title = 'Boss Battle', finalBoss = false, onFinish }) {
-  const { width, height } = useWindowDimensions();
   const barAnim = useRef(new Animated.Value(0)).current;
   const loadingTextAnim = useRef(new Animated.Value(0)).current;
 
@@ -53,19 +51,14 @@ export default function BossLoadingScreen({ title = 'Boss Battle', finalBoss = f
     inputRange: [0, 1],
     outputRange: ['0%', '100%'],
   });
-  const posterRatio = 942 / 1536;
-  const frameRatio = width / height;
-  const posterStyle = frameRatio > posterRatio
-    ? { height: '100%', width: height * posterRatio }
-    : { width: '100%', height: width / posterRatio };
 
   return (
     <View style={styles.container}>
       <StatusBar hidden />
       <Animated.Image
         source={bossImage}
-        resizeMode="contain"
-        style={[styles.bossImage, posterStyle]}
+        resizeMode="cover"
+        style={styles.bossImage}
       />
       <View style={styles.scrim} />
       <View style={styles.vignetteTop} />
@@ -98,13 +91,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   bossImage: {
-    position: 'absolute',
-    top: 0,
-    alignSelf: 'center',
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
   },
   scrim: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(8,3,10,0.18)',
+    backgroundColor: 'rgba(8,3,10,0.04)',
   },
   vignetteTop: {
     position: 'absolute',
@@ -112,15 +105,15 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: '36%',
-    backgroundColor: 'rgba(7,3,10,0.28)',
+    backgroundColor: 'rgba(7,3,10,0.12)',
   },
   vignetteBottom: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
-    height: '42%',
-    backgroundColor: 'rgba(7,3,10,0.54)',
+    height: '28%',
+    backgroundColor: 'rgba(7,3,10,0.1)',
   },
   copyBlock: {
     position: 'absolute',

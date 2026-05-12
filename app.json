@@ -8,8 +8,8 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./src/image/dcmg9logo.png",
-      "resizeMode": "contain",
+      "image": "./src/image/hero.png",
+      "resizeMode": "cover",
       "backgroundColor": "#050814"
     },
     "ios": {
