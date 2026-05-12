@@ -106,10 +106,10 @@ export default function QuizScreen({ route, navigation }) {
   const timePerQ = activeModeKey === 'timer' ? Math.max(15, Math.round(baseTimePerQ * 0.65)) : baseTimePerQ;
   const musicTrack = useMemo(() => {
     if (!level) return 'menu';
-    if (isBossEncounter) return 'boss';
     if (activeModeKey === 'survival') return 'survival';
     if (activeModeKey === 'timer') return 'timer';
-    return onboardingStep === 'gameplay' ? 'answer' : 'menu';
+    if (isBossEncounter) return 'boss';
+    return onboardingStep === 'gameplay' ? 'story' : 'menu';
   }, [activeModeKey, isBossEncounter, level, onboardingStep]);
 
   const isBattleLocked = battleStatus === 'gameOver' || finished || gameOverTriggeredRef.current;

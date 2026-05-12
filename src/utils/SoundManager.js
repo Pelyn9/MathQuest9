@@ -9,6 +9,7 @@ try {
 
 const SFX_SAMPLE_RATE = 8000;
 const MUSIC_SAMPLE_RATE = 11025;
+const AUDIO_CACHE_VERSION = 'v2';
 const BASE64_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 const waitForUiTurn = () => new Promise(resolve => setTimeout(resolve, 0));
 
@@ -213,6 +214,24 @@ const MUSIC_DEFS = {
     kickEvery: 2,
     kickVolume: 0.12,
   }),
+  story: () => makeMusicLoop({
+    bpm: 108,
+    roots: [48, 55, 53, 50],
+    scale: [0, 4, 7, 12],
+    arp: [0, 2, 3, 2, 1, 2, 0, 1],
+    bassWave: 'triangle',
+    bassVolume: 0.13,
+    padVolume: 0.042,
+    arpVolume: 0.082,
+    arpWave: 'triangle',
+    lead: [[0, 72, 0.5], [1, 76, 0.45], [2, 79, 0.6], [4, 74, 0.45], [6, 77, 0.5], [8, 76, 0.5], [10, 79, 0.55], [12, 84, 0.85]],
+    leadWave: 'triangle',
+    leadVolume: 0.062,
+    kickEvery: 2,
+    kickVolume: 0.13,
+    tickEvery: 1,
+    tickVolume: 0.025,
+  }),
   boss: () => makeMusicLoop({
     bpm: 132,
     roots: [36, 36, 39, 35],
@@ -232,30 +251,40 @@ const MUSIC_DEFS = {
     tickVolume: 0.045,
   }),
   survival: () => makeMusicLoop({
-    bpm: 96,
-    roots: [45, 43, 40, 43],
+    bpm: 138,
+    roots: [45, 45, 40, 43],
     scale: [0, 3, 7, 10],
-    arp: [0, 1, 0, 2, 0, 3, 2, 1],
-    bassVolume: 0.15,
-    padVolume: 0.03,
-    arpVolume: 0.07,
-    kickEvery: 2,
-    kickVolume: 0.18,
-    lead: [[2, 69, 0.6], [5, 67, 0.5], [9, 72, 0.7], [13, 70, 0.7]],
-    leadVolume: 0.055,
+    arp: [0, 0, 2, 1, 0, 3, 2, 1],
+    bassWave: 'softSquare',
+    bassVolume: 0.2,
+    padVolume: 0.022,
+    arpVolume: 0.105,
+    arpWave: 'softSquare',
+    kickEvery: 1,
+    kickVolume: 0.22,
+    tickEvery: 0.5,
+    tickVolume: 0.05,
+    lead: [[0, 69, 0.5], [2, 72, 0.4], [3, 70, 0.35], [5, 67, 0.45], [8, 72, 0.55], [10, 75, 0.35], [12, 74, 0.55], [14, 70, 0.55]],
+    leadWave: 'softSquare',
+    leadVolume: 0.07,
   }),
   timer: () => makeMusicLoop({
-    bpm: 144,
-    roots: [47, 50, 43, 45],
+    bpm: 156,
+    roots: [47, 50, 52, 50],
     scale: [0, 3, 7, 10],
-    arp: [0, 1, 2, 3, 2, 1, 3, 2],
-    bassVolume: 0.11,
-    padVolume: 0.025,
-    arpVolume: 0.095,
-    tickEvery: 0.5,
-    tickVolume: 0.085,
+    arp: [3, 2, 1, 2, 3, 1, 2, 0],
+    bassWave: 'triangle',
+    bassVolume: 0.12,
+    padVolume: 0.018,
+    arpVolume: 0.12,
+    arpWave: 'triangle',
+    tickEvery: 0.25,
+    tickVolume: 0.075,
     kickEvery: 2,
-    kickVolume: 0.12,
+    kickVolume: 0.14,
+    lead: [[1, 83, 0.25], [3, 82, 0.25], [5, 80, 0.25], [7, 79, 0.25], [9, 83, 0.25], [11, 86, 0.25], [13, 84, 0.25], [15, 82, 0.35]],
+    leadWave: 'triangle',
+    leadVolume: 0.055,
   }),
   result: () => makeMusicLoop({
     bpm: 92,
@@ -417,7 +446,7 @@ class ExpoAudioPlayer {
 
   async _ensureSoundFile(name, gen, isMusic) {
     if (!this.soundDir) return null;
-    const path = `${this.soundDir}${isMusic ? 'music-' : ''}${name}.wav`;
+    const path = `${this.soundDir}${isMusic ? 'music-' : ''}${name}-${AUDIO_CACHE_VERSION}.wav`;
     try {
       const info = await FileSystem.getInfoAsync(path);
       if (info.exists) return path;
