@@ -16,15 +16,6 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.mathquest9.app"
     },
-    "android": {
-      "package": "com.mathquest9.app",
-      "adaptiveIcon": {
-        "foregroundImage": "./src/image/dcmg9logo.png",
-        "backgroundColor": "#6C63FF"
-      },
-      "edgeToEdgeEnabled": true,
-      "versionCode": 1
-    },
     "web": {
       "favicon": "./src/image/dcmg9logo.png",
       "bundler": "metro",
@@ -32,11 +23,6 @@
     },
     "plugins": [
       "expo-asset"
-    ],
-    "extra": {
-      "eas": {
-        "projectId": "6ae99222-c21d-48ed-a9a3-1680fee53715"
-      }
-    }
+    ]
   }
 }
