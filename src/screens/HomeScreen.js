@@ -43,6 +43,7 @@ const HomeScreen = React.memo(function HomeScreen({ navigation }) {
   const xpPercent = neededXP > 0
     ? Math.min(100, Math.max(0, (currentXP / neededXP) * 100))
     : 100;
+  const missionProgressPercent = Math.min(100, Math.max(0, (missionStats.completed / 100) * 100));
 
   const dailyInfo = useMemo(() => {
     if (!state.lastDailyReward) {
@@ -107,6 +108,8 @@ const HomeScreen = React.memo(function HomeScreen({ navigation }) {
       color: module.color,
       icon: module.icon,
       title: module.title,
+      subtitle: module.subtitle,
+      boss: module.boss,
     };
   };
 
@@ -191,12 +194,13 @@ const HomeScreen = React.memo(function HomeScreen({ navigation }) {
 
           <Animated.View style={{ opacity: sectionAnim, transform: [{ translateY: sectionAnim.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }] }}>
           <View style={styles.heroPanel}>
+            <View style={[styles.heroAccentLine, { backgroundColor: diffConfig.color }]} />
             <View style={styles.levelRow}>
-              <View style={styles.avatar}>
+              <View style={[styles.avatar, { borderColor: `${diffConfig.color}62`, backgroundColor: `${diffConfig.color}16` }]}>
                 <Ionicons name="shield-checkmark" size={22} color={C.primary} />
               </View>
               <View style={styles.levelCopy}>
-                <AppText style={styles.levelText}>Level {playerLevel}</AppText>
+                <AppText style={styles.levelText}>Hero Level {playerLevel}</AppText>
                 <AppText style={styles.playerTitle} numberOfLines={1}>{playerTitle}</AppText>
               </View>
               <View style={[styles.difficultyPill, { backgroundColor: `${diffConfig.color}18`, borderColor: `${diffConfig.color}45` }]}>
@@ -219,8 +223,10 @@ const HomeScreen = React.memo(function HomeScreen({ navigation }) {
 
             <View style={styles.metricRow}>
               {summaryStats.map(stat => (
-                <View key={stat.label} style={styles.metricItem}>
-                  <Ionicons name={stat.icon} size={16} color={stat.color} />
+                <View key={stat.label} style={[styles.metricItem, { borderTopColor: `${stat.color}B8` }]}>
+                  <View style={[styles.metricIconWrap, { backgroundColor: `${stat.color}18` }]}>
+                    <Ionicons name={stat.icon} size={15} color={stat.color} />
+                  </View>
                   <AppText style={styles.metricValue}>{stat.value}</AppText>
                   <AppText style={styles.metricLabel}>{stat.label}</AppText>
                 </View>
@@ -318,6 +324,17 @@ const HomeScreen = React.memo(function HomeScreen({ navigation }) {
           </Animated.View>
 
           <Animated.View style={[styles.missionPanel, { borderColor: `${activeMode.color}55`, opacity: missionAnim, transform: [{ translateY: missionAnim.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }] }]}>
+            <View style={styles.missionHeaderRow}>
+              <View>
+                <AppText style={styles.missionKicker}>Active Quest</AppText>
+                <AppText style={[styles.missionModeName, { color: activeMode.color }]}>{activeMode.title}</AppText>
+              </View>
+              <View style={[styles.missionModePill, { borderColor: `${activeMode.color}55`, backgroundColor: `${activeMode.color}14` }]}>
+                <Ionicons name={activeMode.icon} size={13} color={activeMode.color} />
+                <AppText style={[styles.missionModePillText, { color: activeMode.color }]}>{activeMode.label}</AppText>
+              </View>
+            </View>
+
             <View style={styles.missionMain}>
               <View style={[styles.missionIcon, { backgroundColor: `${activeMode.color}18` }]}>
                 <Ionicons name={activeMode.icon} size={22} color={activeMode.color} />
@@ -327,6 +344,20 @@ const HomeScreen = React.memo(function HomeScreen({ navigation }) {
                 <AppText style={styles.missionTitle} numberOfLines={2}>{missionTitle}</AppText>
               </View>
             </View>
+
+            {activeModeKey === 'story' && (
+              <View style={styles.missionProgressBlock}>
+                <View style={styles.missionProgressLabels}>
+                  <AppText style={styles.missionProgressLabel}>Kingdom Progress</AppText>
+                  <AppText style={[styles.missionProgressValue, { color: storyPath.color }]}>
+                    {missionStats.completed}/100
+                  </AppText>
+                </View>
+                <View style={styles.missionTrack}>
+                  <View style={[styles.missionFill, { width: `${missionProgressPercent}%`, backgroundColor: storyPath.color }]} />
+                </View>
+              </View>
+            )}
 
             <View style={styles.missionActions}>
               <TouchableOpacity
@@ -418,11 +449,18 @@ function ModuleTile({ module, spanFull, onPress, styles, colors: C }) {
         <View style={[styles.moduleIcon, { backgroundColor: `${module.color}18` }]}>
           <Ionicons name={module.icon} size={20} color={module.color} />
         </View>
-        {completed >= total && <Ionicons name="checkmark-circle" size={17} color={C.success} />}
+        <View style={[styles.moduleCompletionBadge, { backgroundColor: `${module.color}16`, borderColor: `${module.color}45` }]}>
+          <AppText style={[styles.moduleCompletionText, { color: module.color }]}>{completed}/{total}</AppText>
+        </View>
       </View>
       <View style={styles.moduleTextBlock}>
         <AppText style={[styles.moduleNumber, { color: module.color }]}>Module</AppText>
         <AppText style={styles.moduleTitle} numberOfLines={2}>{module.title}</AppText>
+        <AppText style={styles.moduleSubtitle} numberOfLines={1}>{module.subtitle}</AppText>
+        <View style={styles.moduleBossRow}>
+          <Ionicons name={completed >= total ? 'checkmark-circle' : 'skull-outline'} size={12} color={completed >= total ? C.success : C.textMuted} />
+          <AppText style={styles.moduleBossText} numberOfLines={1}>{module.boss}</AppText>
+        </View>
       </View>
       <View style={styles.moduleProgressRow}>
         <View style={styles.moduleTrack}>
@@ -444,8 +482,8 @@ const createStyles = (C, { isNarrow, isWide }) => StyleSheet.create({
   },
   scrollContent: {
     alignItems: 'center',
-    paddingTop: 50,
-    paddingBottom: 24,
+    paddingTop: 46,
+    paddingBottom: 30,
   },
   content: {
     width: '100%',
@@ -500,9 +538,23 @@ const createStyles = (C, { isNarrow, isWide }) => StyleSheet.create({
     marginTop: 18,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: `${C.cardBorder}75`,
-    backgroundColor: `${C.card}E6`,
-    padding: 14,
+    borderColor: `${C.gold}34`,
+    backgroundColor: `${C.card}EA`,
+    padding: 15,
+    overflow: 'hidden',
+    shadowColor: C.black,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.22,
+    shadowRadius: 18,
+    elevation: 4,
+  },
+  heroAccentLine: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 4,
+    opacity: 0.86,
   },
   levelRow: {
     flexDirection: 'row',
@@ -510,14 +562,12 @@ const createStyles = (C, { isNarrow, isWide }) => StyleSheet.create({
     gap: 10,
   },
   avatar: {
-    width: 42,
-    height: 42,
+    width: 44,
+    height: 44,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: `${C.primary}45`,
-    backgroundColor: `${C.primary}16`,
   },
   levelCopy: {
     flex: 1,
@@ -569,7 +619,7 @@ const createStyles = (C, { isNarrow, isWide }) => StyleSheet.create({
     fontWeight: '800',
   },
   xpTrack: {
-    height: 7,
+    height: 8,
     borderRadius: 6,
     overflow: 'hidden',
     backgroundColor: `${C.black}55`,
@@ -588,15 +638,24 @@ const createStyles = (C, { isNarrow, isWide }) => StyleSheet.create({
   },
   metricItem: {
     flex: 1,
-    minHeight: 62,
+    minHeight: 68,
     borderRadius: 8,
     borderWidth: 1,
+    borderTopWidth: 3,
     borderColor: `${C.cardBorder}55`,
     backgroundColor: `${C.backgroundLight}88`,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 6,
+    paddingHorizontal: 5,
     paddingVertical: 8,
+  },
+  metricIconWrap: {
+    width: 26,
+    height: 22,
+    borderRadius: 7,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 2,
   },
   metricValue: {
     color: C.text,
@@ -676,11 +735,53 @@ const createStyles = (C, { isNarrow, isWide }) => StyleSheet.create({
     lineHeight: 15,
   },
   missionPanel: {
-    marginTop: 12,
+    marginTop: 14,
     borderRadius: 8,
     borderWidth: 1,
-    backgroundColor: `${C.card}E8`,
-    padding: 13,
+    backgroundColor: `${C.card}F0`,
+    padding: 14,
+    shadowColor: C.black,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 14,
+    elevation: 4,
+  },
+  missionHeaderRow: {
+    minHeight: 34,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+    marginBottom: 12,
+  },
+  missionKicker: {
+    color: C.gold,
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  missionModeName: {
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: '900',
+    marginTop: 1,
+  },
+  missionModePill: {
+    minHeight: 30,
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: 9,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    flexShrink: 0,
+  },
+  missionModePillText: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: '900',
   },
   missionMain: {
     flexDirection: 'row',
@@ -688,11 +789,13 @@ const createStyles = (C, { isNarrow, isWide }) => StyleSheet.create({
     gap: 11,
   },
   missionIcon: {
-    width: 44,
-    height: 44,
+    width: 46,
+    height: 46,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: `${C.gold}24`,
   },
   missionCopy: {
     flex: 1,
@@ -705,10 +808,42 @@ const createStyles = (C, { isNarrow, isWide }) => StyleSheet.create({
   },
   missionTitle: {
     color: C.text,
-    fontSize: 18,
+    fontSize: 19,
     fontWeight: '900',
-    lineHeight: 23,
+    lineHeight: 24,
     marginTop: 1,
+  },
+  missionProgressBlock: {
+    marginTop: 12,
+  },
+  missionProgressLabels: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  missionProgressLabel: {
+    color: C.textMuted,
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: '800',
+  },
+  missionProgressValue: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: '900',
+  },
+  missionTrack: {
+    height: 7,
+    borderRadius: 6,
+    overflow: 'hidden',
+    backgroundColor: `${C.black}60`,
+    borderWidth: 1,
+    borderColor: `${C.gold}20`,
+  },
+  missionFill: {
+    height: '100%',
+    borderRadius: 6,
   },
   missionActions: {
     flexDirection: 'row',
@@ -765,10 +900,10 @@ const createStyles = (C, { isNarrow, isWide }) => StyleSheet.create({
   },
   moduleTile: {
     width: isNarrow ? '47.5%' : '48%',
-    minHeight: isNarrow ? 160 : 182,
+    minHeight: isNarrow ? 178 : 196,
     borderRadius: 8,
     borderWidth: 1,
-    backgroundColor: `${C.card}C8`,
+    backgroundColor: `${C.card}D8`,
     padding: isNarrow ? 10 : 15,
     justifyContent: 'space-between',
     shadowColor: C.black,
@@ -779,7 +914,7 @@ const createStyles = (C, { isNarrow, isWide }) => StyleSheet.create({
   },
   moduleTileFull: {
     width: '100%',
-    minHeight: isNarrow ? 160 : 182,
+    minHeight: isNarrow ? 174 : 188,
   },
   moduleTop: {
     flexDirection: 'row',
@@ -793,6 +928,22 @@ const createStyles = (C, { isNarrow, isWide }) => StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: `${C.gold}22`,
+  },
+  moduleCompletionBadge: {
+    minHeight: 26,
+    minWidth: 40,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 7,
+  },
+  moduleCompletionText: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: '900',
   },
   moduleTextBlock: {
     marginTop: 12,
@@ -810,6 +961,26 @@ const createStyles = (C, { isNarrow, isWide }) => StyleSheet.create({
     fontWeight: '900',
     lineHeight: isNarrow ? 17 : 20,
     marginTop: 3,
+  },
+  moduleSubtitle: {
+    color: C.textMuted,
+    fontSize: 11,
+    lineHeight: 14,
+    marginTop: 4,
+  },
+  moduleBossRow: {
+    minHeight: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 7,
+  },
+  moduleBossText: {
+    flex: 1,
+    color: C.textMuted,
+    fontSize: 10,
+    lineHeight: 13,
+    fontWeight: '700',
   },
   moduleProgressRow: {
     flexDirection: 'row',

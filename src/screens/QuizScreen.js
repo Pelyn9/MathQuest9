@@ -26,6 +26,7 @@ import StoryIntroModal from '../components/StoryIntroModal';
 import RoyalGuideModal from '../components/RoyalGuideModal';
 import BossLoadingScreen from '../components/BossLoadingScreen';
 import ScreenBackground from '../components/ScreenBackground';
+import { useRpgTransition } from '../components/RpgRouteTransition';
 import useScreenMusic from '../hooks/useScreenMusic';
 
 const MODULES = {
@@ -75,6 +76,7 @@ export default function QuizScreen({ route, navigation }) {
   const { showToast } = useToast();
   const { colors: C } = useTheme();
   const styles = useMemo(() => createStyles(C), [C]);
+  const playRpgTransition = useRpgTransition();
   const initialMission = missionId ? getMissionById(missionId) : null;
   const initialActiveModeKey = initialMission ? 'story' : mode || state.activeMode || 'story';
   const startsWithLoadingScreen = initialActiveModeKey === 'survival'
@@ -692,6 +694,8 @@ export default function QuizScreen({ route, navigation }) {
           <View style={[styles.topBar, isStoryMission && { borderBottomColor: `${storyPath.color}45` }, isSurvivalMode && styles.survivalTopBar]}>
             <TouchableOpacity onPress={() => {
               if (onboardingStep === 'gameplay') {
+                soundManager.play('close');
+                playRpgTransition();
                 navigation.navigate('Main', { screen: 'Home' });
               }
             }} style={styles.closeBtn}>

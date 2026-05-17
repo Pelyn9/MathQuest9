@@ -7,6 +7,7 @@ import { useGame } from '../context/GameContext';
 import ProgressBar from '../components/ProgressBar';
 import Timer from '../components/Timer';
 import ScreenBackground from '../components/ScreenBackground';
+import { useRpgTransition } from '../components/RpgRouteTransition';
 import useScreenMusic from '../hooks/useScreenMusic';
 import { soundManager } from '../utils/SoundManager';
 
@@ -29,6 +30,7 @@ export default function AssessmentScreen({ route, navigation }) {
   const isTiny = width < 330;
   const styles = useMemo(() => createStyles(C, { isCompact, isTiny }), [C, isCompact, isTiny]);
   const { state, setPreTest, setPostTest } = useGame();
+  const playRpgTransition = useRpgTransition();
   const [questions, setQuestions] = useState([]);
   const [qIndex, setQIndex] = useState(0);
   const [selected, setSelected] = useState(null);
@@ -132,6 +134,7 @@ export default function AssessmentScreen({ route, navigation }) {
             style={styles.doneBtn}
             onPress={() => {
               soundManager.play('close');
+              playRpgTransition();
               navigation.goBack();
             }}
           >
@@ -163,6 +166,7 @@ export default function AssessmentScreen({ route, navigation }) {
           style={styles.closeBtn}
           onPress={() => {
             soundManager.play('close');
+            playRpgTransition();
             navigation.goBack();
           }}
         >

@@ -7,6 +7,7 @@ import { SHADOWS } from '../theme/colors';
 import { useGame } from '../context/GameContext';
 import { getUnlockedTitles } from '../utils/gameLogic';
 import ScreenBackground from '../components/ScreenBackground';
+import { useRpgTransition } from '../components/RpgRouteTransition';
 import useScreenMusic from '../hooks/useScreenMusic';
 import { soundManager } from '../utils/SoundManager';
 
@@ -70,6 +71,7 @@ export default function ShopScreen({ navigation }) {
   const { colors: C } = useTheme();
   const styles = useMemo(() => createStyles(C), [C]);
   const { state, addCoins, unlockAvatar, setAvatar, unlockTheme, setThemePreference } = useGame();
+  const playRpgTransition = useRpgTransition();
   const [activeTab, setActiveTab] = useState('avatars');
   const [shopDialog, setShopDialog] = useState(null);
   const tabContentAnim = useRef(new Animated.Value(1)).current;
@@ -247,6 +249,7 @@ export default function ShopScreen({ navigation }) {
           style={styles.backBtn}
           onPress={() => {
             soundManager.play('close');
+            playRpgTransition();
             navigation.goBack();
           }}
         >

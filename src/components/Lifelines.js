@@ -21,12 +21,17 @@ function Lifelines({
         onPress={onHint}
         disabled={hintLevel >= 2}
       >
-        <Ionicons name={hintIcon} size={20} color={hintLevel >= 2 ? C.textMuted : C.warning} />
-        <AppText style={[styles.label, { color: C.textLight }, hintLevel >= 2 && { color: C.textMuted }]}>
+        <Ionicons name={hintIcon} size={18} color={hintLevel >= 2 ? C.textMuted : C.warning} />
+        <AppText
+          style={[styles.label, { color: C.textLight }, hintLevel >= 2 && { color: C.textMuted }]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.75}
+        >
           {hintLabel}
         </AppText>
         {coins < hintCost && hintLevel === 1 && (
-          <Ionicons name="lock-closed" size={12} color={C.danger} />
+          <Ionicons name="lock-closed" size={11} color={C.danger} />
         )}
       </TouchableOpacity>
 
@@ -35,12 +40,17 @@ function Lifelines({
         onPress={onFiftyFifty}
         disabled={usedFifty}
       >
-        <Ionicons name="cut-outline" size={20} color={usedFifty ? C.textMuted : C.mana} />
-        <AppText style={[styles.label, { color: C.textLight }, usedFifty && { color: C.textMuted }]}>
+        <Ionicons name="cut-outline" size={18} color={usedFifty ? C.textMuted : C.mana} />
+        <AppText
+          style={[styles.label, { color: C.textLight }, usedFifty && { color: C.textMuted }]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.75}
+        >
           50/50{fiftyCost > 0 ? ` (${fiftyCost})` : ''}
         </AppText>
         {coins < fiftyCost && !usedFifty && (
-          <Ionicons name="lock-closed" size={12} color={C.danger} />
+          <Ionicons name="lock-closed" size={11} color={C.danger} />
         )}
       </TouchableOpacity>
 
@@ -49,12 +59,17 @@ function Lifelines({
         onPress={onCallFriend}
         disabled={usedCall}
       >
-        <Ionicons name="people-outline" size={20} color={usedCall ? C.textMuted : C.secondary} />
-        <AppText style={[styles.label, { color: C.textLight }, usedCall && { color: C.textMuted }]}>
+        <Ionicons name="people-outline" size={18} color={usedCall ? C.textMuted : C.secondary} />
+        <AppText
+          style={[styles.label, { color: C.textLight }, usedCall && { color: C.textMuted }]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.75}
+        >
           Friend{callCost > 0 ? ` (${callCost})` : ''}
         </AppText>
         {coins < callCost && !usedCall && (
-          <Ionicons name="lock-closed" size={12} color={C.danger} />
+          <Ionicons name="lock-closed" size={11} color={C.danger} />
         )}
       </TouchableOpacity>
     </View>
@@ -64,15 +79,18 @@ function Lifelines({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    alignItems: 'center',
     paddingVertical: 10,
-    gap: 8,
+    gap: 6,
   },
   lifeline: {
+    flex: 1,
+    minWidth: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 14,
+    justifyContent: 'center',
+    gap: 4,
+    paddingHorizontal: 6,
     paddingVertical: 8,
     borderRadius: 10,
     borderWidth: 1,
@@ -81,8 +99,11 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   label: {
-    fontSize: 12,
-    fontWeight: '600',
+    flexShrink: 1,
+    minWidth: 0,
+    fontSize: 11,
+    fontWeight: '700',
+    textAlign: 'center',
   },
 });
 

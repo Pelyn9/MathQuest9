@@ -9,7 +9,7 @@ import { GameProvider, useGame } from './src/context/GameContext';
 import { ToastProvider } from './src/context/ToastContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import SplashScreen from './src/screens/SplashScreen';
-import AppText from './src/components/AppText';
+import { RpgTransitionProvider } from './src/components/RpgRouteTransition';
 
 function AppContent() {
   const { state, loaded } = useGame();
@@ -50,7 +50,11 @@ function AppContent() {
   return (
     <NavigationContainer>
       <StatusBar style="light" />
-      <AppNavigator hasChosenDifficulty={state.hasChosenDifficulty} />
+      <View style={styles.navigatorShell}>
+        <RpgTransitionProvider>
+          <AppNavigator hasChosenDifficulty={state.hasChosenDifficulty} />
+        </RpgTransitionProvider>
+      </View>
     </NavigationContainer>
   );
 }
@@ -118,5 +122,10 @@ const styles = StyleSheet.create({
   splashContainer: {
     flex: 1,
     backgroundColor: '#000',
+  },
+  navigatorShell: {
+    flex: 1,
+    backgroundColor: '#051126',
+    overflow: 'hidden',
   },
 });

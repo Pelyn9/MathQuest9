@@ -7,6 +7,7 @@ import { MODULES } from '../theme/colors';
 import { useGame } from '../context/GameContext';
 import { STORY_MISSIONS, isMissionCompleted } from '../data/storyMissions';
 import ScreenBackground from '../components/ScreenBackground';
+import { useRpgTransition } from '../components/RpgRouteTransition';
 import useScreenMusic from '../hooks/useScreenMusic';
 import { soundManager } from '../utils/SoundManager';
 
@@ -25,6 +26,7 @@ export default function LevelScreen({ route, navigation }) {
   const { colors: C } = useTheme();
   const styles = useMemo(() => createStyles(C), [C]);
   const { state } = useGame();
+  const playRpgTransition = useRpgTransition();
   const mod = MODULES.find(m => m.id === moduleId);
   const data = MODULE_DATA[moduleId];
   const progress = state.moduleProgress[moduleId];
@@ -80,6 +82,7 @@ export default function LevelScreen({ route, navigation }) {
             style={styles.backBtn}
             onPress={() => {
               soundManager.play('close');
+              playRpgTransition();
               navigation.goBack();
             }}
           >
