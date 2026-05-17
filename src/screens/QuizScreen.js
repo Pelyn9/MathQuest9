@@ -827,9 +827,11 @@ export default function QuizScreen({ route, navigation }) {
               <Ionicons name="heart-dislike" size={76} color={C.heart} />
             </Animated.View>
 
-            <AppText decorative style={[styles.gameOverTitle, { opacity: titleGlow }]}>
-              GAME OVER
-            </AppText>
+            <Animated.View style={{ opacity: titleGlow }}>
+              <AppText decorative style={styles.gameOverTitle}>
+                GAME OVER
+              </AppText>
+            </Animated.View>
 
             <AppText style={styles.gameOverSubtitle}>
               You were defeated. Try again to continue your adventure.
