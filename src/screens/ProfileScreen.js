@@ -14,7 +14,7 @@ import useScreenMusic from '../hooks/useScreenMusic';
 const DIFF_ORDER = ['easy', 'normal', 'hard', 'extreme'];
 const FANTASY_FONT = Platform.OS === 'ios' ? 'Times New Roman' : 'serif';
 
-export default function ProfileScreen({ navigation }) {
+const ProfileScreen = React.memo(function ProfileScreen({ navigation }) {
   const { colors: C } = useTheme();
   const { showToast } = useToast();
   const { state, playerLevel, setDifficulty, setSoundEnabled } = useGame();
@@ -342,7 +342,9 @@ export default function ProfileScreen({ navigation }) {
       </ScrollView>
     </View>
   );
-}
+});
+
+export default ProfileScreen;
 
 const createStyles = (C, accent) => StyleSheet.create({
   screen: { flex: 1 },

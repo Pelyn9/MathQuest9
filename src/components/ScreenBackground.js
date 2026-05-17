@@ -38,7 +38,7 @@ const SPARKS = [
   { top: '82%', left: '18%', size: 2 },
 ];
 
-export default function ScreenBackground({ preset, moduleId, levelId }) {
+const ScreenBackground = React.memo(function ScreenBackground({ preset, moduleId, levelId }) {
   const { theme } = useTheme();
   let config = null;
 
@@ -131,7 +131,9 @@ export default function ScreenBackground({ preset, moduleId, levelId }) {
       <View style={styles.bottomStone} />
     </View>
   );
-}
+});
+
+export default ScreenBackground;
 
 const styles = StyleSheet.create({
   heroImage: {

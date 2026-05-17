@@ -20,7 +20,7 @@ import { MODULES } from '../theme/colors';
 import { soundManager } from '../utils/SoundManager';
 import { DIFFICULTY, getPlayerTitle, getXPProgress } from '../utils/gameLogic';
 
-export default function HomeScreen({ navigation }) {
+const HomeScreen = React.memo(function HomeScreen({ navigation }) {
   const { colors: C } = useTheme();
   const { width: screenWidth } = useWindowDimensions();
   const isNarrow = screenWidth < 360;
@@ -354,7 +354,9 @@ export default function HomeScreen({ navigation }) {
       />
     </View>
   );
-}
+});
+
+export default HomeScreen;
 
 function ModuleTile({ module, spanFull, onPress, styles, colors: C }) {
   const completed = module.levelsCompleted.length;

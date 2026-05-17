@@ -21,7 +21,7 @@ import ScreenBackground from '../components/ScreenBackground';
 import useScreenMusic from '../hooks/useScreenMusic';
 import { soundManager } from '../utils/SoundManager';
 
-export default function MapScreen({ navigation }) {
+const MapScreen = React.memo(function MapScreen({ navigation }) {
   const { colors: C } = useTheme();
   const styles = useMemo(() => createStyles(C), [C]);
   const { state, playerLevel } = useGame();
@@ -232,7 +232,9 @@ export default function MapScreen({ navigation }) {
     </ScrollView>
     </View>
   );
-}
+});
+
+export default MapScreen;
 
 const createStyles = (C) => StyleSheet.create({
   wrapper: { flex: 1 },

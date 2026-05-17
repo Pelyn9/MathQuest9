@@ -24,8 +24,8 @@ const Tab = createBottomTabNavigator();
 const tabTransitionSpec = {
   animation: 'timing',
   config: {
-    duration: 160,
-    easing: Easing.out(Easing.cubic),
+    duration: 300,
+    easing: Easing.inOut(Easing.ease),
   },
 };
 
@@ -53,6 +53,7 @@ function TabNavigator() {
       }}
       screenOptions={({ route }) => ({
         headerShown: false,
+        lazy: false,
         animation: 'fade',
         transitionSpec: tabTransitionSpec,
         tabBarShowLabel: true,
