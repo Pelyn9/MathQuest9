@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
+import { Animated, ScrollView, StyleSheet, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AppText from '../components/AppText';
 import DailyRewardModal from '../components/DailyRewardModal';
@@ -63,6 +63,27 @@ const HomeScreen = React.memo(function HomeScreen({ navigation }) {
   }, [state.lastDailyReward]);
 
   const [showDaily, setShowDaily] = useState(false);
+  const missionAnim = useRef(new Animated.Value(1)).current;
+  const sectionAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(sectionAnim, { toValue: 1, duration: 500, useNativeDriver: true }).start();
+  }, [sectionAnim]);
+
+  useEffect(() => {
+    Animated.sequence([
+      Animated.timing(missionAnim, {
+        toValue: 0,
+        duration: 80,
+        useNativeDriver: true,
+      }),
+      Animated.timing(missionAnim, {
+        toValue: 1,
+        duration: 220,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [activeModeKey, missionAnim]);
 
   useScreenMusic('menu');
 
@@ -163,6 +184,7 @@ const HomeScreen = React.memo(function HomeScreen({ navigation }) {
             </View>
           </View>
 
+          <Animated.View style={{ opacity: sectionAnim, transform: [{ translateY: sectionAnim.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }] }}>
           <View style={styles.heroPanel}>
             <View style={styles.levelRow}>
               <View style={styles.avatar}>
@@ -200,7 +222,9 @@ const HomeScreen = React.memo(function HomeScreen({ navigation }) {
               ))}
             </View>
           </View>
+          </Animated.View>
 
+          <Animated.View style={{ opacity: sectionAnim, transform: [{ translateY: sectionAnim.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }] }}>
           <View style={styles.quickActions}>
             <TouchableOpacity
               style={styles.quickButton}
@@ -244,7 +268,9 @@ const HomeScreen = React.memo(function HomeScreen({ navigation }) {
               </View>
             </TouchableOpacity>
           </View>
+          </Animated.View>
 
+          <Animated.View style={{ opacity: sectionAnim, transform: [{ translateY: sectionAnim.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }] }}>
           <View style={styles.modeSelector}>
             {Object.values(PLAY_MODES).map((mode) => {
               const selected = activeModeKey === mode.id;
@@ -275,8 +301,9 @@ const HomeScreen = React.memo(function HomeScreen({ navigation }) {
               );
             })}
           </View>
+          </Animated.View>
 
-          <View style={[styles.missionPanel, { borderColor: `${activeMode.color}55` }]}>
+          <Animated.View style={[styles.missionPanel, { borderColor: `${activeMode.color}55`, opacity: missionAnim, transform: [{ translateY: missionAnim.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }] }]}>
             <View style={styles.missionMain}>
               <View style={[styles.missionIcon, { backgroundColor: `${activeMode.color}18` }]}>
                 <Ionicons name={activeMode.icon} size={22} color={activeMode.color} />
@@ -314,8 +341,9 @@ const HomeScreen = React.memo(function HomeScreen({ navigation }) {
                 </TouchableOpacity>
               )}
             </View>
-          </View>
+          </Animated.View>
 
+          <Animated.View style={{ opacity: sectionAnim, transform: [{ translateY: sectionAnim.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }] }}>
           <View style={styles.sectionHeader}>
             <AppText style={styles.sectionTitle}>Practice</AppText>
             <AppText style={styles.sectionMeta}>Choose a module</AppText>
@@ -336,6 +364,7 @@ const HomeScreen = React.memo(function HomeScreen({ navigation }) {
               />
             ))}
           </View>
+          </Animated.View>
         </View>
       </ScrollView>
 

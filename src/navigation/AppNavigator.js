@@ -32,7 +32,7 @@ const tabTransitionSpec = {
 const smoothStackOptions = {
   headerShown: false,
   animation: 'fade',
-  animationDuration: 200,
+  animationDuration: 300,
   animationTypeForReplace: 'push',
   gestureEnabled: true,
   fullScreenGestureEnabled: true,

@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { View, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import React, { useMemo, useRef, useEffect } from 'react';
+import { Animated, View, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import AppText from '../components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
@@ -30,6 +30,16 @@ const MapScreen = React.memo(function MapScreen({ navigation }) {
   const missionProgress = getDifficultyMissionProgress(state, state.difficulty);
   const missionStats = getMissionStats(missionProgress);
   const nextMissionId = getNextMissionId(missionProgress);
+  const headerAnim = useRef(new Animated.Value(0)).current;
+  const listAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.sequence([
+      Animated.timing(headerAnim, { toValue: 1, duration: 350, useNativeDriver: true }),
+      Animated.timing(listAnim, { toValue: 1, duration: 400, useNativeDriver: true }),
+    ]).start();
+  }, [headerAnim, listAnim]);
+
   useScreenMusic('menu');
 
   const startMission = (mission) => {
@@ -63,6 +73,7 @@ const MapScreen = React.memo(function MapScreen({ navigation }) {
     <View style={styles.wrapper}>
       <ScreenBackground preset="map" />
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <Animated.View style={{ opacity: headerAnim, transform: [{ translateY: headerAnim.interpolate({ inputRange: [0, 1], outputRange: [-20, 0] }) }] }}>
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <View style={styles.headerCopy}>
@@ -100,6 +111,7 @@ const MapScreen = React.memo(function MapScreen({ navigation }) {
           </View>
         </View>
       </View>
+      </Animated.View>
 
       {/* Saga overview banner */}
       <View style={[styles.sagaBanner, { borderColor: `${activeMode.color}50`, backgroundColor: `${C.card}D8` }]}>
@@ -109,6 +121,7 @@ const MapScreen = React.memo(function MapScreen({ navigation }) {
         </AppText>
       </View>
 
+      <Animated.View style={{ opacity: listAnim, transform: [{ translateY: listAnim.interpolate({ inputRange: [0, 1], outputRange: [30, 0] }) }] }}>
       <View style={styles.pathWrap}>
         {STORY_MISSIONS.map((mission, idx) => {
           const unlocked = isMissionUnlocked(missionProgress, mission.id);
@@ -210,8 +223,9 @@ const MapScreen = React.memo(function MapScreen({ navigation }) {
               )}
             </View>
           );
-        })}
+          })}
       </View>
+      </Animated.View>
 
       <View style={styles.legend}>
         <View style={styles.legendItem}>

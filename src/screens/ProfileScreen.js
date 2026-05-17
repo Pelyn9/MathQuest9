@@ -1,8 +1,8 @@
-import { View, ScrollView, StyleSheet, Switch, Pressable, TouchableOpacity, Platform } from 'react-native';
+import { Animated, View, ScrollView, StyleSheet, Switch, Pressable, TouchableOpacity, Platform } from 'react-native';
 import AppText from '../components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useRef, useEffect } from 'react';
 import { useTheme } from '../theme/ThemeContext';
 import { useGame } from '../context/GameContext';
 import { useToast } from '../context/ToastContext';
@@ -21,6 +21,22 @@ const ProfileScreen = React.memo(function ProfileScreen({ navigation }) {
   const activeDifficulty = DIFFICULTY[state.difficulty] || DIFFICULTY.normal;
   const accent = activeDifficulty.color;
   const styles = useMemo(() => createStyles(C, accent), [C, accent]);
+  const diffAnim = useRef(new Animated.Value(1)).current;
+  const sectionAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.sequence([
+      Animated.timing(sectionAnim, { toValue: 1, duration: 400, useNativeDriver: true }),
+    ]).start();
+  }, [sectionAnim]);
+
+  useEffect(() => {
+    Animated.sequence([
+      Animated.timing(diffAnim, { toValue: 0.92, duration: 80, useNativeDriver: true }),
+      Animated.timing(diffAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
+    ]).start();
+  }, [state.difficulty, diffAnim]);
+
   useScreenMusic('menu');
 
   const allBadges = Object.values(BADGES);
@@ -141,6 +157,7 @@ const ProfileScreen = React.memo(function ProfileScreen({ navigation }) {
         {/* ═══════════════════════════════════════
             EXPERIENCE BAR
            ═══════════════════════════════════════ */}
+        <Animated.View style={{ opacity: sectionAnim, transform: [{ translateY: sectionAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }] }}>
         <View style={styles.parchmentCard}>
           <View style={styles.expHeader}>
             <MaterialCommunityIcons name="lightning-bolt" size={14} color={accent} />
@@ -153,10 +170,12 @@ const ProfileScreen = React.memo(function ProfileScreen({ navigation }) {
           </View>
           <AppText style={styles.expDetail}>{currentXP} / {neededXP} to next level</AppText>
         </View>
+        </Animated.View>
 
         {/* ═══════════════════════════════════════
             ATTRIBUTES · STAT BLOCK
            ═══════════════════════════════════════ */}
+        <Animated.View style={{ opacity: sectionAnim, transform: [{ translateY: sectionAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }] }}>
         <View style={styles.parchmentCard}>
           <View style={styles.attrGrid}>
             <View style={styles.attrCell}>
@@ -181,6 +200,7 @@ const ProfileScreen = React.memo(function ProfileScreen({ navigation }) {
             </View>
           </View>
         </View>
+        </Animated.View>
 
         {/* ═══════════════════════════════════════
             DIFFICULTY · EQUIPMENT SLOTS
@@ -189,6 +209,7 @@ const ProfileScreen = React.memo(function ProfileScreen({ navigation }) {
           <MaterialCommunityIcons name="axe" size={14} color={C.textMuted} />
           <AppText style={styles.sectionLabel}>Equip Difficulty</AppText>
         </View>
+        <Animated.View style={{ transform: [{ scale: diffAnim }] }}>
         <View style={styles.diffGrid}>
           {DIFF_ORDER.map((key) => {
             const d = DIFFICULTY[key];
@@ -213,6 +234,7 @@ const ProfileScreen = React.memo(function ProfileScreen({ navigation }) {
             );
           })}
         </View>
+        </Animated.View>
 
         {/* ═══════════════════════════════════════
             QUEST LOG · ASSESSMENT

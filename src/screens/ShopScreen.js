@@ -1,7 +1,7 @@
-import { View, TouchableOpacity, ScrollView, StyleSheet, Modal, Pressable } from 'react-native';
+import { Animated, View, TouchableOpacity, ScrollView, StyleSheet, Modal, Pressable } from 'react-native';
 import AppText from '../components/AppText';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { useTheme } from '../theme/ThemeContext';
 import { SHADOWS } from '../theme/colors';
 import { useGame } from '../context/GameContext';
@@ -72,6 +72,23 @@ export default function ShopScreen({ navigation }) {
   const { state, addCoins, unlockAvatar, setAvatar, unlockTheme, setThemePreference } = useGame();
   const [activeTab, setActiveTab] = useState('avatars');
   const [shopDialog, setShopDialog] = useState(null);
+  const tabContentAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.sequence([
+      Animated.timing(tabContentAnim, {
+        toValue: 0,
+        duration: 70,
+        useNativeDriver: true,
+      }),
+      Animated.timing(tabContentAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [activeTab, tabContentAnim]);
+
   useScreenMusic('menu');
 
   const unlockedTitles = getUnlockedTitles(state.badges || []);
@@ -277,6 +294,7 @@ export default function ShopScreen({ navigation }) {
       </View>
 
       {/* AVATARS TAB */}
+      <Animated.View style={{ opacity: tabContentAnim, transform: [{ translateY: tabContentAnim.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }] }}>
       {activeTab === 'avatars' && (
         <>
           {/* Achievement Titles */}
@@ -408,8 +426,10 @@ export default function ShopScreen({ navigation }) {
           })}
         </>
       )}
+      </Animated.View>
 
       {/* THEMES TAB */}
+      <Animated.View style={{ opacity: tabContentAnim, transform: [{ translateY: tabContentAnim.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }] }}>
       {activeTab === 'themes' && (
         <>
           <View style={styles.sectionHeader}>
@@ -473,6 +493,7 @@ export default function ShopScreen({ navigation }) {
           })}
         </>
       )}
+      </Animated.View>
 
       <View style={styles.spacer} />
     </ScrollView>
