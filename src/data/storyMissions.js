@@ -234,11 +234,11 @@ const missionActions = [
 ];
 
 const missionObjects = [
-  'the First Gate', 'the Hidden Stall', 'the Dawn Bridge', 'the Cipher Stone', 'the Market Bell',
-  'the Lost Receipt', 'the Silver Route', 'the Trial Forge', 'the Moon Lock', 'the Watch Post',
-  'the Lantern Path', 'the Archive Wall', 'the Shadow Ledger', 'the Compass Ring', 'the Secret Rule',
-  'the Outer Ward', 'the Elder Puzzle', 'the Broken Span', 'the Hero Trail', 'the Royal Seal',
-  'the Last Beacon', 'the High Crossing', 'the Dark Court', 'the Boss Keep', 'the Crown Road',
+  'The First Gate', 'The Hidden Stall', 'The Dawn Bridge', 'The Cipher Stone', 'The Market Bell',
+  'The Lost Receipt', 'The Silver Route', 'The Trial Forge', 'The Moon Lock', 'The Watch Post',
+  'The Lantern Path', 'The Archive Wall', 'The Shadow Ledger', 'The Compass Ring', 'The Secret Rule',
+  'The Outer Ward', 'The Elder Puzzle', 'The Broken Span', 'The Hero Trail', 'The Royal Seal',
+  'The Last Beacon', 'The High Crossing', 'The Dark Court', 'The Boss Keep', 'The Crown Road',
 ];
 
 const getChapter = (localId) => Math.ceil(localId / 5);

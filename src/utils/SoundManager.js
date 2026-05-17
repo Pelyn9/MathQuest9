@@ -15,9 +15,15 @@ const AUDIO_CACHE_VERSION = 'v2';
 const BASE64_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 const waitForUiTurn = () => new Promise(resolve => setTimeout(resolve, 0));
 const MAIN_PAGE_MUSIC = require('../backgroundmusic/mainpagemusic.mp3');
+const SURVIVAL_MODE_MUSIC = require('../backgroundmusic/BossMode.mp3');
+const STORY_MODE_MUSIC = require('../backgroundmusic/story.mp3');
+const TIME_MODE_MUSIC = require('../backgroundmusic/TimeMode.mp3');
 const ASSET_MUSIC_VOLUME = 1;
 const ASSET_MUSIC_DEFS = {
   menu: MAIN_PAGE_MUSIC,
+  story: STORY_MODE_MUSIC,
+  survival: SURVIVAL_MODE_MUSIC,
+  timer: TIME_MODE_MUSIC,
 };
 
 async function resolveAssetUri(assetModule) {

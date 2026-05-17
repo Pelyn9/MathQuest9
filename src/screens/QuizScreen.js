@@ -79,7 +79,7 @@ export default function QuizScreen({ route, navigation }) {
   const initialActiveModeKey = initialMission ? 'story' : mode || state.activeMode || 'story';
   const startsWithLoadingScreen = initialActiveModeKey === 'survival'
     || initialActiveModeKey === 'timer'
-    || initialActiveModeKey === 'story'
+    || (initialActiveModeKey === 'story' && !!initialMission)
     || Boolean(initialMission ? initialMission.isBoss : level?.isBoss);
 
   const [qIndex, setQIndex] = useState(0);
@@ -131,7 +131,7 @@ export default function QuizScreen({ route, navigation }) {
   const isSurvivalMode = activeModeKey === 'survival';
   const isTimerMode = activeModeKey === 'timer';
   const isBossEncounter = isSurvivalMode || Boolean(mission ? mission.isBoss : level?.isBoss);
-  const loadingScreenKey = (isBossEncounter || isTimerMode || isStoryMode)
+  const loadingScreenKey = (isBossEncounter || isTimerMode || isStoryMission)
     ? `${activeModeKey}-${mission?.id || `${moduleId}-${levelId}`}`
     : null;
   const missionProgress = isStoryMission ? getDifficultyMissionProgress(state, state.difficulty) : null;
@@ -146,6 +146,7 @@ export default function QuizScreen({ route, navigation }) {
     if (!level) return 'menu';
     if (activeModeKey === 'survival') return 'survival';
     if (activeModeKey === 'timer') return 'timer';
+    if (activeModeKey === 'story') return 'story';
     if (isBossEncounter) return 'boss';
     return onboardingStep === 'gameplay' ? 'story' : 'menu';
   }, [activeModeKey, isBossEncounter, level, onboardingStep]);
@@ -617,7 +618,7 @@ export default function QuizScreen({ route, navigation }) {
     outputRange: [0.4, 1],
   });
 
-  if (showBossLoading && (isBossEncounter || isTimerMode || isStoryMode)) {
+  if (showBossLoading && (isBossEncounter || isTimerMode || isStoryMission)) {
     return (
       <BossLoadingScreen
         title={isTimerMode ? 'Timer Mode' : isSurvivalMode ? 'Survival Boss Battle' : isStoryMode ? 'Story Mode' : mission?.shortTitle || level?.title || 'Boss Battle'}
@@ -764,14 +765,14 @@ export default function QuizScreen({ route, navigation }) {
               )}
             </View>
 
-            {showHint && currentQ?.hint && (
+            {!isSurvivalMode && showHint && currentQ?.hint && (
               <View style={styles.hintBanner}>
                 <Ionicons name="bulb" size={16} color={C.warning} />
                 <AppText style={styles.hintText}>{currentQ.hint}</AppText>
               </View>
             )}
 
-            {usedCall && (
+            {!isSurvivalMode && usedCall && (
               <View style={styles.callBanner}>
                 <Ionicons name="people" size={16} color={C.secondary} />
                 <AppText style={styles.hintText}>{friendHint}</AppText>
@@ -812,18 +813,20 @@ export default function QuizScreen({ route, navigation }) {
             <View style={styles.bottomSection}>
               {!showCorrect ? (
                 <>
-                  <Lifelines
-                    onHint={handleHint}
-                    onFiftyFifty={handleFiftyFifty}
-                    onCallFriend={handleCallFriend}
-                    usedFifty={usedFifty}
-                    usedCall={usedCall}
-                    hintLevel={hintLevel}
-                    coins={state.coins}
-                    hintCost={10}
-                    fiftyCost={20}
-                    callCost={40}
-                  />
+                  {!isSurvivalMode && (
+                    <Lifelines
+                      onHint={handleHint}
+                      onFiftyFifty={handleFiftyFifty}
+                      onCallFriend={handleCallFriend}
+                      usedFifty={usedFifty}
+                      usedCall={usedCall}
+                      hintLevel={hintLevel}
+                      coins={state.coins}
+                      hintCost={10}
+                      fiftyCost={20}
+                      callCost={40}
+                    />
+                  )}
                   <TouchableOpacity
                     style={[styles.submitBtn, (selected === null || isBattleLocked) && styles.btnDisabled]}
                     onPress={handleSubmit}
