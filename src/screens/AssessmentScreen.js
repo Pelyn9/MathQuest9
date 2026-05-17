@@ -1,4 +1,4 @@
-import { View, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
+import { View, TouchableOpacity, ScrollView, StyleSheet, useWindowDimensions } from 'react-native';
 import AppText from '../components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState, useMemo, useEffect } from 'react';
@@ -24,7 +24,10 @@ const ASSESSMENT_TIME = 60;
 export default function AssessmentScreen({ route, navigation }) {
   const isPostTest = route.params?.type === 'post';
   const { colors: C } = useTheme();
-  const styles = useMemo(() => createStyles(C), [C]);
+  const { width } = useWindowDimensions();
+  const isCompact = width < 370;
+  const isTiny = width < 330;
+  const styles = useMemo(() => createStyles(C, { isCompact, isTiny }), [C, isCompact, isTiny]);
   const { state, setPreTest, setPostTest } = useGame();
   const [questions, setQuestions] = useState([]);
   const [qIndex, setQIndex] = useState(0);
@@ -175,7 +178,9 @@ export default function AssessmentScreen({ route, navigation }) {
       <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <AppText style={styles.headerLabel}>{isPostTest ? 'Post-Test' : 'Pre-Test'}</AppText>
-          <AppText style={styles.headerTitle}>{currentQ.question}</AppText>
+          <AppText style={styles.headerTitle} maxFontSizeMultiplier={1.25} textBreakStrategy="balanced">
+            {currentQ.question}
+          </AppText>
         </View>
 
         <View style={styles.options}>
@@ -197,7 +202,9 @@ export default function AssessmentScreen({ route, navigation }) {
                 <AppText style={[styles.letter, { color: isCorrect ? C.success : isWrong ? C.danger : isSelected ? C.info : C.textMuted, fontWeight: 'bold' }]}>
                   {String.fromCharCode(65 + i)}
                 </AppText>
-                <AppText style={[styles.optionText, { color: C.text }]}>{opt}</AppText>
+                <AppText style={[styles.optionText, { color: C.text }]} maxFontSizeMultiplier={1.2} textBreakStrategy="balanced">
+                  {opt}
+                </AppText>
               </TouchableOpacity>
             );
           })}
@@ -233,7 +240,7 @@ export default function AssessmentScreen({ route, navigation }) {
   );
 }
 
-const createStyles = (C) => StyleSheet.create({
+const createStyles = (C, { isCompact, isTiny } = {}) => StyleSheet.create({
   wrapper: { flex: 1 },
   container: { flex: 1, backgroundColor: 'transparent' },
   topBar: {
@@ -249,20 +256,32 @@ const createStyles = (C) => StyleSheet.create({
   topCenter: { flex: 1 },
   questionNum: { fontSize: 13, color: C.textMuted, fontWeight: '600' },
   body: { flex: 1 },
-  header: { padding: 20, paddingBottom: 12 },
+  header: { padding: isTiny ? 14 : isCompact ? 16 : 20, paddingBottom: 12 },
   headerLabel: { fontSize: 11, fontWeight: '800', color: C.gold, letterSpacing: 2, textTransform: 'uppercase' },
-  headerTitle: { fontSize: 18, fontWeight: 'bold', color: C.text, marginTop: 8, lineHeight: 26 },
-  options: { paddingHorizontal: 20, gap: 10 },
+  headerTitle: {
+    fontSize: isTiny ? 15 : isCompact ? 16 : 18,
+    fontWeight: 'bold',
+    color: C.text,
+    marginTop: 8,
+    lineHeight: isTiny ? 22 : isCompact ? 24 : 26,
+  },
+  options: { paddingHorizontal: isTiny ? 14 : isCompact ? 16 : 20, gap: 10 },
   option: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    padding: 14, borderRadius: 10, borderWidth: 1,
+    flexDirection: 'row', alignItems: 'flex-start', gap: isTiny ? 9 : 12,
+    padding: isTiny ? 11 : isCompact ? 12 : 14, borderRadius: 10, borderWidth: 1,
     shadowColor: C.primary, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.12, shadowRadius: 8, elevation: 2,
   },
   letter: {
-    width: 28, height: 28, borderRadius: 8,
-    textAlign: 'center', lineHeight: 28, fontSize: 13,
+    width: isTiny ? 26 : 28, height: isTiny ? 26 : 28, borderRadius: 8,
+    textAlign: 'center', lineHeight: isTiny ? 26 : 28, fontSize: isTiny ? 12 : 13,
   },
-  optionText: { fontSize: 15, flex: 1, lineHeight: 20 },
+  optionText: {
+    fontSize: isTiny ? 13 : isCompact ? 14 : 15,
+    flex: 1,
+    flexShrink: 1,
+    minWidth: 0,
+    lineHeight: isTiny ? 18 : isCompact ? 19 : 20,
+  },
   explanationBox: {
     marginHorizontal: 20, marginTop: 16, padding: 14,
     borderRadius: 12, borderLeftWidth: 3, borderWidth: 1, borderColor: `${C.info}35`,
