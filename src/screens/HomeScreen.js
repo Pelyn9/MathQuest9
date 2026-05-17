@@ -1,35 +1,35 @@
-import { View, TouchableOpacity, ScrollView, StyleSheet, useWindowDimensions } from 'react-native';
-import AppText from '../components/AppText';
+import React, { useMemo, useState } from 'react';
+import { ScrollView, StyleSheet, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useMemo, useState, useEffect } from 'react';
-import { useTheme } from '../theme/ThemeContext';
-import { MODULES } from '../theme/colors';
+import AppText from '../components/AppText';
+import DailyRewardModal from '../components/DailyRewardModal';
+import LivesDisplay from '../components/LivesDisplay';
+import ScreenBackground from '../components/ScreenBackground';
 import { useGame } from '../context/GameContext';
-import { getXPProgress, getPlayerTitle, getFullDisplayTitle, DIFFICULTY } from '../utils/gameLogic';
 import {
   PLAY_MODES,
   getDifficultyMissionProgress,
-  getDifficultyMissionStory,
   getMissionById,
   getMissionStats,
   getNextMissionId,
   getStoryDifficultyPath,
 } from '../data/storyMissions';
-import LivesDisplay from '../components/LivesDisplay';
-import ModuleCard from '../components/ModuleCard';
-import DailyRewardModal from '../components/DailyRewardModal';
-import ScreenBackground from '../components/ScreenBackground';
 import useScreenMusic from '../hooks/useScreenMusic';
+import { useTheme } from '../theme/ThemeContext';
+import { MODULES } from '../theme/colors';
 import { soundManager } from '../utils/SoundManager';
+import { DIFFICULTY, getPlayerTitle, getXPProgress } from '../utils/gameLogic';
 
 export default function HomeScreen({ navigation }) {
   const { colors: C } = useTheme();
   const { width: screenWidth } = useWindowDimensions();
-  const titleSize = Math.min(22, Math.round(screenWidth * 0.05));
-  const styles = useMemo(() => createStyles(C, titleSize), [C, titleSize]);
+  const isNarrow = screenWidth < 360;
+  const isWide = screenWidth >= 600;
+  const styles = useMemo(() => createStyles(C, { isNarrow, isWide }), [C, isNarrow, isWide]);
+
   const { state, playerLevel, claimDailyReward, setPlayMode } = useGame();
   const { currentXP, neededXP } = getXPProgress(state.xp);
-  const title = getPlayerTitle(playerLevel);
+  const playerTitle = getPlayerTitle(playerLevel);
   const diffConfig = DIFFICULTY[state.difficulty] || DIFFICULTY.normal;
   const activeModeKey = state.activeMode || 'story';
   const activeMode = PLAY_MODES[activeModeKey] || PLAY_MODES.story;
@@ -37,24 +37,34 @@ export default function HomeScreen({ navigation }) {
   const missionProgress = getDifficultyMissionProgress(state, state.difficulty);
   const missionStats = getMissionStats(missionProgress);
   const nextMission = getMissionById(getNextMissionId(missionProgress));
+  const accuracy = state.totalAnswered > 0
+    ? Math.round((state.totalCorrect / state.totalAnswered) * 100)
+    : 0;
+  const xpPercent = neededXP > 0
+    ? Math.min(100, Math.max(0, (currentXP / neededXP) * 100))
+    : 100;
+
   const dailyInfo = useMemo(() => {
     if (!state.lastDailyReward) {
       return { available: true, streak: 0, claimedToday: false };
     }
+
     const last = new Date(state.lastDailyReward);
     const now = new Date();
     const lastDay = new Date(last.getFullYear(), last.getMonth(), last.getDate()).getTime();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
     const diffDays = Math.max(0, Math.floor((today - lastDay) / (1000 * 60 * 60 * 24)));
+
     return {
       available: diffDays > 0,
       streak: diffDays <= 1 ? 1 : 0,
       claimedToday: diffDays === 0,
     };
   }, [state.lastDailyReward]);
-  useScreenMusic('menu');
 
   const [showDaily, setShowDaily] = useState(false);
+
+  useScreenMusic('menu');
 
   const openStackScreen = (screen, params) => {
     const parent = navigation.getParent?.();
@@ -65,22 +75,23 @@ export default function HomeScreen({ navigation }) {
     }
   };
 
-  useEffect(() => {
-    if (dailyInfo.available) setShowDaily(true);
-  }, [dailyInfo.available]);
-
-  const calcStreak = () => {
-    return dailyInfo.streak;
-  };
-
   const getModuleProgress = (modId) => {
-    const m = state.moduleProgress[modId];
-    const mod = MODULES.find(x => x.id === modId);
-    return { ...m, totalLevels: mod.levels, color: mod.color, lightColor: mod.lightColor, icon: mod.icon, title: mod.title, subtitle: mod.subtitle };
+    const savedProgress = state.moduleProgress?.[modId] || {};
+    const module = MODULES.find(item => item.id === modId);
+
+    return {
+      ...savedProgress,
+      levelsCompleted: Array.isArray(savedProgress.levelsCompleted) ? savedProgress.levelsCompleted : [],
+      totalLevels: module.levels,
+      color: module.color,
+      icon: module.icon,
+      title: module.title,
+    };
   };
 
   const startMission = () => {
     soundManager.play('start');
+
     if (activeModeKey === 'story') {
       if (!nextMission) return;
       openStackScreen('Quiz', {
@@ -89,274 +100,248 @@ export default function HomeScreen({ navigation }) {
         missionId: nextMission.id,
         mode: 'story',
       });
-    } else {
-      // survival / timer — pick a random module/level
-      const randomModule = MODULES[Math.floor(Math.random() * MODULES.length)].id;
-      const randomLevel = Math.floor(Math.random() * 4) + 1;
-      openStackScreen('Quiz', {
-        moduleId: randomModule,
-        levelId: randomLevel,
-        mode: activeModeKey,
-      });
+      return;
     }
+
+    const randomModule = MODULES[Math.floor(Math.random() * MODULES.length)].id;
+    const randomLevel = Math.floor(Math.random() * 4) + 1;
+    openStackScreen('Quiz', {
+      moduleId: randomModule,
+      levelId: randomLevel,
+      mode: activeModeKey,
+    });
   };
+
+  const missionTitle = activeModeKey === 'story'
+    ? nextMission?.shortTitle || 'Final Mission'
+    : `${activeMode.label} Challenge`;
+  const missionMeta = activeModeKey === 'story'
+    ? `${storyPath.label} - Mission ${nextMission?.id || 100}/100`
+    : activeModeKey === 'survival'
+      ? 'Random practice - no timer'
+      : 'Random practice - timed';
+  const missionButtonText = activeModeKey === 'story'
+    ? missionStats.completed >= 100 ? 'Replay Finale' : 'Continue'
+    : 'Start';
+
+  const summaryStats = [
+    { icon: 'flag', label: 'Missions', value: `${missionStats.completed}/100`, color: C.warning },
+    { icon: 'star', label: 'Stars', value: missionStats.totalStars, color: C.gold },
+    { icon: 'checkmark-circle', label: 'Accuracy', value: `${accuracy}%`, color: C.success },
+  ];
 
   return (
     <View style={styles.wrapper}>
       <ScreenBackground preset="home" />
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <View style={styles.headerLeft}>
-            <View style={styles.titleOrnament}>
-              <View style={styles.ornamentLine} />
-              <Ionicons name="compass" size={18} color={C.gold} />
-              <View style={styles.ornamentLine} />
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.content}>
+          <View style={styles.topBar}>
+            <View style={styles.brandBlock}>
+              <AppText style={styles.appName}>MathQuest 9</AppText>
+              <AppText style={styles.appSubtitle} numberOfLines={1}>The Lost Kingdom of Numeria</AppText>
             </View>
-            <View style={styles.titleRow}>
-              <AppText style={styles.greeting} decorative>Derivative Chronicles</AppText>
-              <View style={[styles.diffBadge, { backgroundColor: `${diffConfig.color}20` }]}>
-                <Ionicons name={diffConfig.icon} size={12} color={diffConfig.color} />
-                <AppText style={[styles.diffText, { color: diffConfig.color }]}>{diffConfig.label}</AppText>
-              </View>
-            </View>
-            <AppText style={styles.subtitle}>MathQuest 9 - The Lost Kingdom of Numeria</AppText>
-          </View>
-          <View style={styles.headerRight}>
-            <LivesDisplay lives={state.lives} maxLives={state.maxLives} />
-            <TouchableOpacity
-              style={styles.coinBadge}
-              onPress={() => {
-                soundManager.play('coin');
-                openStackScreen('Shop');
-              }}
-              activeOpacity={0.75}
-              accessibilityRole="button"
-              accessibilityLabel="Open coin shop"
-            >
-              <Ionicons name="cash-outline" size={14} color={C.gold} />
-              <AppText style={styles.coinText}>{state.coins}</AppText>
-            </TouchableOpacity>
-          </View>
-        </View>
 
-        <View style={styles.playerCard}>
-          <View style={styles.playerInfo}>
-            <View style={styles.avatarSmall}>
-              <Ionicons name="shield-checkmark" size={22} color={C.primary} />
-            </View>
-            <View style={styles.playerText}>
-              <AppText style={styles.playerName} decorative>Level {playerLevel} {title}</AppText>
-              <AppText style={styles.playerSub}>Math Hero</AppText>
-            </View>
-          </View>
-          <View style={styles.xpSection}>
-            <View style={styles.xpHeader}>
-              <Ionicons name="flash" size={14} color={C.xp} />
-              <AppText style={styles.xpLabel}>XP</AppText>
-              <AppText style={styles.xpValue}>{state.xp}</AppText>
-            </View>
-            <View style={styles.xpTrack}>
-              <View style={[styles.xpFill, { width: `${(currentXP / neededXP) * 100}%` }]} />
-            </View>
-            <AppText style={styles.xpDetail}>{currentXP}/{neededXP}</AppText>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={[
-            styles.dailyRewardCard,
-            { borderColor: dailyInfo.available ? `${C.gold}70` : `${C.cardBorder}90` },
-          ]}
-          onPress={() => {
-            soundManager.play(dailyInfo.available ? 'open' : 'click');
-            setShowDaily(true);
-          }}
-          activeOpacity={0.78}
-          accessibilityRole="button"
-          accessibilityLabel="Open daily reward"
-        >
-          <View style={[styles.dailyGiftIcon, { backgroundColor: dailyInfo.available ? `${C.gold}24` : `${C.backgroundLight}D0` }]}>
-            <Ionicons name={dailyInfo.available ? 'gift' : 'checkmark-circle'} size={22} color={dailyInfo.available ? C.gold : C.success} />
-          </View>
-          <View style={styles.dailyRewardCopy}>
-            <AppText style={styles.dailyRewardTitle} decorative>Daily Reward</AppText>
-            <AppText style={styles.dailyRewardText}>
-              {dailyInfo.available ? 'Coins and XP are ready to claim.' : 'Reward claimed today. Come back tomorrow.'}
-            </AppText>
-          </View>
-          <View style={[styles.dailyRewardAction, { backgroundColor: dailyInfo.available ? C.gold : `${C.success}22` }]}>
-            <AppText style={[styles.dailyRewardActionText, { color: dailyInfo.available ? C.black : C.success }]}>
-              {dailyInfo.available ? 'Claim' : 'View'}
-            </AppText>
-          </View>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.modePanel}>
-        <View style={styles.modeHeader}>
-          <View style={styles.modeHeaderText}>
-            <AppText style={styles.modeTitle} decorative>Quest Mode</AppText>
-            <AppText style={styles.modeSubtitle}>
-              {activeMode.description} {storyPath.label} keeps its own mission progress and XP bonus.
-            </AppText>
-          </View>
-          <View style={[styles.activeModePill, { backgroundColor: `${activeMode.color}18` }]}>
-            <Ionicons name={activeMode.icon} size={13} color={activeMode.color} />
-            <AppText style={[styles.activeModeText, { color: activeMode.color }]}>{activeMode.label}</AppText>
-          </View>
-        </View>
-        <View style={styles.modeGrid}>
-          {Object.values(PLAY_MODES).map((mode) => {
-            const selected = activeModeKey === mode.id;
-            return (
+            <View style={styles.topStatus}>
+              <LivesDisplay lives={state.lives} maxLives={state.maxLives} />
               <TouchableOpacity
-                key={mode.id}
-                style={[
-                  styles.modeButton,
-                  {
-                    borderColor: selected ? mode.color : C.cardBorder,
-                    backgroundColor: selected ? `${mode.color}18` : C.card,
-                  },
-                ]}
+                style={styles.coinButton}
                 onPress={() => {
-                  soundManager.play(selected ? 'click' : 'select');
-                  setPlayMode(mode.id);
+                  soundManager.play('coin');
+                  openStackScreen('Shop');
                 }}
                 activeOpacity={0.75}
+                accessibilityRole="button"
+                accessibilityLabel="Open shop"
               >
-                <Ionicons name={mode.icon} size={18} color={selected ? mode.color : C.textMuted} />
-                <AppText style={[styles.modeButtonText, { color: selected ? mode.color : C.text }]}>
-                  {mode.label}
-                </AppText>
+                <Ionicons name="cash-outline" size={15} color={C.gold} />
+                <AppText style={styles.coinText}>{state.coins}</AppText>
               </TouchableOpacity>
-            );
-          })}
-        </View>
-      </View>
-
-      {activeModeKey === 'story' && nextMission && (
-        <View style={[styles.missionCard, { borderColor: `${activeMode.color}55` }]}>
-          <View style={styles.missionTop}>
-            <View style={[styles.missionIcon, { backgroundColor: `${nextMission.color}20` }]}>
-              <Ionicons name={nextMission.icon} size={22} color={nextMission.color} />
-            </View>
-            <View style={styles.missionInfo}>
-              <AppText style={styles.missionKicker}>
-                {missionStats.completed >= 100 ? `${storyPath.progressLabel} Cleared` : `Next Mission ${nextMission.id}/100 - ${storyPath.label}`}
-              </AppText>
-              <AppText style={styles.missionTitle} decorative>{nextMission.shortTitle}</AppText>
-              <AppText style={styles.missionStory} numberOfLines={3}>
-                {getDifficultyMissionStory(nextMission, state.difficulty)}
-              </AppText>
             </View>
           </View>
-          <View style={styles.missionActions}>
+
+          <View style={styles.heroPanel}>
+            <View style={styles.levelRow}>
+              <View style={styles.avatar}>
+                <Ionicons name="shield-checkmark" size={22} color={C.primary} />
+              </View>
+              <View style={styles.levelCopy}>
+                <AppText style={styles.levelText}>Level {playerLevel}</AppText>
+                <AppText style={styles.playerTitle} numberOfLines={1}>{playerTitle}</AppText>
+              </View>
+              <View style={[styles.difficultyPill, { backgroundColor: `${diffConfig.color}18`, borderColor: `${diffConfig.color}45` }]}>
+                <Ionicons name={diffConfig.icon} size={13} color={diffConfig.color} />
+                <AppText style={[styles.difficultyText, { color: diffConfig.color }]}>{diffConfig.label}</AppText>
+              </View>
+            </View>
+
+            <View style={styles.xpBlock}>
+              <View style={styles.xpLabels}>
+                <AppText style={styles.xpLabel}>XP</AppText>
+                <AppText style={styles.xpValue}>
+                  {neededXP > 0 ? `${currentXP}/${neededXP}` : 'Max'}
+                </AppText>
+              </View>
+              <View style={styles.xpTrack}>
+                <View style={[styles.xpFill, { width: `${xpPercent}%` }]} />
+              </View>
+            </View>
+
+            <View style={styles.metricRow}>
+              {summaryStats.map(stat => (
+                <View key={stat.label} style={styles.metricItem}>
+                  <Ionicons name={stat.icon} size={16} color={stat.color} />
+                  <AppText style={styles.metricValue}>{stat.value}</AppText>
+                  <AppText style={styles.metricLabel}>{stat.label}</AppText>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.quickActions}>
             <TouchableOpacity
-              style={[styles.primaryMissionBtn, { backgroundColor: activeMode.color }]}
-              onPress={startMission}
-              activeOpacity={0.8}
+              style={styles.quickButton}
+              onPress={() => {
+                soundManager.play(dailyInfo.available ? 'open' : 'click');
+                setShowDaily(true);
+              }}
+              activeOpacity={0.76}
+              accessibilityRole="button"
+              accessibilityLabel="Open daily reward"
             >
-              <Ionicons name="play" size={17} color={C.white} />
-              <AppText style={styles.primaryMissionText}>
-                {missionStats.completed >= 100 ? 'Replay Finale' : 'Continue'}
-              </AppText>
+              <View style={[styles.quickIcon, { backgroundColor: dailyInfo.available ? `${C.gold}20` : `${C.success}18` }]}>
+                <Ionicons
+                  name={dailyInfo.available ? 'gift' : 'checkmark-circle'}
+                  size={18}
+                  color={dailyInfo.available ? C.gold : C.success}
+                />
+              </View>
+              <View style={styles.quickTextWrap}>
+                <AppText style={styles.quickTitle}>Daily Reward</AppText>
+                <AppText style={styles.quickMeta}>{dailyInfo.available ? 'Ready' : 'Claimed'}</AppText>
+              </View>
             </TouchableOpacity>
+
             <TouchableOpacity
-              style={styles.secondaryMissionBtn}
+              style={styles.quickButton}
               onPress={() => {
                 soundManager.play('click');
-                navigation.navigate('Map');
+                navigation.navigate('Profile');
               }}
-              activeOpacity={0.8}
+              activeOpacity={0.76}
+              accessibilityRole="button"
+              accessibilityLabel="Open profile"
             >
-              <Ionicons name="map" size={17} color={C.primary} />
-              <AppText style={styles.secondaryMissionText}>Mission Map</AppText>
+              <View style={[styles.quickIcon, { backgroundColor: `${C.primary}18` }]}>
+                <Ionicons name="person-circle-outline" size={19} color={C.primary} />
+              </View>
+              <View style={styles.quickTextWrap}>
+                <AppText style={styles.quickTitle}>Profile</AppText>
+                <AppText style={styles.quickMeta}>Badges</AppText>
+              </View>
             </TouchableOpacity>
           </View>
-        </View>
-      )}
 
-      {/* survival / timer — generic challenge card */}
-      {activeModeKey !== 'story' && (
-        <View style={[styles.missionCard, { borderColor: `${activeMode.color}55` }]}>
-          <View style={styles.missionTop}>
-            <View style={[styles.missionIcon, { backgroundColor: `${activeMode.color}20` }]}>
-              <Ionicons name={activeMode.icon} size={24} color={activeMode.color} />
+          <View style={styles.modeSelector}>
+            {Object.values(PLAY_MODES).map((mode) => {
+              const selected = activeModeKey === mode.id;
+
+              return (
+                <TouchableOpacity
+                  key={mode.id}
+                  style={[
+                    styles.modeButton,
+                    {
+                      borderColor: selected ? mode.color : `${C.cardBorder}75`,
+                      backgroundColor: selected ? `${mode.color}18` : 'transparent',
+                    },
+                  ]}
+                  onPress={() => {
+                    soundManager.play(selected ? 'click' : 'select');
+                    setPlayMode(mode.id);
+                  }}
+                  activeOpacity={0.76}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Select ${mode.label} mode`}
+                >
+                  <Ionicons name={mode.icon} size={17} color={selected ? mode.color : C.textMuted} />
+                  <AppText style={[styles.modeText, { color: selected ? mode.color : C.textLight }]}>
+                    {mode.label}
+                  </AppText>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <View style={[styles.missionPanel, { borderColor: `${activeMode.color}55` }]}>
+            <View style={styles.missionMain}>
+              <View style={[styles.missionIcon, { backgroundColor: `${activeMode.color}18` }]}>
+                <Ionicons name={activeMode.icon} size={22} color={activeMode.color} />
+              </View>
+              <View style={styles.missionCopy}>
+                <AppText style={styles.missionMeta} numberOfLines={1}>{missionMeta}</AppText>
+                <AppText style={styles.missionTitle} numberOfLines={2}>{missionTitle}</AppText>
+              </View>
             </View>
-            <View style={styles.missionInfo}>
-              <AppText style={styles.missionKicker}>{activeMode.label} Challenge</AppText>
-              <AppText style={styles.missionTitle} decorative>Random Skirmish</AppText>
-              <AppText style={styles.missionStory}>
-                {activeModeKey === 'survival'
-                  ? 'Endless questions with no timer. Hold your ground as long as you can. Every correct answer keeps you alive.'
-                  : 'Race against the clock. Answer fast and accurate to survive the countdown pressure.'}
-              </AppText>
+
+            <View style={styles.missionActions}>
+              <TouchableOpacity
+                style={[styles.primaryButton, { backgroundColor: activeMode.color }]}
+                onPress={startMission}
+                activeOpacity={0.82}
+                accessibilityRole="button"
+                accessibilityLabel={missionButtonText}
+              >
+                <Ionicons name="play" size={18} color={C.white} />
+                <AppText style={styles.primaryButtonText}>{missionButtonText}</AppText>
+              </TouchableOpacity>
+
+              {activeModeKey === 'story' && (
+                <TouchableOpacity
+                  style={styles.secondaryButton}
+                  onPress={() => {
+                    soundManager.play('click');
+                    navigation.navigate('Map');
+                  }}
+                  activeOpacity={0.82}
+                  accessibilityRole="button"
+                  accessibilityLabel="Open mission map"
+                >
+                  <Ionicons name="map-outline" size={18} color={C.primary} />
+                </TouchableOpacity>
+              )}
             </View>
           </View>
-          <View style={styles.missionActions}>
-            <TouchableOpacity
-              style={[styles.primaryMissionBtn, { backgroundColor: activeMode.color }]}
-              onPress={startMission}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="play" size={17} color={C.white} />
-              <AppText style={styles.primaryMissionText}>Battle</AppText>
-            </TouchableOpacity>
+
+          <View style={styles.sectionHeader}>
+            <AppText style={styles.sectionTitle}>Practice</AppText>
+            <AppText style={styles.sectionMeta}>Choose a module</AppText>
+          </View>
+
+          <View style={styles.moduleGrid}>
+            {MODULES.map((module, index) => (
+              <ModuleTile
+                key={module.id}
+                module={getModuleProgress(module.id)}
+                spanFull={index === MODULES.length - 1 && MODULES.length % 2 === 1}
+                styles={styles}
+                colors={C}
+                onPress={() => {
+                  soundManager.play('click');
+                  openStackScreen('Level', { moduleId: module.id });
+                }}
+              />
+            ))}
           </View>
         </View>
-      )}
-
-      <View style={styles.statsRow}>
-        <View style={styles.statCardGold}>
-          <Ionicons name="star" size={18} color={C.gold} />
-          <AppText style={styles.statValue}>{missionStats.totalStars}/{missionStats.totalPossibleStars}</AppText>
-          <AppText style={styles.statLabel}>Stars</AppText>
-        </View>
-        <View style={styles.statCardSuccess}>
-          <Ionicons name="checkmark-circle" size={18} color={C.success} />
-          <AppText style={styles.statValue}>
-            {state.totalAnswered > 0 ? Math.round((state.totalCorrect / state.totalAnswered) * 100) : 0}%
-          </AppText>
-          <AppText style={styles.statLabel}>Accuracy</AppText>
-        </View>
-        <View style={styles.statCardWarning}>
-          <Ionicons name="flag" size={18} color={C.warning} />
-          <AppText style={styles.statValue}>{missionStats.completed}/100</AppText>
-          <AppText style={styles.statLabel}>Missions</AppText>
-        </View>
-      </View>
-
-      <AppText style={styles.sectionTitle} decorative>Training Realms</AppText>
-
-      {MODULES.map((mod) => (
-        <ModuleCard
-          key={mod.id}
-          module={getModuleProgress(mod.id)}
-          onPress={() => {
-            soundManager.play('click');
-            openStackScreen('Level', { moduleId: mod.id });
-          }}
-        />
-      ))}
-
-      <TouchableOpacity
-        style={styles.profileBtn}
-        onPress={() => {
-          soundManager.play('click');
-          navigation.navigate('Profile');
-        }}
-      >
-        <Ionicons name="person-circle-outline" size={20} color={C.primary} />
-        <AppText style={styles.profileBtnText}>View Profile & Achievements</AppText>
-        <Ionicons name="chevron-forward" size={16} color={C.textMuted} />
-      </TouchableOpacity>
-
-      <View style={styles.spacer} />
+      </ScrollView>
 
       <DailyRewardModal
         visible={showDaily}
-        streak={calcStreak()}
+        streak={dailyInfo.streak}
         claimable={dailyInfo.available}
         onClaim={(coins, xp) => {
           soundManager.play('coin');
@@ -367,78 +352,441 @@ export default function HomeScreen({ navigation }) {
           setShowDaily(false);
         }}
       />
-    </ScrollView>
     </View>
   );
 }
 
-const createStyles = (C, titleSize) => StyleSheet.create({
-  wrapper: { flex: 1 },
-  container: { flex: 1, backgroundColor: 'transparent' },
-  header: { paddingHorizontal: 20, paddingTop: 48, paddingBottom: 16, backgroundColor: 'transparent' },
-  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 },
-  headerLeft: { flexShrink: 1, minWidth: 0 },
-  titleOrnament: { flexDirection: 'row', alignItems: 'center', gap: 8, width: 210, maxWidth: '100%', marginBottom: 6 },
-  ornamentLine: { flex: 1, height: 1, backgroundColor: `${C.gold}70` },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
-  greeting: { fontSize: titleSize, fontWeight: '900', color: C.gold, textAlign: 'left', includeFontPadding: false, flexShrink: 1, letterSpacing: 2, textTransform: 'uppercase', textShadowColor: 'rgba(244,197,106,0.35)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 10 },
-  diffBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: `${C.primary}55`, flexShrink: 0 },
-  diffText: { fontSize: 9, fontWeight: 'bold', textTransform: 'uppercase' },
-  subtitle: { fontSize: 14, marginTop: 4, color: C.textLight, fontStyle: 'italic' },
-  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 10, flexShrink: 0 },
-  coinBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, gap: 4, marginRight: 8, backgroundColor: `${C.gold}18`, borderWidth: 1, borderColor: `${C.gold}45` },
-  coinText: { fontWeight: 'bold', fontSize: 13, color: C.gold },
-  playerCard: { flexDirection: 'row', alignItems: 'center', marginTop: 18, borderRadius: 14, padding: 14, borderWidth: 1, backgroundColor: `${C.card}E8`, borderColor: `${C.gold}45`, shadowColor: C.gold, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 12, elevation: 4 },
-  playerInfo: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
-  avatarSmall: { width: 42, height: 42, borderRadius: 21, justifyContent: 'center', alignItems: 'center', backgroundColor: `${C.primary}20`, borderWidth: 1, borderColor: `${C.gold}50` },
-  playerText: { flex: 1 },
-  playerName: { fontSize: 14, fontWeight: 'bold', color: C.text },
-  playerSub: { fontSize: 11, color: C.textMuted },
-  xpSection: { width: 120 },
-  xpHeader: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  xpLabel: { fontSize: 11, fontWeight: '600', flex: 1, color: C.textMuted },
-  xpValue: { fontSize: 12, fontWeight: 'bold', color: C.xp },
-  xpTrack: { height: 6, borderRadius: 3, overflow: 'hidden', marginTop: 5, backgroundColor: `${C.black}55`, borderWidth: 1, borderColor: `${C.rune || C.primary}25` },
-  xpFill: { height: '100%', borderRadius: 3, backgroundColor: C.xp },
-  xpDetail: { fontSize: 9, textAlign: 'right', marginTop: 2, color: C.textMuted },
-  dailyRewardCard: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 12, borderRadius: 12, padding: 12, borderWidth: 1.5, backgroundColor: `${C.card}E6`, shadowColor: C.gold, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.14, shadowRadius: 9, elevation: 3 },
-  dailyGiftIcon: { width: 42, height: 42, borderRadius: 12, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: `${C.gold}35` },
-  dailyRewardCopy: { flex: 1, minWidth: 0 },
-  dailyRewardTitle: { fontSize: 14, fontWeight: '900', color: C.text },
-  dailyRewardText: { fontSize: 11, lineHeight: 15, color: C.textMuted, marginTop: 2 },
-  dailyRewardAction: { minWidth: 58, minHeight: 32, borderRadius: 9, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 10 },
-  dailyRewardActionText: { fontSize: 11, fontWeight: '900', textTransform: 'uppercase' },
-  modePanel: { marginHorizontal: 20, marginTop: 16, borderRadius: 12, padding: 14, borderWidth: 1, backgroundColor: `${C.card}E0`, borderColor: `${C.rune || C.primary}40` },
-  modeHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
-  modeHeaderText: { flex: 1 },
-  modeTitle: { fontSize: 15, fontWeight: '900', color: C.text },
-  modeSubtitle: { fontSize: 11, lineHeight: 16, marginTop: 2, color: C.textMuted },
-  activeModePill: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 9, paddingVertical: 5, borderRadius: 10 },
-  activeModeText: { fontSize: 10, fontWeight: '900', textTransform: 'uppercase' },
-  modeGrid: { flexDirection: 'row', gap: 8, marginTop: 12 },
-  modeButton: { flex: 1, minHeight: 48, borderRadius: 10, borderWidth: 1.5, justifyContent: 'center', alignItems: 'center', gap: 4 },
-  modeButtonText: { fontSize: 11, fontWeight: '900', textTransform: 'uppercase' },
-  missionCard: { marginHorizontal: 20, marginTop: 12, borderRadius: 12, padding: 14, borderWidth: 1.5, backgroundColor: `${C.card}E8`, shadowColor: C.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.16, shadowRadius: 12, elevation: 4 },
-  missionTop: { flexDirection: 'row', gap: 12 },
-  missionIcon: { width: 48, height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: `${C.gold}35` },
-  missionInfo: { flex: 1 },
-  missionKicker: { fontSize: 10, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase', color: C.textMuted },
-  missionTitle: { fontSize: 16, fontWeight: '900', marginTop: 2, color: C.text },
-  missionStory: { fontSize: 12, lineHeight: 17, marginTop: 3, color: C.textMuted, textAlign: 'justify' },
-  missionActions: { flexDirection: 'row', gap: 10, marginTop: 14 },
-  primaryMissionBtn: { flex: 1, minHeight: 44, borderRadius: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, borderWidth: 1, borderColor: `${C.gold}55` },
-  primaryMissionText: { fontSize: 14, fontWeight: '900', color: C.white },
-  secondaryMissionBtn: { flex: 1, minHeight: 44, borderRadius: 10, borderWidth: 1, borderColor: `${C.primary}70`, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, backgroundColor: `${C.primary}14` },
-  secondaryMissionText: { fontSize: 14, fontWeight: '900', color: C.primary },
-  statsRow: { flexDirection: 'row', paddingHorizontal: 20, gap: 10, marginTop: 16 },
-  statCard: { flex: 1, borderRadius: 14, padding: 12, alignItems: 'center', gap: 4 },
-  statCardGold: { flex: 1, borderRadius: 12, padding: 12, alignItems: 'center', gap: 4, backgroundColor: `${C.gold}12`, borderWidth: 1, borderColor: `${C.gold}35` },
-  statCardSuccess: { flex: 1, borderRadius: 12, padding: 12, alignItems: 'center', gap: 4, backgroundColor: `${C.success}12`, borderWidth: 1, borderColor: `${C.success}35` },
-  statCardWarning: { flex: 1, borderRadius: 12, padding: 12, alignItems: 'center', gap: 4, backgroundColor: `${C.warning}12`, borderWidth: 1, borderColor: `${C.warning}35` },
-  statValue: { fontSize: 16, fontWeight: 'bold', color: C.text },
-  statLabel: { fontSize: 10, color: C.textMuted },
-  sectionTitle: { fontSize: 17, fontWeight: 'bold', marginTop: 24, marginBottom: 8, marginHorizontal: 20, color: C.gold, letterSpacing: 1.2, textTransform: 'uppercase' },
-  profileBtn: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 20, marginTop: 12, borderRadius: 12, padding: 14, gap: 10, borderWidth: 1, backgroundColor: `${C.card}DD`, borderColor: `${C.gold}35` },
-  profileBtnText: { flex: 1, fontSize: 14, fontWeight: '500', color: C.textLight },
-  spacer: { height: 40 },
+function ModuleTile({ module, spanFull, onPress, styles, colors: C }) {
+  const completed = module.levelsCompleted.length;
+  const total = module.totalLevels || 1;
+  const progress = Math.min(100, Math.max(0, (completed / total) * 100));
+
+  return (
+    <TouchableOpacity
+      style={[styles.moduleTile, spanFull && styles.moduleTileFull, { borderColor: `${module.color}52` }]}
+      onPress={onPress}
+      activeOpacity={0.76}
+      accessibilityRole="button"
+      accessibilityLabel={`Open ${module.title}`}
+    >
+      <View style={styles.moduleTop}>
+        <View style={[styles.moduleIcon, { backgroundColor: `${module.color}18` }]}>
+          <Ionicons name={module.icon} size={20} color={module.color} />
+        </View>
+        {completed >= total && <Ionicons name="checkmark-circle" size={17} color={C.success} />}
+      </View>
+      <View style={styles.moduleTextBlock}>
+        <AppText style={[styles.moduleNumber, { color: module.color }]}>Module</AppText>
+        <AppText style={styles.moduleTitle} numberOfLines={2}>{module.title}</AppText>
+      </View>
+      <View style={styles.moduleProgressRow}>
+        <View style={styles.moduleTrack}>
+          <View style={[styles.moduleFill, { width: `${progress}%`, backgroundColor: module.color }]} />
+        </View>
+        <AppText style={styles.moduleCount}>{completed}/{total}</AppText>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+const createStyles = (C, { isNarrow, isWide }) => StyleSheet.create({
+  wrapper: {
+    flex: 1,
+  },
+  container: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+  scrollContent: {
+    alignItems: 'center',
+    paddingTop: 50,
+    paddingBottom: 118,
+  },
+  content: {
+    width: '100%',
+    paddingHorizontal: isWide ? 40 : isNarrow ? 10 : 20,
+  },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  brandBlock: {
+    flex: 1,
+    minWidth: 0,
+  },
+  appName: {
+    color: C.gold,
+    fontSize: 25,
+    fontWeight: '900',
+    lineHeight: 30,
+  },
+  appSubtitle: {
+    color: C.textLight,
+    fontSize: 12,
+    lineHeight: 16,
+    marginTop: 1,
+  },
+  topStatus: {
+    alignItems: 'flex-end',
+    gap: 7,
+    flexShrink: 0,
+  },
+  coinButton: {
+    minHeight: 30,
+    minWidth: 58,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: `${C.gold}38`,
+    backgroundColor: `${C.gold}12`,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+  },
+  coinText: {
+    color: C.gold,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  heroPanel: {
+    marginTop: 18,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: `${C.cardBorder}75`,
+    backgroundColor: `${C.card}E6`,
+    padding: 14,
+  },
+  levelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  avatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: `${C.primary}45`,
+    backgroundColor: `${C.primary}16`,
+  },
+  levelCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  levelText: {
+    color: C.textMuted,
+    fontSize: 12,
+    lineHeight: 15,
+  },
+  playerTitle: {
+    color: C.text,
+    fontSize: 17,
+    fontWeight: '900',
+    lineHeight: 22,
+  },
+  difficultyPill: {
+    minHeight: 30,
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: 9,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    flexShrink: 0,
+  },
+  difficultyText: {
+    fontSize: 11,
+    fontWeight: '900',
+  },
+  xpBlock: {
+    marginTop: 14,
+  },
+  xpLabels: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 7,
+  },
+  xpLabel: {
+    color: C.textMuted,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  xpValue: {
+    color: C.xp,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  xpTrack: {
+    height: 7,
+    borderRadius: 6,
+    overflow: 'hidden',
+    backgroundColor: `${C.black}55`,
+    borderWidth: 1,
+    borderColor: `${C.primary}24`,
+  },
+  xpFill: {
+    height: '100%',
+    borderRadius: 6,
+    backgroundColor: C.xp,
+  },
+  metricRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 14,
+  },
+  metricItem: {
+    flex: 1,
+    minHeight: 62,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: `${C.cardBorder}55`,
+    backgroundColor: `${C.backgroundLight}88`,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+    paddingVertical: 8,
+  },
+  metricValue: {
+    color: C.text,
+    fontSize: 14,
+    fontWeight: '900',
+    lineHeight: 18,
+    marginTop: 3,
+  },
+  metricLabel: {
+    color: C.textMuted,
+    fontSize: 10,
+    lineHeight: 13,
+  },
+  quickActions: {
+    flexDirection: isNarrow ? 'column' : 'row',
+    gap: 10,
+    marginTop: 12,
+  },
+  quickButton: {
+    flex: 1,
+    minHeight: 58,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: `${C.cardBorder}60`,
+    backgroundColor: `${C.card}D8`,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    gap: 10,
+  },
+  quickIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickTextWrap: {
+    flex: 1,
+    minWidth: 0,
+  },
+  quickTitle: {
+    color: C.text,
+    fontSize: 13,
+    fontWeight: '800',
+    lineHeight: 17,
+  },
+  quickMeta: {
+    color: C.textMuted,
+    fontSize: 11,
+    lineHeight: 14,
+  },
+  modeSelector: {
+    marginTop: 14,
+    padding: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: `${C.cardBorder}60`,
+    backgroundColor: `${C.black}20`,
+    flexDirection: 'row',
+    gap: 5,
+  },
+  modeButton: {
+    flex: 1,
+    minHeight: 42,
+    borderRadius: 7,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: isNarrow ? 'column' : 'row',
+    gap: isNarrow ? 2 : 5,
+    paddingHorizontal: 5,
+  },
+  modeText: {
+    fontSize: isNarrow ? 10 : 12,
+    fontWeight: '800',
+    lineHeight: 15,
+  },
+  missionPanel: {
+    marginTop: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    backgroundColor: `${C.card}E8`,
+    padding: 13,
+  },
+  missionMain: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 11,
+  },
+  missionIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  missionCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  missionMeta: {
+    color: C.textMuted,
+    fontSize: 11,
+    lineHeight: 14,
+  },
+  missionTitle: {
+    color: C.text,
+    fontSize: 18,
+    fontWeight: '900',
+    lineHeight: 23,
+    marginTop: 1,
+  },
+  missionActions: {
+    flexDirection: 'row',
+    gap: 9,
+    marginTop: 13,
+  },
+  primaryButton: {
+    flex: 1,
+    minHeight: 44,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 7,
+  },
+  primaryButtonText: {
+    color: C.white,
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  secondaryButton: {
+    width: 48,
+    minHeight: 44,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: `${C.primary}55`,
+    backgroundColor: `${C.primary}12`,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sectionHeader: {
+    marginTop: 24,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  sectionTitle: {
+    color: C.textLight,
+    fontSize: 22,
+    fontWeight: '900',
+    lineHeight: 28,
+  },
+  sectionMeta: {
+    color: C.textMuted,
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  moduleGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: isNarrow ? 8 : 12,
+  },
+  moduleTile: {
+    width: isNarrow ? '47.5%' : '48%',
+    minHeight: isNarrow ? 160 : 182,
+    borderRadius: 8,
+    borderWidth: 1,
+    backgroundColor: `${C.card}C8`,
+    padding: isNarrow ? 10 : 15,
+    justifyContent: 'space-between',
+    shadowColor: C.black,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 16,
+    elevation: 3,
+  },
+  moduleTileFull: {
+    width: '100%',
+    minHeight: isNarrow ? 160 : 182,
+  },
+  moduleTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: isNarrow ? 38 : 44,
+  },
+  moduleIcon: {
+    width: isNarrow ? 38 : 44,
+    height: isNarrow ? 38 : 44,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  moduleTextBlock: {
+    marginTop: 12,
+    flex: 1,
+    justifyContent: 'flex-start',
+  },
+  moduleNumber: {
+    fontSize: isNarrow ? 11 : 12,
+    fontWeight: '900',
+    lineHeight: 15,
+  },
+  moduleTitle: {
+    color: C.textLight,
+    fontSize: isNarrow ? 13 : 16,
+    fontWeight: '900',
+    lineHeight: isNarrow ? 17 : 20,
+    marginTop: 3,
+  },
+  moduleProgressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 16,
+  },
+  moduleTrack: {
+    flex: 1,
+    height: 6,
+    borderRadius: 5,
+    overflow: 'hidden',
+    backgroundColor: `${C.black}78`,
+  },
+  moduleFill: {
+    height: '100%',
+    borderRadius: 5,
+  },
+  moduleCount: {
+    color: C.textMuted,
+    fontSize: 11,
+    fontWeight: '800',
+    lineHeight: 14,
+  },
 });
