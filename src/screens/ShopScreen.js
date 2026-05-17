@@ -725,5 +725,5 @@ const createStyles = (C) => StyleSheet.create({
     fontSize: 15,
     fontWeight: '900',
   },
-  spacer: { height: 50 },
+  spacer: { height: 20 },
 });

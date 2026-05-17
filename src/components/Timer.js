@@ -1,11 +1,11 @@
 import { View, StyleSheet } from 'react-native';
 import AppText from './AppText';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import { useTheme } from '../theme/ThemeContext';
 import { soundManager } from '../utils/SoundManager';
 
-export default function Timer({ seconds, onExpire, running, resetKey }) {
+function Timer({ seconds, onExpire, running, resetKey }) {
   const { colors: C } = useTheme();
   const [remaining, setRemaining] = useState(seconds);
   const intervalRef = useRef(null);
@@ -85,3 +85,5 @@ const styles = StyleSheet.create({
   fill: { height: '100%', borderRadius: 3 },
   text: { fontSize: 12, fontWeight: 'bold', minWidth: 26 },
 });
+
+export default memo(Timer);

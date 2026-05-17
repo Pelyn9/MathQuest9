@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import { Platform } from 'react-native';
 import { DIFFICULTY } from '../utils/gameLogic';
 
@@ -446,11 +446,11 @@ export function ThemeProvider({ children, initialTheme = 'dark' }) {
   const isDark = baseColors.mode === 'dark';
   const accent = diffAccent || baseColors.primary;
 
-  const colors = {
+  const colors = useMemo(() => ({
     ...baseColors,
     primary: accent,
     primaryDark: accent,
-  };
+  }), [baseColors, accent]);
 
   return (
     <ThemeContext.Provider value={{ theme: themeId, colors, setThemeMode, isDark, setDifficultyAccent, accent }}>

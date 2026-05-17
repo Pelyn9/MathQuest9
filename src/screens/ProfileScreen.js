@@ -372,7 +372,7 @@ const createStyles = (C, accent) => StyleSheet.create({
   screen: { flex: 1 },
   scroll: {
     width: '100%', maxWidth: 480, alignSelf: 'center',
-    paddingHorizontal: 16, paddingTop: 24, paddingBottom: 110,
+    paddingHorizontal: 16, paddingTop: 24, paddingBottom: 20,
   },
 
   /* ── HERO PARCHMENT ── */

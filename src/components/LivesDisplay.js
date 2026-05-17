@@ -1,8 +1,9 @@
 import { View, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import React, { memo } from 'react';
 import { useTheme } from '../theme/ThemeContext';
 
-export default function LivesDisplay({ lives, maxLives }) {
+function LivesDisplay({ lives, maxLives }) {
   const { colors: C } = useTheme();
   const max = maxLives || 5;
   const size = max > 3 ? 14 : 18;
@@ -28,3 +29,5 @@ const styles = StyleSheet.create({
     gap: 1,
   },
 });
+
+export default memo(LivesDisplay);

@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
   loadingLineWrap: {
     width: '78%',
     maxWidth: 420,
-    marginBottom: 40,
+    marginBottom: 16,
   },
 
   loadingLineTrack: {

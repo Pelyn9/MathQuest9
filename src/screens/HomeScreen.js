@@ -151,6 +151,11 @@ const HomeScreen = React.memo(function HomeScreen({ navigation }) {
     { icon: 'checkmark-circle', label: 'Accuracy', value: `${accuracy}%`, color: C.success },
   ];
 
+  const trophyStats = [
+    { icon: 'heart', label: 'Survival Trophy', value: `${state.survivalTrophy || 0}`, color: '#FF5D63' },
+    { icon: 'timer', label: 'Time Trophy', value: `${state.timeTrophy || 0}`, color: '#42D9FF' },
+  ];
+
   return (
     <View style={styles.wrapper}>
       <ScreenBackground preset="home" />
@@ -218,6 +223,15 @@ const HomeScreen = React.memo(function HomeScreen({ navigation }) {
                   <Ionicons name={stat.icon} size={16} color={stat.color} />
                   <AppText style={styles.metricValue}>{stat.value}</AppText>
                   <AppText style={styles.metricLabel}>{stat.label}</AppText>
+                </View>
+              ))}
+            </View>
+            <View style={styles.trophyRow}>
+              {trophyStats.map(stat => (
+                <View key={stat.label} style={styles.trophyItem}>
+                  <Ionicons name={stat.icon} size={14} color={stat.color} />
+                  <AppText style={[styles.trophyValue, { color: stat.color }]}>{stat.value}</AppText>
+                  <AppText style={styles.trophyLabel}>{stat.label}</AppText>
                 </View>
               ))}
             </View>
@@ -431,7 +445,7 @@ const createStyles = (C, { isNarrow, isWide }) => StyleSheet.create({
   scrollContent: {
     alignItems: 'center',
     paddingTop: 50,
-    paddingBottom: 118,
+    paddingBottom: 24,
   },
   content: {
     width: '100%',
@@ -819,5 +833,33 @@ const createStyles = (C, { isNarrow, isWide }) => StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
     lineHeight: 14,
+  },
+  trophyRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 8,
+  },
+  trophyItem: {
+    flex: 1,
+    minHeight: 46,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: `${C.cardBorder}50`,
+    backgroundColor: `${C.backgroundLight}70`,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+    gap: 5,
+  },
+  trophyValue: {
+    fontSize: 14,
+    fontWeight: '900',
+    lineHeight: 18,
+  },
+  trophyLabel: {
+    color: C.textMuted,
+    fontSize: 10,
+    lineHeight: 13,
   },
 });

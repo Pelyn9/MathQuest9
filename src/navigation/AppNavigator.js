@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -44,6 +44,46 @@ function TabNavigator() {
   const { state } = useGame();
   const activeDifficulty = DIFFICULTY[state.difficulty] || DIFFICULTY.normal;
 
+  const tabOptions = useMemo(() => ({
+    headerShown: false,
+    lazy: true,
+    animation: 'fade',
+    transitionSpec: tabTransitionSpec,
+    tabBarShowLabel: true,
+    tabBarActiveTintColor: activeDifficulty.color,
+    tabBarInactiveTintColor: C.textMuted,
+    tabBarStyle: {
+      backgroundColor: `${C.tabBar || C.card}F2`,
+      borderTopWidth: 1,
+      borderTopColor: `${C.gold}35`,
+      paddingBottom: 12,
+      paddingTop: 8,
+      height: 82,
+      minHeight: 82,
+      shadowColor: C.primary,
+      shadowOffset: { width: 0, height: -4 },
+      shadowOpacity: 0.18,
+      shadowRadius: 12,
+      elevation: 12,
+    },
+    tabBarItemStyle: {
+      paddingVertical: 4,
+      paddingHorizontal: 4,
+      minHeight: 50,
+    },
+    tabBarIconStyle: {
+      marginTop: 0,
+      marginBottom: 2,
+    },
+    tabBarLabelStyle: {
+      fontSize: 12,
+      lineHeight: 14,
+      fontWeight: '700',
+      fontFamily: C.fontFamily,
+    },
+    tabBarLabelPosition: 'below-icon',
+  }), [activeDifficulty.color, C.tabBar, C.card, C.gold, C.primary, C.textMuted, C.fontFamily]);
+
   return (
     <Tab.Navigator
       screenListeners={{
@@ -52,11 +92,7 @@ function TabNavigator() {
         },
       }}
       screenOptions={({ route }) => ({
-        headerShown: false,
-        lazy: false,
-        animation: 'fade',
-        transitionSpec: tabTransitionSpec,
-        tabBarShowLabel: true,
+        ...tabOptions,
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
           if (route.name === 'Home') iconName = focused ? 'home' : 'home-outline';
@@ -64,38 +100,6 @@ function TabNavigator() {
           else if (route.name === 'Profile') iconName = focused ? 'person' : 'person-outline';
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: activeDifficulty.color,
-        tabBarInactiveTintColor: C.textMuted,
-        tabBarStyle: {
-          backgroundColor: `${C.tabBar || C.card}F2`,
-          borderTopWidth: 1,
-          borderTopColor: `${C.gold}35`,
-          paddingBottom: 12,
-          paddingTop: 8,
-          height: 82,
-          minHeight: 82,
-          shadowColor: C.primary,
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.18,
-          shadowRadius: 12,
-          elevation: 12,
-        },
-        tabBarItemStyle: {
-          paddingVertical: 4,
-          paddingHorizontal: 4,
-          minHeight: 50,
-        },
-        tabBarIconStyle: {
-          marginTop: 0,
-          marginBottom: 2,
-        },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          lineHeight: 14,
-          fontWeight: '700',
-          fontFamily: C.fontFamily,
-        },
-        tabBarLabelPosition: 'below-icon',
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: 'Home' }} />

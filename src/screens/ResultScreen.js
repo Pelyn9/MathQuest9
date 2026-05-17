@@ -448,6 +448,6 @@ const createStyles = (C) => StyleSheet.create({
     fontWeight: '600',
   },
   bottomPadding: {
-    height: 40,
+    height: 20,
   },
 });

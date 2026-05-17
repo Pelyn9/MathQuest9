@@ -71,7 +71,7 @@ export default function QuizScreen({ route, navigation }) {
   const modData = MODULES[moduleId];
   const level = modData?.levels.find(l => l.id === levelId);
 
-  const { state, useLife, refillLives, addCoins, answerCorrect, answerWrong, completeLevel } = useGame();
+  const { state, useLife, refillLives, addCoins, answerCorrect, answerWrong, completeLevel, addXP, setModeTrophy } = useGame();
   const { showToast } = useToast();
   const { colors: C } = useTheme();
   const styles = useMemo(() => createStyles(C), [C]);
@@ -100,6 +100,7 @@ export default function QuizScreen({ route, navigation }) {
   const [awardedXP, setAwardedXP] = useState(0);
   const [finished, setFinished] = useState(false);
   const [questions, setQuestions] = useState([]);
+  const [questionsAnswered, setQuestionsAnswered] = useState(0);
   const [localLives, setLocalLives] = useState(state.lives);
   const [timerRunning, setTimerRunning] = useState(false);
   const [timerKey, setTimerKey] = useState(0);
@@ -117,6 +118,8 @@ export default function QuizScreen({ route, navigation }) {
   const brokenHeartTilt = useRef(new Animated.Value(0)).current;
   const gameOverGlowAnim = useRef(new Animated.Value(0)).current;
   const gameOverGlowLoopRef = useRef(null);
+  const survivalTrophyRef = useRef(state.survivalTrophy);
+  const timeTrophyRef = useRef(state.timeTrophy);
 
   const diffConfig = DIFFICULTY[state.difficulty] || DIFFICULTY.normal;
   const activeModeKey = initialActiveModeKey;
@@ -169,6 +172,11 @@ export default function QuizScreen({ route, navigation }) {
       setOnboardingStep('gameplay');
     }
   }, [isStoryMission, mission, level]);
+
+  useEffect(() => {
+    survivalTrophyRef.current = state.survivalTrophy;
+    timeTrophyRef.current = state.timeTrophy;
+  }, [state.survivalTrophy, state.timeTrophy]);
 
   useEffect(() => {
     return () => {
@@ -233,6 +241,18 @@ export default function QuizScreen({ route, navigation }) {
     setShowCorrect(false);
     stopTimer();
 
+    if ((isSurvivalMode || isTimerMode) && totalXP > 0) {
+      addXP(totalXP);
+    }
+    if (isSurvivalMode || isTimerMode) {
+      const trophyScore = questionsAnswered > 0 ? Math.round((correctCount / questionsAnswered) * 100) : 0;
+      const currentBest = isSurvivalMode ? survivalTrophyRef.current : timeTrophyRef.current;
+      setModeTrophy(isSurvivalMode ? 'survival' : 'timer', trophyScore);
+      if (trophyScore > currentBest && trophyScore > 0) {
+        showToast('New Record!', 'success', 'trophy');
+      }
+    }
+
     gameOverGlowLoopRef.current?.stop?.();
     gameOverGlowLoopRef.current = null;
     damageFlashOpacity.stopAnimation();
@@ -292,7 +312,7 @@ export default function QuizScreen({ route, navigation }) {
         }),
       ]),
     ]).start();
-  }, [brokenHeartScale, brokenHeartTilt, damageFlashOpacity, gameOverGlowAnim, gameOverOpacity, stopTimer]);
+  }, [brokenHeartScale, brokenHeartTilt, damageFlashOpacity, gameOverGlowAnim, gameOverOpacity, stopTimer, isSurvivalMode, isTimerMode, addXP, totalXP, questionsAnswered, correctCount, setModeTrophy, showToast]);
 
   const currentQ = questions[qIndex];
   const isLast = qIndex >= questions.length - 1;
@@ -316,6 +336,7 @@ export default function QuizScreen({ route, navigation }) {
     if (isBattleLocked || answerLockedRef.current || showCorrect || !currentQ) return;
     answerLockedRef.current = true;
     stopTimer();
+    setQuestionsAnswered(c => c + 1);
     const defeated = applyWrongAnswer();
     if (defeated) return;
     setSelected(-1);
@@ -356,6 +377,7 @@ export default function QuizScreen({ route, navigation }) {
     if (selected === null || isBattleLocked || answerLockedRef.current || !currentQ) return;
     answerLockedRef.current = true;
     stopTimer();
+    setQuestionsAnswered(c => c + 1);
     const correct = selected === currentQ.correct;
     const scoringDifficulty = currentQ.difficulty || level.difficulty;
     const timeBonus = Math.floor(timePerQ * 10 * (1 - (0.5)));
@@ -527,6 +549,7 @@ export default function QuizScreen({ route, navigation }) {
     setLastBadge(null);
     setLastCoins(0);
     setAwardedXP(0);
+    setQuestionsAnswered(0);
     setFinished(false);
     setLocalLives(nextLives);
     setBattleStatus('playing');
@@ -581,6 +604,10 @@ export default function QuizScreen({ route, navigation }) {
 
   const friendHint = currentQ?.hint ? `Here's a hint: ${currentQ.hint}. Let's work through this step by step!` : '';
   const progressColor = level.isBoss ? C.warning : C.xp;
+  const runModePoints = questionsAnswered > 0 ? Math.round((correctCount / questionsAnswered) * 100) : 0;
+  const gameOverMissionProgress = getDifficultyMissionProgress(state, state.difficulty);
+  const gameOverMissionStats = getMissionStats(gameOverMissionProgress);
+  const gameOverAccuracy = state.totalAnswered > 0 ? Math.round((state.totalCorrect / state.totalAnswered) * 100) : 0;
   const brokenHeartRotation = brokenHeartTilt.interpolate({
     inputRange: [-1, 0, 1],
     outputRange: ['-12deg', '0deg', '12deg'],
@@ -727,6 +754,14 @@ export default function QuizScreen({ route, navigation }) {
                 <Ionicons name="trophy" size={14} color={C.gold} />
                 <AppText style={styles.statChipText}>{score} pts</AppText>
               </View>
+              {(isSurvivalMode || isTimerMode) && (
+                <View style={styles.statChip}>
+                  <Ionicons name={isSurvivalMode ? 'heart' : 'timer'} size={14} color={activeMode.color} />
+                  <AppText style={styles.statChipText}>
+                    {questionsAnswered > 0 ? Math.round((correctCount / questionsAnswered) * 100) : 0}/100
+                  </AppText>
+                </View>
+              )}
             </View>
 
             {showHint && currentQ?.hint && (
@@ -836,6 +871,39 @@ export default function QuizScreen({ route, navigation }) {
             <AppText style={styles.gameOverSubtitle}>
               You were defeated. Try again to continue your adventure.
             </AppText>
+
+            <View style={styles.gameOverStatsContainer}>
+              {(isSurvivalMode || isTimerMode) && (
+                <View style={[styles.gameOverStatRow, { borderBottomWidth: 1, borderBottomColor: `${activeMode.color}20` }]}>
+                  <Ionicons name={isSurvivalMode ? 'heart' : 'timer'} size={15} color={activeMode.color} />
+                  <AppText style={styles.gameOverStatLabel}>{isSurvivalMode ? 'Survival' : 'Time'} Points</AppText>
+                  <AppText style={styles.gameOverStatValue}>{runModePoints}/100</AppText>
+                </View>
+              )}
+              {!isSurvivalMode && !isTimerMode && (
+                <View style={styles.gameOverStatRow}>
+                  <Ionicons name="flag" size={15} color={C.warning} />
+                  <AppText style={styles.gameOverStatLabel}>Missions</AppText>
+                  <AppText style={styles.gameOverStatValue}>{gameOverMissionStats.completed}/100</AppText>
+                </View>
+              )}
+              <View style={styles.gameOverStatRow}>
+                <Ionicons name="star" size={15} color={C.gold} />
+                <AppText style={styles.gameOverStatLabel}>Stars</AppText>
+                <AppText style={styles.gameOverStatValue}>{gameOverMissionStats.totalStars}</AppText>
+              </View>
+              <View style={styles.gameOverStatRow}>
+                <Ionicons name="checkmark-circle" size={15} color={C.success} />
+                <AppText style={styles.gameOverStatLabel}>Accuracy</AppText>
+                <AppText style={styles.gameOverStatValue}>{gameOverAccuracy}%</AppText>
+              </View>
+              {(isSurvivalMode || isTimerMode) && totalXP > 0 && (
+                <View style={styles.gameOverXpRow}>
+                  <Ionicons name="flash" size={15} color={C.xp} />
+                  <AppText style={styles.gameOverXpText}>+{totalXP} XP earned</AppText>
+                </View>
+              )}
+            </View>
 
             <View style={styles.gameOverButtons}>
               <Pressable
@@ -1086,7 +1154,29 @@ const createStyles = (C) => StyleSheet.create({
   },
   gameOverSubtitle: {
     maxWidth: 330, color: '#F0D9C7', fontSize: 15, lineHeight: 22,
-    textAlign: 'center', marginTop: 10, marginBottom: 26,
+    textAlign: 'center', marginTop: 10, marginBottom: 16,
+  },
+  gameOverStatsContainer: {
+    width: '100%', backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 10, paddingHorizontal: 16, paddingVertical: 10,
+    marginBottom: 18, borderWidth: 1, borderColor: 'rgba(255,215,0,0.2)',
+  },
+  gameOverStatRow: {
+    flexDirection: 'row', alignItems: 'center', paddingVertical: 5,
+  },
+  gameOverStatLabel: {
+    flex: 1, color: '#C8B8A8', fontSize: 13, fontWeight: '600', marginLeft: 8,
+  },
+  gameOverStatValue: {
+    color: C.white, fontSize: 14, fontWeight: '800',
+  },
+  gameOverXpRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: `${C.xp}20`, paddingVertical: 7, paddingHorizontal: 14,
+    borderRadius: 8, marginTop: 7, gap: 6,
+  },
+  gameOverXpText: {
+    color: C.xp, fontSize: 13, fontWeight: '800',
   },
   gameOverButtons: { width: '100%', gap: 12 },
   gameOverButton: {

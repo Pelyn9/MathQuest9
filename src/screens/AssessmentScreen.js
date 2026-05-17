@@ -288,7 +288,7 @@ const createStyles = (C, { isCompact, isTiny } = {}) => StyleSheet.create({
   },
   explanationTitle: { fontSize: 13, fontWeight: 'bold', marginBottom: 4 },
   explanationText: { fontSize: 13, lineHeight: 19 },
-  bottomSection: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 30 },
+  bottomSection: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 20 },
   submitBtn: {
     backgroundColor: C.primary, paddingVertical: 14, borderRadius: 10,
     flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8,

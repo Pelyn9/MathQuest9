@@ -206,5 +206,5 @@ const createStyles = (C) => StyleSheet.create({
   diffText: { fontSize: 10, fontWeight: '700', textTransform: 'uppercase' },
   qCount: { fontSize: 10, color: C.textMuted },
   starsRow: { flexDirection: 'row', gap: 2, marginTop: 4 },
-  spacer: { height: 40 },
+  spacer: { height: 20 },
 });

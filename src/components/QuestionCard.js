@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, memo } from 'react';
 import { Animated, Easing, ImageBackground, View, TouchableOpacity, StyleSheet, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AppText from './AppText';
@@ -6,7 +6,7 @@ import { useTheme } from '../theme/ThemeContext';
 
 const castleBackground = require('../image/castle.png');
 
-export default function QuestionCard({ question, selected, onSelect, showCorrect, usedFifty, disabled = false, onOpenGuide }) {
+function QuestionCard({ question, selected, onSelect, showCorrect, usedFifty, disabled = false, onOpenGuide }) {
   const { colors: C } = useTheme();
   const { width } = useWindowDimensions();
   const isCompact = width < 370;
@@ -358,3 +358,5 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
+
+export default memo(QuestionCard);

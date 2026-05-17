@@ -1,8 +1,9 @@
 import { View, StyleSheet } from 'react-native';
 import AppText from './AppText';
+import React, { memo } from 'react';
 import { useTheme } from '../theme/ThemeContext';
 
-export default function ProgressBar({ current, total, color, showLabel = true }) {
+function ProgressBar({ current, total, color, showLabel = true }) {
   const { colors: C } = useTheme();
   const pct = total > 0 ? current / total : 0;
   const fillColor = color || C.primary;
@@ -45,3 +46,5 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
 });
+
+export default memo(ProgressBar);

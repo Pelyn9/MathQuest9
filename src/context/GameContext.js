@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback, useState } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useState, useRef } from 'react';
+import { AppState } from 'react-native';
 import { loadGameState, saveGameState } from '../utils/storage';
 import { calculateStars, regenLives, checkBadges, calculatePlayerLevel, DIFFICULTY, BADGE_AVATAR_UNLOCKS } from '../utils/gameLogic';
 import { soundManager } from '../utils/SoundManager';
@@ -106,6 +107,8 @@ const initialState = {
   preTestScore: null,
   postTestScore: null,
   completedLevelsOnExtreme: [],
+  survivalTrophy: 0,
+  timeTrophy: 0,
   soundEnabled: true,
   lastDailyReward: null,
 };
@@ -298,6 +301,17 @@ function gameReducer(state, action) {
     case 'CLAIM_DAILY_REWARD':
       return { ...state, coins: state.coins + action.payload.coins, xp: state.xp + action.payload.xp, lastDailyReward: Date.now() };
 
+    case 'SET_MODE_TROPHY': {
+      const { mode, score } = action.payload;
+      if (mode === 'survival') {
+        return { ...state, survivalTrophy: Math.max(state.survivalTrophy, score) };
+      }
+      if (mode === 'timer') {
+        return { ...state, timeTrophy: Math.max(state.timeTrophy, score) };
+      }
+      return state;
+    }
+
     case 'RESET':
       return { ...initialState };
 
@@ -345,21 +359,53 @@ export function GameProvider({ children }) {
     setThemeMode(state.selectedTheme || 'light');
   }, [state.selectedTheme, setThemeMode]);
 
+  const saveTimeoutRef = useRef(null);
+  const stateRef = useRef(state);
+  stateRef.current = state;
+  const lastBadgeCheckRef = useRef(0);
+
   useEffect(() => {
     if (loaded) {
       soundManager.setEnabled(state.soundEnabled);
-      saveGameState(state);
-      const newBadges = checkBadges(state, state);
-      for (const badge of newBadges) {
-        dispatch({ type: 'ADD_BADGE', payload: badge.id });
-        // Auto-unlock avatar associated with this badge
-        const avatarId = BADGE_AVATAR_UNLOCKS[badge.id];
-        if (avatarId !== undefined && !state.unlockedAvatars.includes(avatarId)) {
-          dispatch({ type: 'UNLOCK_AVATAR', payload: avatarId });
-        }
+    }
+  }, [loaded, state.soundEnabled]);
+
+  useEffect(() => {
+    if (!loaded) return;
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      saveGameState(stateRef.current);
+    }, 1500);
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    };
+  }, [loaded, state]);
+
+  useEffect(() => {
+    if (!loaded) return;
+    const now = Date.now();
+    if (now - lastBadgeCheckRef.current < 3000) return;
+    lastBadgeCheckRef.current = now;
+    const newBadges = checkBadges(state, state);
+    for (const badge of newBadges) {
+      dispatch({ type: 'ADD_BADGE', payload: badge.id });
+      const avatarId = BADGE_AVATAR_UNLOCKS[badge.id];
+      if (avatarId !== undefined && !state.unlockedAvatars.includes(avatarId)) {
+        dispatch({ type: 'UNLOCK_AVATAR', payload: avatarId });
       }
     }
-  }, [loaded, state]);
+  }, [loaded, state.xp, state.coins, state.longestStreak, state.moduleProgress, state.missionProgress, state.badges]);
+
+  useEffect(() => {
+    if (!loaded || !saveTimeoutRef.current) return;
+    const sub = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'background' || nextState === 'inactive') {
+        if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+        saveGameState(stateRef.current);
+      }
+    });
+    return () => sub?.remove();
+  }, [loaded]);
 
   const setDifficulty = useCallback((d) => dispatch({ type: 'SET_DIFFICULTY', payload: d }), []);
   const setPlayMode = useCallback((mode) => dispatch({ type: 'SET_PLAY_MODE', payload: mode }), []);
@@ -387,6 +433,10 @@ export function GameProvider({ children }) {
 
   const claimDailyReward = useCallback((coins, xp) => {
     dispatch({ type: 'CLAIM_DAILY_REWARD', payload: { coins, xp } });
+  }, []);
+
+  const setModeTrophy = useCallback((mode, score) => {
+    dispatch({ type: 'SET_MODE_TROPHY', payload: { mode, score } });
   }, []);
 
   const playerLevel = calculatePlayerLevel(state.xp);
@@ -418,6 +468,7 @@ export function GameProvider({ children }) {
         toggleSound,
         setSoundEnabled,
         claimDailyReward,
+        setModeTrophy,
       }}
     >
       {children}

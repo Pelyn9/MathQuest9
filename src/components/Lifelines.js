@@ -1,10 +1,10 @@
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import AppText from './AppText';
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
+import React, { memo } from 'react';
 import { useTheme } from '../theme/ThemeContext';
 
-export default function Lifelines({
+function Lifelines({
   onHint, onFiftyFifty, onCallFriend,
   usedFifty, usedCall, hintLevel,
   coins, hintCost, fiftyCost, callCost,
@@ -85,3 +85,5 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+
+export default memo(Lifelines);

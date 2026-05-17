@@ -293,5 +293,5 @@ const createStyles = (C) => StyleSheet.create({
   legend: { flexDirection: 'row', justifyContent: 'center', gap: 18, paddingVertical: 14, marginHorizontal: 20, backgroundColor: `${C.card}D8`, borderRadius: 12, marginTop: 8, borderWidth: 1, borderColor: `${C.gold}25` },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   legendText: { fontSize: 11, color: C.textMuted },
-  bottomPadding: { height: 44 },
+  bottomPadding: { height: 20 },
 });
